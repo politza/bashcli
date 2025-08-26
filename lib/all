@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [[ -n "${_BASHCLI_LIB_SOURCED}" \
+        && "${BASHCLI_DEBUG}" != true ]]; then
+  return
+fi
+
+BASHCLI_LIB_DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+. "${BASHCLI_LIB_DIR}"/log
+. "${BASHCLI_LIB_DIR}"/bashcli
+. "${BASHCLI_LIB_DIR}"/progress
+. "${BASHCLI_LIB_DIR}"/options
+. "${BASHCLI_LIB_DIR}"/context
+. "${BASHCLI_LIB_DIR}"/command
+. "${BASHCLI_LIB_DIR}"/help
+. "${BASHCLI_LIB_DIR}"/string
+
+unset BASHCLI_LIB_DIR
+_BASHCLI_LIB_SOURCED=true

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+bashcli-log-debug "Showing help for command $*"
+
+bashcli-help-show "$@"

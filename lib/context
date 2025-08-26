@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+declare    BASHCLI_CONTEXT_DESCRIPTION=''
+declare -A BASHCLI_CONTEXT_OPTIONS=()
+declare -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
+declare -A BASHCLI_CONTEXT_OPTION_ALIASES=()
+declare -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
+declare -A BASHCLI_CONTEXT_CONFIG=()
+
+bashcli-context-clear() {
+  BASHCLI_CONTEXT_DESCRIPTION=''
+  BASHCLI_CONTEXT_OPTIONS=()
+  BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
+  BASHCLI_CONTEXT_OPTION_ALIASES=()
+  BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
+  BASHCLI_CONTEXT_CONFIG=()
+}
+
+# shellcheck disable=2034
+bashcli-context-read() {
+  local -n DESCRIPTION=BASHCLI_CONTEXT_DESCRIPTION
+  local -n OPTIONS=BASHCLI_CONTEXT_OPTIONS
+  local -n OPTION_DESCRIPTIONS=BASHCLI_CONTEXT_OPTION_DESCRIPTIONS
+  local -n OPTION_ALIASES=BASHCLI_CONTEXT_OPTION_ALIASES
+  local -n OPTION_COMPLETIONS=BASHCLI_CONTEXT_OPTION_COMPLETIONS
+  local -n CONFIG=BASHCLI_CONTEXT_CONFIG
+
+  local commandDir=$1
+  local commandContext=${commandDir}/context
+
+  bashcli-context-clear
+
+  if [ -f "${commandContext}" ]; then
+    bashcli-log-debug "Reading context from ${commandContext}"
+    # shellcheck source=/dev/null
+    . "${commandContext}"
+    bashcli-context-validate
+    bashcli-context-add-defaults
+  else
+    bashcli-log-debug "No context found in directory ${commandDir}"
+  fi
+}
+
+bashcli-context-add-defaults() {
+  if [ -z "${BASHCLI_CONTEXT_OPTIONS[help]}" ]; then
+    BASHCLI_CONTEXT_OPTIONS[help]=boolean
+    BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[help]="Shows this message."
+  fi
+}
+
+bashcli-context-validate() {
+  local option optionType alias IFS
+  if [ -z "${BASHCLI_CONTEXT_DESCRIPTION}" ]; then
+    BASHCLI_CONTEXT_DESCRIPTION="No description available."
+  fi
+
+  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+    if [[ ${option} == -* ]]; then
+      bashcli-fatal "Option name must not start with a dash: ${option}"
+    fi
+    optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
+    case ${optionType} in
+      boolean|single|multi) ;;
+      *) bashcli-fatal "Option-type must be one of boolean, single or multi: ${optionType}" ;;
+    esac
+    if [ -z "${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}" ]; then
+      BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]="No description available."
+    fi
+  done
+
+  for option in "${!BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[@]}"; do
+    if [ -z "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
+      bashcli-log-warning "Description for non-existing option provided: ${option}"
+    fi
+  done
+
+  for option in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
+    if [ -z "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
+      bashcli-log-warning "Alias for non-existing option provided: ${option}"
+    fi
+    IFS=,
+    for alias in ${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}; do
+      if [[ ${alias} == -* ]]; then
+        bashcli-fatal "Alias name must not start with a dash: ${alias}"
+      fi
+    done
+  done
+
+  for option in "${!BASHCLI_CONTEXT_OPTION_COMPLETIONS[@]}"; do
+    if [ "${option}" == %parameter ]; then
+      continue
+    fi
+    if [ -z "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
+      bashcli-log-warning "Completions for non-existing option provided: ${option}"
+    fi
+  done
+}

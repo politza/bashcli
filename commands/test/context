@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034,SC2054
+
+DESCRIPTION="\
+This command is for testing only.
+"
+
+OPTIONS=(
+ boolean-option boolean
+ single-option  single
+ multi-option   multi
+)
+
+OPTION_DESCRIPTIONS=(
+  boolean-option "An option without an argument."
+  single-option  "An option with an argument that is supposed to be used only once."
+  multi-option   "An option with an argument that may be used multiple times."
+)
+
+OPTION_ALIASES=(
+  boolean-option b,B
+  single-option  s,S
+  multi-option   m,M
+)
+
+OPTION_COMPLETIONS=(
+  single-option file
+  multi-option  directory,service
+)
+
+CONFIG=(
+)

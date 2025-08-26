@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=2190,2215
+
+BASHCLI_LOG_LEVEL=${BASHCLI_LOG_LEVEL:-warning}
+
+-bashcli-log() {
+  local level=$1
+  local context
+  local fnName
+  local -A colors=()
+  local minContextWidth=24
+
+  shift
+
+  if [ -t 2 ]; then
+    colors=(
+      error   $'\033[91m'
+      warning $'\033[93m'
+      debug   $'\033[96m'
+      info    $'\033[92m'
+      none    $'\033[39m'
+    )
+  fi
+
+  case ${level} in
+    debug) case ${BASHCLI_LOG_LEVEL} in
+             info|warning|error) return ;;
+           esac ;;
+    info) case ${BASHCLI_LOG_LEVEL} in
+            warning|error) return ;;
+          esac ;;
+    warning) case ${BASHCLI_LOG_LEVEL} in
+               error) return ;;
+             esac ;;
+  esac
+
+  if [[ -n "${FUNCNAME[2]}" && "${FUNCNAME[2]}" != source ]]; then
+    fnName="${FUNCNAME[2]}"
+    if [[ ${fnName} == ?(-)bashcli-* ]]; then
+      fnName=${fnName#-}
+      fnName=${fnName#bashcli-}
+    elif [[ ${fnName} == ${BASHCLI_CLI_NAME}-* ]]; then
+      # shellcheck disable=SC2295 
+      fnName=${fnName#${BASHCLI_CLI_NAME}-}
+    fi
+    context+="${fnName}"
+  elif [ ${#BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
+    context="${BASHCLI_COMMAND_STACK[*]:1}"
+  else
+    context="${BASHCLI_COMMAND_STACK[*]}"
+  fi
+
+  printf "[%s]%-${minContextWidth}s %s\n" "${colors[${level}]}${level}${colors[none]}" "(${context})" "$*" >&2
+}
+
+bashcli-log-error() {
+  -bashcli-log error "$@"
+}
+
+bashcli-log-warning() {
+  -bashcli-log warning "$@"
+}
+
+bashcli-log-info() {
+  -bashcli-log info "$@"
+}
+
+bashcli-log-debug() {
+  -bashcli-log debug "$@"
+}

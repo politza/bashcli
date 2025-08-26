@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+bashcli-log-debug "Main called with arguments $@"
+
+if [ $# -gt 0 ]; then
+  bashcli-command-exec "$@"
+fi

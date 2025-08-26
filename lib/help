@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+declare -A BASHCLI_HELP_FACES=(
+  bold $'\033[1m'
+  regular $'\033[0m'
+)
+
+# shellcheck disable=2215
+bashcli-help-show() {
+  local commandList=("$@")
+  local commandDir
+
+  bashcli-log-debug "Showing help for ${commandList[*]}"
+  commandDir=$(bashcli-command-resolve "${commandList[@]}") || return 1
+  bashcli-context-read "${commandDir}"
+
+  -bashcli-help-show-intro "${BASHCLI_CLI_NAME}" "${commandList[@]}"
+  -bashcli-help-show-options
+  -bashcli-help-show-subcommands "${commandList[@]}"
+}
+
+-bashcli-help-show-intro() {
+  local commandList=("$@")
+  local description=${BASHCLI_CONTEXT_DESCRIPTION}
+  local optionsInfo parameterInfo parameterTypes
+
+  if [ ${#BASHCLI_CONTEXT_OPTIONS[@]} -gt 0 ]; then
+    optionsInfo=" [ OPTIONS ]"
+  fi
+  parameterTypes="${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}"
+  if [ -n "${parameterTypes}" ]; then
+    parameterTypes=${parameterTypes//,/ | }
+    parameterInfo=" ${parameterTypes^^} ..."
+  fi
+
+  printf "%sUsage:%s\n%s%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
+         "${commandList[*]}" "${optionsInfo}" "${parameterInfo}" 
+  if [ -n "${description}" ]; then
+    printf "\n%s\n" "${description%%$'\n'}"
+  fi
+}
+
+-bashcli-help-show-options() {
+  local maxOptionsWidth=0
+  local -A optionLabels=()
+  local index optionDashes option optionAliases optionVariants optionVariant
+  local optionValueType optionType optionLabel descriptionLine descriptionLines
+  local IFS=$'\n'
+  local padding=4
+
+  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+    # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
+    optionAliases=${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
+    optionAliases=(${optionAliases//,/$'\n'})
+    optionVariants=(${option} "${optionAliases[@]}")
+    for ((index = 0; index < ${#optionVariants[@]}; ++index)); do
+      optionVariant=${optionVariants[${index}]}
+      optionDashes=${optionVariant:0:2}
+      optionDashes=${optionDashes//?/-}
+      optionVariants[${index}]=${optionDashes}${optionVariant}
+    done
+    optionVariants=($(LC_ALL=C sort <<<"${optionVariants[*]}"))
+
+    # Build the label starting with variants, then add their value type and store the result.
+    optionLabel=
+    for ((index = 0; index < ${#optionVariants[@]}; ++index)); do
+      if [ ${index} -gt 0 ]; then
+        optionLabel+=', '
+      fi
+      optionLabel+=${optionVariants[${index}]}
+    done
+
+    optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
+    case ${optionType} in
+      single|multi)
+        optionValueType=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}
+        optionValueType=${optionValueType//,/ | }
+        optionLabel+=" ${optionValueType^^}"
+    esac
+    optionLabels[${option}]=${optionLabel}
+    if [ ${#optionLabel} -gt ${maxOptionsWidth} ]; then
+      maxOptionsWidth=${#optionLabel}
+    fi
+  done
+
+  # Finally print the options aligned with their descriptions.
+  if [ ${#optionLabels[@]} -gt 0 ]; then
+    printf "\n%sOptions:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
+    (( maxOptionsWidth += padding ))
+    for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+      printf "%-${maxOptionsWidth}s" "${optionLabels[${option}]}"
+      descriptionLines=(${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]})
+      for ((index = 0; index < ${#descriptionLines[@]}; ++index)); do
+        if [ -z "${descriptionLines[${index}]}" ]; then
+          continue
+        fi
+        if [ ${index} -gt 0 ]; then
+          printf "%${maxOptionsWidth}s" ""
+        fi
+        printf "%s\n" "${descriptionLines[${index}]}"
+      done
+    done
+  fi
+}
+
+-bashcli-help-show-subcommands() {
+  local commandList=("$@")
+  local maxSubcommandLength=0
+  local padding=4
+  local subcommand subcommand commandDir
+
+  bashcli-command-subcommands "${commandList[@]}" || return 1
+
+  if [ ${#REPLY} -gt 0 ]; then
+    printf "\n%sSubcommands:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
+
+    for subcommand in "${REPLY[@]}"; do
+      if [ ${#subcommand} -gt "${maxSubcommandLength}" ]; then
+        maxSubcommandLength=${#subcommand}
+      fi
+    done
+
+    ((maxSubcommandLength += padding))
+    for subcommand in "${REPLY[@]}"; do
+      commandDir=$(bashcli-command-resolve "${commandList[@]}" "${subcommand}")
+      if [ -n "${commandDir}" ]; then
+        bashcli-context-read "${commandDir}"
+      fi
+      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${BASHCLI_CONTEXT_DESCRIPTION%%$'\n'}"
+    done
+  fi
+}

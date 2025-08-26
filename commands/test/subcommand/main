@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+bashcli-log-debug "Test subcommand called with arguments: $*"

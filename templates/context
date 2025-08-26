@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034,SC2054
+
+DESCRIPTION="\
+"
+
+OPTIONS=(
+)
+
+OPTION_DESCRIPTIONS=(
+)
+
+OPTION_ALIASES=(
+)
+
+OPTION_COMPLETIONS=(
+)
+
+CONFIG=(
+)

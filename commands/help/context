@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+DESCRIPTION="\
+Display help for a given command.
+"
+
+OPTIONS=(
+)
+
+OPTION_DESCRIPTIONS=(
+)
+
+OPTION_ALIASES=(
+)
+
+OPTION_COMPLETIONS=(
+  %parameter command
+)
+
+CONFIG=(
+)

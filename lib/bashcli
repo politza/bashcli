@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+bashcli-fatal() {
+  -bashcli-log error "$@"
+  exit 1
+}
+
+bashcli-now() {
+  echo $(($(date +%s%N) / 1000000))
+}
+
+bashcli-init() {
+  bashcli-log-debug BASHCLI_DIR=${BASHCLI_DIR}
+  bashcli-log-debug BASHCLI_CLI_NAME=${BASHCLI_CLI_NAME}
+  bashcli-log-debug BASHCLI_CLI_DIR=${BASHCLI_CLI_DIR}
+  bashcli-command-init
+}
