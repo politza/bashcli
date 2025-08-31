@@ -7,9 +7,13 @@ This command is for testing only.
 "
 
 OPTIONS=(
- boolean-option boolean
- single-option  single
- multi-option   multi
+  enum-option single
+  boolean-option boolean
+  single-option  single
+  multi-option   multi
+  enum-option-first  enum:enum-option
+  enum-option-second enum:enum-option
+  enum-option-third  enum:enum-option
 )
 
 OPTION_DESCRIPTIONS=(

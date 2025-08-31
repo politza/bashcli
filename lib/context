@@ -61,7 +61,12 @@ bashcli-context-validate() {
     optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
     case ${optionType} in
       boolean|single|multi) ;;
-      *) bashcli-fatal "Option-type must be one of boolean, single or multi: ${optionType}" ;;
+      enum:?*)
+        case ${BASHCLI_CONTEXT_OPTIONS[${optionType#enum:}]} in
+          multi|boolean|enum:*)
+            bashcli-fatal "Enum option-value must be a single option: ${optionType:#enum:}" ;;
+        esac ;;
+      *) bashcli-fatal "Option-type must be one of boolean, single, multi or enum:\${name}: ${optionType}" ;;
     esac
     if [ -z "${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}" ]; then
       BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]="No description available."

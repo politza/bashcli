@@ -73,7 +73,7 @@ bashcli-help-show() {
     optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
     case ${optionType} in
       single|multi)
-        optionValueType=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}
+        optionValueType=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]:-OPTION}
         optionValueType=${optionValueType//,/ | }
         optionLabel+=" ${optionValueType^^}"
     esac
@@ -83,7 +83,7 @@ bashcli-help-show() {
     fi
   done
 
-  # Finally print the options aligned with their descriptions.
+  # Now print the options aligned with their descriptions.
   if [ ${#optionLabels[@]} -gt 0 ]; then
     printf "\n%sOptions:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
     (( maxOptionsWidth += padding ))

@@ -56,7 +56,7 @@ bashcli-options-parse-complete() {
 
 -bashcli-options-parse() {
   local _parseMode=$1
-  local _options _option _index _argument
+  local _options _option _optionType _index _argument
   local _multiOptionRefPattern='__%s_ref' _multiOptionRef _multiOptionVar
   local -n _parsedOptions _parsedParameters
   local -A _multiOptionRefs=()
@@ -87,7 +87,7 @@ bashcli-options-parse-complete() {
     esac
   done
 
-  # Parse the commands options
+  # Parse the command's options.
   bashcli-options-parse-raw "${_parseMode}" -- "$@" || return 1
   eval set -- "${REPLY}"
 
@@ -95,7 +95,7 @@ bashcli-options-parse-complete() {
   for _multiOptionVar in "${_multiOptionVars[@]}"; do
     _option=$(-bashcli-options-resolve-multivar "${_multiOptionVar}") || return 1
     _multiOptionVar=${_multiOptionVar%%=*}
-    _multiOptionRef=$(printf "${_multiOptionRefPattern}" "${_multiOptionVar}")
+    printf -v _multiOptionRef "${_multiOptionRefPattern}" "${_multiOptionVar}"
     eval "local -n ${_multiOptionRef}=${_multiOptionVar}" || return 1
     _multiOptionRefs[${_option}]=${_multiOptionRef} 
   done
@@ -116,9 +116,15 @@ bashcli-options-parse-complete() {
           _option=${_option#-}
           bashcli-options-resolve-alias "${_option}" || return 1
           _option=${REPLY}
-          case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
-            single|boolean)
-              _parsedOptions[${_option}]=$2 ;;
+          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
+          case ${_optionType} in
+            single)
+              _parsedOptions[${_option}]=$2
+              shift ;;
+            boolean)
+              _parsedOptions[${_option}]=true ;;
+            enum:?*)
+              _parsedOptions[${_optionType#enum:}]=${_option} ;;
             multi)
               if [ -n "${_parsedOptions[${_option}]}" ]; then
                 _parsedOptions[${_option}]+=$'\n'
@@ -126,10 +132,13 @@ bashcli-options-parse-complete() {
               _parsedOptions[${_option}]+=$2 
               if [ -R "${_multiOptionRefs[${_option}]}" ]; then
                 eval "${_multiOptionRefs[${_option}]}+=(\"$2\")" || return 1
-              fi ;;
+              fi
+              shift ;;
             *)
               bashcli-fatal "Internal error" ;;
           esac ;;
+      *)
+        bashcli-fatal "Internal error: $1" ;;
     esac
     shift
   done
