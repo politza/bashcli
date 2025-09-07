@@ -41,7 +41,7 @@ BASHCLI_LOG_LEVEL=${BASHCLI_LOG_LEVEL:-warning}
       fnName=${fnName#-}
       fnName=${fnName#bashcli-}
     elif [[ ${fnName} == ${BASHCLI_CLI_NAME}-* ]]; then
-      # shellcheck disable=SC2295 
+      # shellcheck disable=SC2295
       fnName=${fnName#${BASHCLI_CLI_NAME}-}
     fi
     context+="${fnName}"

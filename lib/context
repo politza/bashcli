@@ -31,13 +31,13 @@ bashcli-context-read() {
   bashcli-context-clear
 
   if [ -f "${commandContext}" ]; then
-    bashcli-log-debug "Reading context from ${commandContext}"
+    bashcli-log-debug "${commandContext}"
     # shellcheck source=/dev/null
     . "${commandContext}"
     bashcli-context-validate
     bashcli-context-add-defaults
   else
-    bashcli-log-debug "No context found in directory ${commandDir}"
+    bashcli-log-warn "No context in directory: ${commandDir}"
   fi
 }
 
@@ -100,3 +100,4 @@ bashcli-context-validate() {
     fi
   done
 }
+

@@ -6,7 +6,7 @@ declare -A options=()
 declare parameters=()
 declare -a multiOptionOptions=()
 
-bashcli-options-parse-complete options parameters multiOptionOptions -- "$@" || {
+bashcli-options-parse options parameters multiOptionOptions -- "$@" || {
   bashcli-fatal "Failed to parse options"
 }
 

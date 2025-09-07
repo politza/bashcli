@@ -2,6 +2,26 @@
 
 bashcli-log-debug "Main called with arguments $@"
 
-if [ $# -gt 0 ]; then
-  bashcli-command-exec "$@"
+declare -A options=()
+declare parameters=()
+
+bashcli-options-parse options parameters -- "$@" || {
+  bashcli-fatal "Failed to parse options"
+}
+
+bashcli-log-debug "Options successfully parsed"
+
+declare -p options
+declare -p parameters
+
+case ${options[log-level]} in
+  debug|warning|info|error)
+    # shellcheck disable=SC2034
+    BASHCLI_LOG_LEVEL=${options[log-level]} ;;
+  ?*)
+     bashcli-fatal "Invalid log-level: ${options[log-level]}" ;;
+esac
+
+if [ ${#parameters[@]} -gt 0 ]; then
+  bashcli-command-exec "${parameters[@]}"
 fi

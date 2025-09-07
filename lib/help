@@ -12,7 +12,8 @@ bashcli-help-show() {
   local commandDir
 
   bashcli-log-debug "Showing help for ${commandList[*]}"
-  commandDir=$(bashcli-command-resolve "${commandList[@]}") || return 1
+  bashcli-command-resolve "${commandList[@]}" || return 1
+  commandDir=${REPLY}
   bashcli-context-read "${commandDir}"
 
   -bashcli-help-show-intro "${BASHCLI_CLI_NAME}" "${commandList[@]}"
@@ -35,7 +36,7 @@ bashcli-help-show() {
   fi
 
   printf "%sUsage:%s\n%s%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
-         "${commandList[*]}" "${optionsInfo}" "${parameterInfo}" 
+         "${commandList[*]}" "${optionsInfo}" "${parameterInfo}"
   if [ -n "${description}" ]; then
     printf "\n%s\n" "${description%%$'\n'}"
   fi
@@ -124,7 +125,8 @@ bashcli-help-show() {
 
     ((maxSubcommandLength += padding))
     for subcommand in "${REPLY[@]}"; do
-      commandDir=$(bashcli-command-resolve "${commandList[@]}" "${subcommand}")
+      bashcli-command-resolve "${commandList[@]}" "${subcommand}"
+      commandDir=${REPLY}
       if [ -n "${commandDir}" ]; then
         bashcli-context-read "${commandDir}"
       fi

@@ -1,32 +1,21 @@
 #!/usr/bin/env bash
 
 DESCRIPTION="\
-This command is for testing only.
+This is the main command.
 "
 
 OPTIONS=(
-  boolean-option   boolean
-  single-option single
-  multi-option  multi
+  log-level single
 )
 
 OPTION_DESCRIPTIONS=(
-  boolean-option   "An option without an argument."
-  single-option "An option with an argument that is supposed to be used only once.
-This is a multi line description of an option."
-  multi-option  "An option with an argument that may be used multiple times."
+  log-level   "Sets the log level of the command invocation."
 )
 
 OPTION_ALIASES=(
-  boolean-option   f,F
-  single-option s,S
-  multi-option  m,M
 )
 
 OPTION_COMPLETIONS=(
-  single-option file
-  multi-option  directory,service
-  %parameter file
 )
 
 CONFIG=(

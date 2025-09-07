@@ -1,69 +1,16 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2215,SC2165,SC2167,SC2004,SC2059
-
-bashcli-options-parse-raw() {
-  local IFS=' '
-  local commandName="${BASHCLI_COMMAND_STACK[*]}"
-  local option options commandDir
-  local getoptMode getoptSuffix getoptShort getoptLong 
-
-  options=$(getopt -o '' --long partial,complete -n "${FUNC_NAME}" -- "$@") || return 1
-
-  eval set -- "${options}"
-
-  while true; do
-    case $1 in
-      --partial) getoptMode=+ ;;
-      --complete) getoptMode= ;;
-      --) shift
-          break ;;
-    esac
-    shift
-  done
-
-  commandDir=$(bashcli-command-resolve "${BASHCLI_COMMAND_STACK[@]:1}") || return 1
-  bashcli-context-read "${commandDir}"
-
-  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
-    case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
-      single|multi) getoptSuffix=: ;;
-      *) getoptSuffix=
-    esac
-    IFS=,
-    for option in "${option}" ${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}; do
-      if [ ${#option} -eq 1 ]; then
-        getoptShort+="${option}${getoptSuffix}"
-      else
-        if [ -n "${getoptLong}" ]; then
-          getoptLong+=,
-        fi
-        getoptLong+="${option}${getoptSuffix}"
-      fi
-    done
-  done
-
-  REPLY="$(getopt -o "${getoptMode}${getoptShort}" --long "${getoptLong}" -n "${commandName}" -- "$@")"
-}
-
-bashcli-options-parse-partial() {
-  -bashcli-options-parse --partial "$@"
-}
-
-bashcli-options-parse-complete() {
-  -bashcli-options-parse --complete "$@"
-}
-
--bashcli-options-parse() {
-  local _parseMode=$1
-  local _options _option _optionType _index _argument
+bashcli-options-parse() {
+  local _options _option _optionType _index _argument _arguments
   local _multiOptionRefPattern='__%s_ref' _multiOptionRef _multiOptionVar
   local -n _parsedOptions _parsedParameters
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
-  shift
+  local _commandDir _commandStack=("${BASHCLI_COMMAND_STACK[@]:1}")
+  local -A _subcommandOptions=()
 
-  # Parse this functions arguments: OPTIONS PARAMETERS [ MULTI-OPTION ... ]
+  # Parse this functions arguments: OPTIONS-MAP PARAMETERS-ARRAY [ MULTI-OPTION-MAP ... ] -- ARGUMENTS
   for ((_index = 1; _index <= $# + 1; ++_index)); do
     if [ ${_index} -eq $(($# + 1)) ]; then
       bashcli-log-error "Option separator (--) missing"
@@ -87,62 +34,138 @@ bashcli-options-parse-complete() {
     esac
   done
 
-  # Parse the command's options.
-  bashcli-options-parse-raw "${_parseMode}" -- "$@" || return 1
-  eval set -- "${REPLY}"
+  # Read command's context.
+  if bashcli-command-resolve "${_commandStack[@]}"; then
+    _commandDir=${REPLY}
+    bashcli-context-read "${_commandDir}"
+  fi
 
-  # With the command's context now set up, initialize the multi-option namerefs.
+  # Initialize the multi-option namerefs.
   for _multiOptionVar in "${_multiOptionVars[@]}"; do
     _option=$(-bashcli-options-resolve-multivar "${_multiOptionVar}") || return 1
     _multiOptionVar=${_multiOptionVar%%=*}
     printf -v _multiOptionRef "${_multiOptionRefPattern}" "${_multiOptionVar}"
     eval "local -n ${_multiOptionRef}=${_multiOptionVar}" || return 1
-    _multiOptionRefs[${_option}]=${_multiOptionRef} 
+    _multiOptionRefs[${_option}]=${_multiOptionRef}
   done
 
-  # Fill the provided variables with the command's options.
-  while true; do
+  # Parse the options into the provided variables.
+  while [ $# -gt 0 ]; do
     case $1 in
       --help)
         bashcli-help-show "${BASHCLI_COMMAND_STACK[@]:1}"
         exit 0 ;;
-      --)
+      -[^-]?*)
+        # Split multiple concatenated options.
+        _arguments=()
+        for ((_index = 1; _index < ${#1}; ++_index)); do
+          _option=${1:_index:1}
+          if bashcli-options-resolve-alias "${_option}"; then
+            _option=${REPLY}
+          fi
+          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
+          if [ -z "${_optionType}" ]; then
+            _optionType=${_subcommandOptions[${_option}]}
+          fi
+          if [ -z "${_optionType}" ]; then
+            printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: unrecognized option: -${_option}" >&2
+            exit 1
+          fi
+          _arguments+=("-${_option}")
+          case ${_optionType} in
+            single|multi)
+              _arguments+=("${1:_index + 1}")
+              break ;;
+          esac
+        done
         shift
-        if [ -R _parsedParameters ]; then
-          _parsedParameters=("$@")
-        fi
-        break ;;
+        set -- "${_arguments[@]}" "$@"
+        continue
+        ;;
       -*) _option=${1#-}
           _option=${_option#-}
-          bashcli-options-resolve-alias "${_option}" || return 1
-          _option=${REPLY}
-          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
-          case ${_optionType} in
-            single)
-              _parsedOptions[${_option}]=$2
-              shift ;;
-            boolean)
-              _parsedOptions[${_option}]=true ;;
-            enum:?*)
-              _parsedOptions[${_optionType#enum:}]=${_option} ;;
-            multi)
-              if [ -n "${_parsedOptions[${_option}]}" ]; then
-                _parsedOptions[${_option}]+=$'\n'
-              fi
-              _parsedOptions[${_option}]+=$2 
-              if [ -R "${_multiOptionRefs[${_option}]}" ]; then
-                eval "${_multiOptionRefs[${_option}]}+=(\"$2\")" || return 1
-              fi
-              shift ;;
-            *)
-              bashcli-fatal "Internal error" ;;
-          esac ;;
+          if bashcli-options-resolve-alias "${_option}"; then
+            _option=${REPLY}
+          fi
+          if [ -n "${BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
+            _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
+            case ${_optionType} in
+              single|multi)
+                if [ $# -lt 2 ]; then
+                  printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option requires an argument: $1" >&2
+                  exit 1
+                fi ;;
+            esac
+            case ${_optionType} in
+              single)
+                _parsedOptions[${_option}]=$2
+                shift ;;
+              multi)
+                if [ -n "${_parsedOptions[${_option}]}" ]; then
+                  _parsedOptions[${_option}]+=$'\n'
+                fi
+                _parsedOptions[${_option}]+=$2
+                if [ -R "${_multiOptionRefs[${_option}]}" ]; then
+                  eval "${_multiOptionRefs[${_option}]}+=(\"$2\")" || return 1
+                fi
+                shift ;;
+              boolean)
+                _parsedOptions[${_option}]='set' ;;
+              enum:?*)
+                _parsedOptions[${_optionType#enum:}]=${_option} ;;
+              *)
+                bashcli-fatal "Internal error" ;;
+            esac
+          elif [ -n "${_subcommandOptions[${_option}]}" ]; then
+            case ${_subcommandOptions[${_option}]} in
+              single|multi)
+                if [ $# -gt 1 ]; then
+                  _parsedParameters+=("$1")
+                  shift
+                fi ;;
+            esac
+            _parsedParameters+=("$1")
+          else
+            printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: unrecognized option: $1" >&2
+            exit 1
+          fi ;;
       *)
-        bashcli-fatal "Internal error: $1" ;;
+        if bashcli-command-resolve "${_commandStack[@]}" "$1" 2>/dev/null; then
+          _commandDir=${REPLY}
+          _commandStack+=("$1")
+          -bashcli-options-merge-subcommand-options "${_commandDir}" _subcommandOptions
+        fi
+        _parsedParameters+=("$1")
     esac
     shift
   done
-  return 0
+}
+
+
+# shellcheck disable=SC2034
+-bashcli-options-merge-subcommand-options() {
+  local DESCRIPTION
+  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
+  local _commandDir=$1
+  local -n _options=$2
+  local _option _alias
+  local _commandContext=${_commandDir}/context
+  local IFS=,
+ 
+  if [ -f "${_commandContext}" ]; then
+    # shellcheck source=/dev/null
+    . "${_commandContext}" || return 1
+    for _option in "${!OPTIONS[@]}"; do
+      if [ -z "${_options[${_option}]}" ]; then
+        _options[${_option}]=${OPTIONS[${_option}]}
+        for _alias in ${OPTION_ALIASES[${_option}]}; do
+          _options[${_alias}]=${OPTIONS[${_option}]}
+        done
+      fi
+    done
+    return 0
+  fi
+  return 1
 }
 
 -bashcli-options-resolve-multivar() {
@@ -170,12 +193,12 @@ bashcli-options-parse-complete() {
 
   case ${optionType} in
     multi)
-      bashcli-log-debug "$1 => ${option}"
+      bashcli-log-debug "$1 -> ${option}"
       printf "%s" "${option}" ;;
     *)
       if [ -n "${optionType}" ]; then
         bashcli-log-error "Matched variable $1 with non-multi option ${option}"
-      else        
+      else       
         bashcli-log-error "Failed to match variable $1 with any options"
       fi
       return 1 ;;
@@ -186,26 +209,20 @@ bashcli-options-resolve-alias() {
   local input=$1 alias option IFS=,
 
   REPLY=''
-  if [ -n "${BASHCLI_CONTEXT_OPTIONS[${input}]}" ]; then
-    REPLY=${input}
-  else
-    for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
-      for alias in ${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}; do
-        if [ "${alias}" == "${input}" ] ;then
-          REPLY=${option}
-          break
-        fi
-      done
-      if [ -n "${REPLY}" ]; then
+  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+    for alias in ${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}; do
+      if [ "${alias}" == "${input}" ] ;then
+        REPLY=${option}
         break
       fi
     done
-  fi
+    if [ -n "${REPLY}" ]; then
+      break
+    fi
+  done
 
   if [ -n "${REPLY}" ]; then
-    bashcli-log-debug "${input} => ${REPLY}"
-  else
-    bashcli-log-debug "Failed to resolve alias ${input} as an option"
+    bashcli-log-debug "${input} -> ${REPLY}"
   fi
   [ -n "${REPLY}" ]
 }

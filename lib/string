@@ -4,7 +4,7 @@ bashcli-string-kebab-to-camel() {
   local input=$1
   local words output
   local IFS=' '
-  
+ 
   mapfile -d- -t words <<< "${input}"
 
   output=${words[*]^}
