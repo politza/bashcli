@@ -5,6 +5,7 @@ declare -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
   regular $'\033[0m'
 )
+declare BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 
 # shellcheck disable=2215
 bashcli-help-show() {
@@ -38,18 +39,17 @@ bashcli-help-show() {
   printf "%sUsage:%s\n%s%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
          "${commandList[*]}" "${optionsInfo}" "${parameterInfo}"
   if [ -n "${description}" ]; then
-    printf "\n%s\n" "${description%%$'\n'}"
+    echo
+    fmt --width "${BASHCLI_HELP_WIDTH}" <<<"${description%%$'\n'}"
   fi
 }
 
 # shellcheck disable=SC2206,SC2207,SC2004
 -bashcli-help-show-options() {
-  local maxOptionsWidth=0
   local -A optionLabels=()
   local index optionDashes option optionAliases optionVariants optionVariant
-  local optionValueType optionType optionLabel descriptionLines
+  local optionValueType optionType optionLabel description
   local IFS=$'\n'
-  local padding=4
 
   for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
     # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
@@ -81,27 +81,16 @@ bashcli-help-show() {
         optionLabel+=" ${optionValueType^^}"
     esac
     optionLabels[${option}]=${optionLabel}
-    if [ ${#optionLabel} -gt "${maxOptionsWidth}" ]; then
-      maxOptionsWidth=${#optionLabel}
-    fi
   done
 
   # Now print the options aligned with their descriptions.
   if [ ${#optionLabels[@]} -gt 0 ]; then
     printf "\n%sOptions:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
-    (( maxOptionsWidth += padding ))
     for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
-      printf "%-${maxOptionsWidth}s" "${optionLabels[${option}]}"
-      descriptionLines=(${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]})
-      for ((index = 0; index < ${#descriptionLines[@]}; ++index)); do
-        if [ -z "${descriptionLines[${index}]}" ]; then
-          continue
-        fi
-        if [ ${index} -gt 0 ]; then
-          printf "%${maxOptionsWidth}s" ""
-        fi
-        printf "%s\n" "${descriptionLines[${index}]}"
-      done
+      printf "%s\n" "${optionLabels[${option}]}"
+      description=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
+      fmt --width "$((${BASHCLI_HELP_WIDTH} - 2))"  <<< "${description%$'\n'}" | pr --indent 2 --omit-pagination
+      echo
     done
   fi
 }
