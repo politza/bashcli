@@ -7,7 +7,7 @@ bashcli-options-parse() {
   local -n _parsedOptions _parsedParameters
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
-  local _commandDir _commandStack=("${BASHCLI_COMMAND_STACK[@]:1}")
+  local _commandDir _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
   local -A _subcommandOptions=()
 
   # Parse this functions arguments: OPTIONS-MAP PARAMETERS-ARRAY [ MULTI-OPTION-MAP ... ] -- ARGUMENTS
@@ -53,7 +53,7 @@ bashcli-options-parse() {
   while [ $# -gt 0 ]; do
     case $1 in
       --help)
-        bashcli-help-show "${BASHCLI_COMMAND_STACK[@]:1}"
+        bashcli-help-show "${_commandStack[@]}"
         exit 0 ;;
       -[^-]?*)
         # Split multiple concatenated options.
@@ -68,7 +68,7 @@ bashcli-options-parse() {
             _optionType=${_subcommandOptions[${_option}]}
           fi
           if [ -z "${_optionType}" ]; then
-            printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: unrecognized option: -${_option}" >&2
+            printf "%s\n" "${_commandStack[*]}: unrecognized option: -${_option}" >&2
             exit 1
           fi
           _arguments+=("-${_option}")
@@ -110,62 +110,35 @@ bashcli-options-parse() {
                 fi
                 shift ;;
               boolean)
-                _parsedOptions[${_option}]='set' ;;
+                _parsedOptions[${_option}]=true ;;
               enum:?*)
                 _parsedOptions[${_optionType#enum:}]=${_option} ;;
               *)
                 bashcli-fatal "Internal error" ;;
             esac
           elif [ -n "${_subcommandOptions[${_option}]}" ]; then
+            _parsedParameters+=("$1")
             case ${_subcommandOptions[${_option}]} in
               single|multi)
                 if [ $# -gt 1 ]; then
-                  _parsedParameters+=("$1")
                   shift
+                  _parsedParameters+=("$1")
                 fi ;;
             esac
-            _parsedParameters+=("$1")
           else
-            printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: unrecognized option: $1" >&2
+            printf "%s\n" "${_commandStack[*]}: unrecognized option: $1" >&2
             exit 1
           fi ;;
       *)
         if bashcli-command-resolve "${_commandStack[@]}" "$1" 2>/dev/null; then
           _commandDir=${REPLY}
           _commandStack+=("$1")
-          -bashcli-options-merge-subcommand-options "${_commandDir}" _subcommandOptions
+          bashcli-context-merge-options "${_commandDir}" _subcommandOptions
         fi
         _parsedParameters+=("$1")
     esac
     shift
   done
-}
-
-
-# shellcheck disable=SC2034
--bashcli-options-merge-subcommand-options() {
-  local DESCRIPTION
-  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
-  local _commandDir=$1
-  local -n _options=$2
-  local _option _alias
-  local _commandContext=${_commandDir}/context
-  local IFS=,
- 
-  if [ -f "${_commandContext}" ]; then
-    # shellcheck source=/dev/null
-    . "${_commandContext}" || return 1
-    for _option in "${!OPTIONS[@]}"; do
-      if [ -z "${_options[${_option}]}" ]; then
-        _options[${_option}]=${OPTIONS[${_option}]}
-        for _alias in ${OPTION_ALIASES[${_option}]}; do
-          _options[${_alias}]=${OPTIONS[${_option}]}
-        done
-      fi
-    done
-    return 0
-  fi
-  return 1
 }
 
 -bashcli-options-resolve-multivar() {

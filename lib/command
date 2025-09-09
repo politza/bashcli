@@ -13,7 +13,7 @@ fi
 bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
-  local commandPath="${commandList[*]}"
+  local commandPath="${commandList[*]:1}"
   local commandDir directory
   unset IFS
   REPLY=
@@ -22,7 +22,7 @@ bashcli-command-resolve() {
     commandDir=$(realpath -sm "${directory}/${commandPath}")
     if [ -f "${commandDir}"/main ]; then
       unset IFS
-      bashcli-log-debug "${BASHCLI_CLI_NAME}${commandList:+ }${commandList[*]} -> ${commandDir}"
+      bashcli-log-debug "${commandList[*]} -> ${commandDir}"
       REPLY="${commandDir}"
       return 0
     fi
@@ -34,7 +34,7 @@ bashcli-command-resolve() {
 
 bashcli-command-exec() {
   local command commandDir
-  local commandList=("${BASHCLI_COMMAND_STACK[@]:1}")
+  local commandList=("${BASHCLI_COMMAND_STACK[@]}")
 
   if [ ${#BASHCLI_COMMAND_STACK[@]} -eq 0 ]; then
     command=${BASHCLI_CLI_NAME}
@@ -49,7 +49,7 @@ bashcli-command-exec() {
     return 1
   fi
 
-  bashcli-log-debug "${BASHCLI_CLI_NAME} ${commandList[*]}"
+  bashcli-log-debug "${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
   commandDir=$REPLY
 
@@ -61,7 +61,7 @@ bashcli-command-exec() {
 bashcli-command-subcommands() {
   local commandList=("$@")
   local IFS=/
-  local commandPath="${commandList[*]}"
+  local commandPath="${commandList[*]:1}"
   local directory command commandDir
   local -A subcommands=()
 

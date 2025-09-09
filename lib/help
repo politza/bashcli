@@ -16,7 +16,7 @@ bashcli-help-show() {
   commandDir=${REPLY}
   bashcli-context-read "${commandDir}"
 
-  -bashcli-help-show-intro "${BASHCLI_CLI_NAME}" "${commandList[@]}"
+  -bashcli-help-show-intro "${commandList[@]}"
   -bashcli-help-show-options
   -bashcli-help-show-subcommands "${commandList[@]}"
 }

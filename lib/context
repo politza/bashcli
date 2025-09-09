@@ -37,7 +37,7 @@ bashcli-context-read() {
     bashcli-context-validate
     bashcli-context-add-defaults
   else
-    bashcli-log-warn "No context in directory: ${commandDir}"
+    bashcli-log-warning "No context in directory: ${commandDir}"
   fi
 }
 
@@ -101,3 +101,28 @@ bashcli-context-validate() {
   done
 }
 
+# shellcheck disable=SC2034,SC2004
+bashcli-context-merge-options() {
+  local DESCRIPTION
+  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
+  local _commandDir=$1
+  local -n _options=$2
+  local _option _alias
+  local _commandContext=${_commandDir}/context
+  local IFS=,
+
+  if [ -f "${_commandContext}" ]; then
+    # shellcheck source=/dev/null
+    . "${_commandContext}" || return 1
+    for _option in "${!OPTIONS[@]}"; do
+      if [ -z "${_options[${_option}]}" ]; then
+        _options[${_option}]=${OPTIONS[${_option}]}
+        for _alias in ${OPTION_ALIASES[${_option}]}; do
+          _options[${_alias}]=${OPTIONS[${_option}]}
+        done
+      fi
+    done
+    return 0
+  fi
+  return 1
+}
