@@ -55,18 +55,30 @@ bashcli-options-parse() {
       --help)
         bashcli-help-show "${_commandStack[@]}"
         exit 0 ;;
+      --*=*)
+        # Split long options with a value: --option=value .
+        _arguments=("${1%%=*}" "${1#*=}")
+        _option=${_arguments[0]#--}
+        if bashcli-options-resolve-alias "${_option}"; then
+          _option=${REPLY}
+        fi
+        case ${_subcommandOptions[${_option}]:-${BASHCLI_CONTEXT_OPTIONS[${_option}]}} in
+          single|multi) ;;
+          *) printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option does not accept arguments: ${_arguments[0]}" >&2
+             exit 1;;
+        esac
+        shift
+        set --  "${_arguments[@]}" "$@"
+        continue ;;
       -[^-]?*)
-        # Split multiple concatenated options.
+        # Split multiple concatenated short options with a possible value: -abcVALUE .
         _arguments=()
         for ((_index = 1; _index < ${#1}; ++_index)); do
           _option=${1:_index:1}
           if bashcli-options-resolve-alias "${_option}"; then
             _option=${REPLY}
           fi
-          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
-          if [ -z "${_optionType}" ]; then
-            _optionType=${_subcommandOptions[${_option}]}
-          fi
+          _optionType=${_subcommandOptions[${_option}]:-${BASHCLI_CONTEXT_OPTIONS[${_option}]}}
           if [ -z "${_optionType}" ]; then
             printf "%s\n" "${_commandStack[*]}: unrecognized option: -${_option}" >&2
             exit 1
@@ -87,7 +99,17 @@ bashcli-options-parse() {
           if bashcli-options-resolve-alias "${_option}"; then
             _option=${REPLY}
           fi
-          if [ -n "${BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
+          if [ -n "${_subcommandOptions[${_option}]}" ]; then
+            # Let subcommand options shadow their parent command's options.
+            _parsedParameters+=("$1")
+            case ${_subcommandOptions[${_option}]} in
+              single|multi)
+                if [ $# -gt 1 ]; then
+                  shift
+                  _parsedParameters+=("$1")
+                fi ;;
+            esac
+          elif [ -n "${BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
             _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
             case ${_optionType} in
               single|multi)
@@ -116,20 +138,12 @@ bashcli-options-parse() {
               *)
                 bashcli-fatal "Internal error" ;;
             esac
-          elif [ -n "${_subcommandOptions[${_option}]}" ]; then
-            _parsedParameters+=("$1")
-            case ${_subcommandOptions[${_option}]} in
-              single|multi)
-                if [ $# -gt 1 ]; then
-                  shift
-                  _parsedParameters+=("$1")
-                fi ;;
-            esac
           else
             printf "%s\n" "${_commandStack[*]}: unrecognized option: $1" >&2
             exit 1
           fi ;;
       *)
+        # Assume the non-option argument is a possible subcommand.
         if bashcli-command-resolve "${_commandStack[@]}" "$1" 2>/dev/null; then
           _commandDir=${REPLY}
           _commandStack+=("$1")

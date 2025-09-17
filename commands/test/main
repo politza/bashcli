@@ -15,3 +15,7 @@ bashcli-log-debug "Options successfully parsed"
 declare -p options
 declare -p parameters
 declare -p multiOptionOptions
+
+if [ ${#parameters} -gt 0 ]; then
+  bashcli-command-exec "${parameters[@]}"
+fi
