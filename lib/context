@@ -29,8 +29,7 @@ bashcli-context-read() {
   local -A OPTION_ALIASES=()
   local -A OPTION_COMPLETIONS=()
   local -A CONFIG=()
-  # shellcheck disable=SC2155
-  local commandDir=$(realpath "$1")
+  local commandDir=$1
   local commandContext=${commandDir}/context
 
   if [ -z "${BASHCLI_CONTEXT_READ[${commandDir}]}" ]; then

@@ -11,19 +11,18 @@ bashcli-string-kebab-to-camel() {
   output=${output// /}
   output=${output,}
 
-  printf "%s" "${output}"
+  REPLY="${output}"
 }
 
 bashcli-string-kebab-to-snake() {
-  printf "%s" "${1//-/_}"
+  REPLY="${1//-/_}"
 }
 
 bashcli-string-camel-to-kebab() {
   local output=${1//[[:upper:]]/-&}
-  output=${output,,}
-  printf "%s" "${output}"
+  REPLY=${output,,}
 }
 
 bashcli-string-snake-to-kebab() {
-  printf "%s" "${1//_/-}"
+  REPLY="${1//_/-}"
 }

@@ -42,7 +42,8 @@ bashcli-options-parse() {
 
   # Initialize the multi-option namerefs.
   for _multiOptionVar in "${_multiOptionVars[@]}"; do
-    _option=$(-bashcli-options-resolve-multivar "${_multiOptionVar}") || return 1
+    -bashcli-options-resolve-multivar "${_multiOptionVar}" || return 1
+    _option=${REPLY}
     _multiOptionVar=${_multiOptionVar%%=*}
     printf -v _multiOptionRef "${_multiOptionRefPattern}" "${_multiOptionVar}"
     eval "local -n ${_multiOptionRef}=${_multiOptionVar}" || return 1
@@ -166,9 +167,11 @@ bashcli-options-parse() {
     for step in 1 2 3 4 5; do
       case ${step} in
         1)   option=$1 ;;
-        2)   option=$(bashcli-string-camel-to-kebab "$1") ;;
+        2)   bashcli-string-camel-to-kebab "$1"
+             option=$REPLY ;;
         3|5) option=${option%-options} ;;
-        4)   option=$(bashcli-string-snake-to-kebab "$1") ;;
+        4)   bashcli-string-snake-to-kebab "$1"
+             option=$REPLY ;;
       esac
       if [[ -n "${option}" ]]; then
         optionType="${BASHCLI_CONTEXT_OPTIONS[${option}]}"
@@ -179,14 +182,15 @@ bashcli-options-parse() {
     done
   fi
 
+  REPLY=
   case ${optionType} in
     multi)
       bashcli-log-debug "$1 -> ${option}"
-      printf "%s" "${option}" ;;
+      REPLY="${option}" ;;
     *)
       if [ -n "${optionType}" ]; then
         bashcli-log-error "Matched variable $1 with non-multi option ${option}"
-      else       
+      else
         bashcli-log-error "Failed to match variable $1 with any options"
       fi
       return 1 ;;
@@ -195,7 +199,7 @@ bashcli-options-parse() {
 
 bashcli-option-aliases() {
   local option=$1 alias aliasedOption
-  
+
   REPLY=()
   for alias in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
     aliasedOption=${BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}

@@ -19,7 +19,7 @@ bashcli-command-resolve() {
   REPLY=
   
   for directory in "${BASHCLI_COMMAND_DIRS[@]}"; do
-    commandDir=$(realpath -sm "${directory}/${commandPath}")
+    commandDir=${directory}/${commandPath}
     if [ -f "${commandDir}"/main ]; then
       unset IFS
       bashcli-log-debug "${commandList[*]} -> ${commandDir}"
@@ -67,7 +67,7 @@ bashcli-command-subcommands() {
 
   REPLY=()
   for directory in "${BASHCLI_COMMAND_DIRS[@]}"; do
-    commandDir=$(realpath -ms "${directory}/${commandPath}")
+    commandDir=${directory}/${commandPath}
     if [ -d "${commandDir}" ]; then
       for command in "${commandDir}"/*; do
         if [ -f "${command}"/main ]; then
