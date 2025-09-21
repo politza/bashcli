@@ -1,154 +1,128 @@
 #!/usr/bin/env bash
 
-declare    BASHCLI_CONTEXT_DESCRIPTION=''
+# shellcheck disable=SC2034
+
+declare -A BASHCLI_CONTEXT_DESCRIPTIONS=()
 declare -A BASHCLI_CONTEXT_OPTIONS=()
 declare -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
 declare -A BASHCLI_CONTEXT_OPTION_ALIASES=()
 declare -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
 declare -A BASHCLI_CONTEXT_CONFIG=()
+declare -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
+declare -A BASHCLI_CONTEXT_READ=()
 
 bashcli-context-clear() {
-  BASHCLI_CONTEXT_DESCRIPTION=''
+  BASHCLI_CONTEXT_DESCRIPTIONS=()
   BASHCLI_CONTEXT_OPTIONS=()
   BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
   BASHCLI_CONTEXT_OPTION_ALIASES=()
   BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
   BASHCLI_CONTEXT_CONFIG=()
+  BASHCLI_CONTEXT_OPTIONS_SOURCE=()
+  BASHCLI_CONTEXT_READ=()
 }
 
-# shellcheck disable=2034
 bashcli-context-read() {
-  local -n DESCRIPTION=BASHCLI_CONTEXT_DESCRIPTION
-  local -n OPTIONS=BASHCLI_CONTEXT_OPTIONS
-  local -n OPTION_DESCRIPTIONS=BASHCLI_CONTEXT_OPTION_DESCRIPTIONS
-  local -n OPTION_ALIASES=BASHCLI_CONTEXT_OPTION_ALIASES
-  local -n OPTION_COMPLETIONS=BASHCLI_CONTEXT_OPTION_COMPLETIONS
-  local -n CONFIG=BASHCLI_CONTEXT_CONFIG
-
-  local commandDir=$1
+  local DESCRIPTION=
+  local -A OPTIONS=()
+  local -A OPTION_DESCRIPTIONS=()
+  local -A OPTION_ALIASES=()
+  local -A OPTION_COMPLETIONS=()
+  local -A CONFIG=()
+  # shellcheck disable=SC2155
+  local commandDir=$(realpath "$1")
   local commandContext=${commandDir}/context
 
-  bashcli-context-clear
-
-  if [ -f "${commandContext}" ]; then
-    bashcli-log-debug "${commandContext}"
-    # shellcheck source=/dev/null
-    . "${commandContext}"
-    bashcli-context-validate
-    bashcli-context-add-defaults
-  else
-    bashcli-log-warning "No context in directory: ${commandDir}"
+  if [ -z "${BASHCLI_CONTEXT_READ[${commandDir}]}" ]; then
+    if [ -f "${commandContext}" ]; then
+      bashcli-log-debug "Reading from ${commandContext}"
+      # shellcheck source=/dev/null
+      . "${commandContext}"
+      bashcli-context-validate
+      bashcli-context-defaults
+      bashcli-context-merge "${commandDir}"
+      BASHCLI_CONTEXT_READ[${commandDir}]=true
+    else
+      bashcli-log-warning "No context in directory: ${commandDir}"
+    fi
   fi
 }
 
-bashcli-context-add-defaults() {
-  if [ -z "${BASHCLI_CONTEXT_OPTIONS[help]}" ]; then
-    BASHCLI_CONTEXT_OPTIONS[help]=boolean
-    BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[help]="Shows this message."
+bashcli-context-merge() {
+  local alias option commandDir=$1
+  for option in "${!OPTIONS[@]}"; do
+    BASHCLI_CONTEXT_DESCRIPTIONS["${commandDir}"]=${DESCRIPTION}
+    BASHCLI_CONTEXT_OPTIONS[${option}]=${OPTIONS[${option}]}
+    BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]=${OPTION_DESCRIPTIONS[${option}]}
+    BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]=${OPTION_COMPLETIONS[${option}]}
+    BASHCLI_CONTEXT_OPTIONS_SOURCE[${option}]=${commandDir}
+  done
+
+  for alias in "${!OPTION_ALIASES[@]}"; do
+    BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]=${OPTION_ALIASES[${alias}]}
+  done
+}
+
+bashcli-context-defaults() {
+  if [ -z "${OPTIONS[help]}" ]; then
+    OPTIONS[help]=boolean
+    OPTION_DESCRIPTIONS[help]="Shows a help message."
   fi
 }
 
 bashcli-context-validate() {
   local option optionType alias IFS
-  if [ -z "${BASHCLI_CONTEXT_DESCRIPTION}" ]; then
-    BASHCLI_CONTEXT_DESCRIPTION="No description available."
+  if [ -z "${DESCRIPTIONS}" ]; then
+    DESCRIPTIONS="No description available."
   fi
 
-  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+  for option in "${!OPTIONS[@]}"; do
     if [[ ${option} == -* ]]; then
       bashcli-fatal "Option name must not start with a dash: ${option}"
     fi
-    optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
+    optionType=${OPTIONS[${option}]}
     case ${optionType} in
       boolean|single|multi) ;;
       enum:?*)
-        case ${BASHCLI_CONTEXT_OPTIONS[${optionType#enum:}]} in
+        case ${OPTIONS[${optionType#enum:}]} in
           multi|boolean|enum:*)
             bashcli-fatal "Enum option-value must be a single option: ${optionType:#enum:}" ;;
         esac ;;
       *) bashcli-fatal "Option-type must be one of boolean, single, multi or enum:\${name}: ${optionType}" ;;
     esac
-    if [ -z "${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}" ]; then
-      BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]="No description available."
+    if [ -z "${OPTION_DESCRIPTIONS[${option}]}" ]; then
+      OPTION_DESCRIPTIONS[${option}]="No description available."
     fi
   done
 
-  for option in "${!BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[@]}"; do
-    if [ -z "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
+  for option in "${!OPTION_DESCRIPTIONS[@]}"; do
+    if [ -z "${OPTIONS[${option}]}" ]; then
       bashcli-log-warning "Description for non-existing option provided: ${option}"
+      unset "OPTION_DESCRIPTIONS[${option}]"
     fi
   done
 
-  for option in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
-    if [ -z "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
-      bashcli-log-warning "Alias for non-existing option provided: ${option}"
+  for alias in "${!OPTION_ALIASES[@]}"; do
+    option=${OPTION_ALIASES[${alias}]}
+    if [ -z "${OPTIONS[${option}]}" ]; then
+      bashcli-log-warning "Alias for non-existing option provided: ${alias} -> ${option}"
+      unset "OPTION_ALIASES[${option}]"
     fi
-    IFS=,
-    for alias in ${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}; do
-      if [[ ${alias} == -* ]]; then
-        bashcli-fatal "Alias name must not start with a dash: ${alias}"
-      fi
-    done
+  done
+  
+  for alias in "${!OPTION_ALIASES[@]}"; do
+    if [[ ${alias} == -* ]]; then
+      bashcli-fatal "Alias name must not start with a dash: ${alias}"
+    fi
   done
 
-  for option in "${!BASHCLI_CONTEXT_OPTION_COMPLETIONS[@]}"; do
+  for option in "${!OPTION_COMPLETIONS[@]}"; do
     if [ "${option}" == %parameter ]; then
       continue
     fi
-    if [ -z "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
+    if [ -z "${OPTIONS[${option}]}" ]; then
       bashcli-log-warning "Completions for non-existing option provided: ${option}"
+      unset "OPTION_COMPLETIONS[${option}]"
     fi
   done
-}
-
-# shellcheck disable=SC2034,SC2004
-bashcli-context-merge-options() {
-  local DESCRIPTION
-  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
-  local _commandDir=$1
-  local -n _options=$2
-  local _option _alias
-  local _commandContext=${_commandDir}/context
-  local IFS=,
-
-  if [ $# -gt 2 ]; then
-    local -n _completions=$3
-  fi
-  if [ $# -gt 3 ]; then
-    local -n _descriptions=$4
-  fi
-
-  if [ -f "${_commandContext}" ]; then
-    # shellcheck source=/dev/null
-    . "${_commandContext}" || return 1
-    for _option in "${!OPTIONS[@]}"; do
-      _options[${_option}]=${OPTIONS[${_option}]}
-      if [ $# -gt 2 ]; then
-        _completions[${_option}]=${OPTION_COMPLETIONS[${_option}]}
-      fi
-      if [ $# -gt 3 ]; then
-        _descriptions[${_option}]=${OPTION_DESCRIPTIONS[${_option}]:-"No description available."}
-      fi
-      for _alias in ${OPTION_ALIASES[${_option}]}; do
-        _options[${_alias}]=${OPTIONS[${_option}]}
-        if [ $# -gt 2 ]; then
-          _completions[${_alias}]=${OPTION_COMPLETIONS[${_option}]}
-        fi
-        if [ $# -gt 3 ]; then
-          _descriptions[${_alias}]=${OPTION_DESCRIPTIONS[${_option}]:-"No description available."}
-        fi
-      done
-    done
-    if [ $# -gt 2 ]; then
-      _completions[%parameter]=${OPTION_COMPLETIONS[%parameter]}
-    fi
-    if [ -z "${_options[help]}" ]; then
-      _options[help]=boolean
-      if [ $# -gt 3 ]; then
-        _descriptions[help]='Shows a help message'
-      fi
-    fi
-    return 0
-  fi
-  return 1
 }

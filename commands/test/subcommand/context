@@ -25,14 +25,17 @@ OPTION_DESCRIPTIONS=(
 )
 
 OPTION_ALIASES=(
-  xboolean-option x,X
-  xsingle-option  s,S
-  xmulti-option   m,M
+  x xboolean-option
+  X xboolean-option
+  s xsingle-option
+  S xsingle-option
+  m xmulti-option
+  M xmulti-option
 )
 
 OPTION_COMPLETIONS=(
   xsingle-option file
-  xmulti-option  directory,service
+  xmulti-option  file
 )
 
 CONFIG=(

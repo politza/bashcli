@@ -23,9 +23,12 @@ OPTION_DESCRIPTIONS=(
 )
 
 OPTION_ALIASES=(
-  boolean-option b,B
-  single-option  s,S
-  multi-option   m,M
+  b boolean-option
+  B boolean-option
+  s single-option
+  S single-option
+  m multi-option
+  M multi-option
 )
 
 OPTION_COMPLETIONS=(

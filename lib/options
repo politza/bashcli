@@ -7,8 +7,7 @@ bashcli-options-parse() {
   local -n _parsedOptions _parsedParameters
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
-  local _commandDir _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
-  local -A _subcommandOptions=()
+  local _commandDir _subcommandDir _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
 
   # Parse this functions arguments: OPTIONS-MAP PARAMETERS-ARRAY [ MULTI-OPTION-MAP ... ] -- ARGUMENTS
   for ((_index = 1; _index <= $# + 1; ++_index)); do
@@ -35,6 +34,7 @@ bashcli-options-parse() {
   done
 
   # Read command's context.
+  bashcli-context-clear
   if bashcli-command-resolve "${_commandStack[@]}"; then
     _commandDir=${REPLY}
     bashcli-context-read "${_commandDir}"
@@ -59,10 +59,10 @@ bashcli-options-parse() {
         # Split long options with a value: --option=value .
         _arguments=("${1%%=*}" "${1#*=}")
         _option=${_arguments[0]#--}
-        if bashcli-options-resolve-alias "${_option}"; then
-          _option=${REPLY}
+        if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
+          _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
         fi
-        case ${_subcommandOptions[${_option}]:-${BASHCLI_CONTEXT_OPTIONS[${_option}]}} in
+        case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
           single|multi) ;;
           *) printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option does not accept arguments: ${_arguments[0]}" >&2
              exit 1;;
@@ -75,10 +75,10 @@ bashcli-options-parse() {
         _arguments=()
         for ((_index = 1; _index < ${#1}; ++_index)); do
           _option=${1:_index:1}
-          if bashcli-options-resolve-alias "${_option}"; then
-            _option=${REPLY}
+          if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
+            _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
           fi
-          _optionType=${_subcommandOptions[${_option}]:-${BASHCLI_CONTEXT_OPTIONS[${_option}]}}
+          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
           if [ -z "${_optionType}" ]; then
             printf "%s\n" "${_commandStack[*]}: unrecognized option: -${_option}" >&2
             exit 1
@@ -96,13 +96,14 @@ bashcli-options-parse() {
         ;;
       -*) _option=${1#-}
           _option=${_option#-}
-          if bashcli-options-resolve-alias "${_option}"; then
-            _option=${REPLY}
+          if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
+            _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
           fi
-          if [ -n "${_subcommandOptions[${_option}]}" ]; then
+          if [[ "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" &&
+                  "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" != "${_commandDir}" ]]; then
             # Let subcommand options shadow their parent command's options.
             _parsedParameters+=("$1")
-            case ${_subcommandOptions[${_option}]} in
+            case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
               single|multi)
                 if [ $# -gt 1 ]; then
                   shift
@@ -144,10 +145,10 @@ bashcli-options-parse() {
           fi ;;
       *)
         # Assume the non-option argument is a possible subcommand.
-        if bashcli-command-resolve "${_commandStack[@]}" "$1" 2>/dev/null; then
-          _commandDir=${REPLY}
+        if bashcli-command-resolve "${_commandStack[@]}" "$1"; then
+          _subcommandDir=${REPLY}
           _commandStack+=("$1")
-          bashcli-context-merge-options "${_commandDir}" _subcommandOptions
+          bashcli-context-read "${_subcommandDir}"
         fi
         _parsedParameters+=("$1")
     esac
@@ -192,24 +193,14 @@ bashcli-options-parse() {
   esac
 }
 
-bashcli-options-resolve-alias() {
-  local input=$1 alias option IFS=,
-
-  REPLY=''
-  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
-    for alias in ${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}; do
-      if [ "${alias}" == "${input}" ] ;then
-        REPLY=${option}
-        break
-      fi
-    done
-    if [ -n "${REPLY}" ]; then
-      break
+bashcli-option-aliases() {
+  local option=$1 alias aliasedOption
+  
+  REPLY=()
+  for alias in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
+    aliasedOption=${BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}
+    if [ "${option}" == "${aliasedOption}" ]; then
+      REPLY+=("${alias}")
     fi
   done
-
-  if [ -n "${REPLY}" ]; then
-    bashcli-log-debug "${input} -> ${REPLY}"
-  fi
-  [ -n "${REPLY}" ]
 }

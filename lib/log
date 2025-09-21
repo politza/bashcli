@@ -9,7 +9,7 @@ BASHCLI_LOG_LEVEL=${BASHCLI_LOG_LEVEL:-warning}
   local context
   local fnName
   local -A colors=()
-  local minContextWidth=24
+  local minContextWidth=20
 
   shift
 

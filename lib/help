@@ -15,16 +15,19 @@ bashcli-help-show() {
   bashcli-log-debug "Showing help for ${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
   commandDir=${REPLY}
+  bashcli-context-clear
   bashcli-context-read "${commandDir}"
 
-  -bashcli-help-show-intro "${commandList[@]}"
+  -bashcli-help-show-intro "${commandDir}" "${commandList[@]}"
   -bashcli-help-show-options
   -bashcli-help-show-subcommands "${commandList[@]}"
 }
 
 -bashcli-help-show-intro() {
+  local commandDir=$1
+  shift
   local commandList=("$@")
-  local description=${BASHCLI_CONTEXT_DESCRIPTION}
+  local description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandDir}]}
   local optionsInfo parameterInfo parameterTypes
 
   if [ ${#BASHCLI_CONTEXT_OPTIONS[@]} -gt 0 ]; then
@@ -53,8 +56,8 @@ bashcli-help-show() {
 
   for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
     # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
-    optionAliases=${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
-    optionAliases=(${optionAliases//,/$'\n'})
+    bashcli-option-aliases "${option}"
+    optionAliases=("${REPLY[@]}")
     optionVariants=(${option} "${optionAliases[@]}")
     for ((index = 0; index < ${#optionVariants[@]}; ++index)); do
       optionVariant=${optionVariants[${index}]}
@@ -99,7 +102,7 @@ bashcli-help-show() {
   local commandList=("$@")
   local maxSubcommandLength=0
   local padding=4
-  local subcommand subcommand commandDir
+  local subcommand subcommand commandDir description
 
   bashcli-command-subcommands "${commandList[@]}" || return 1
 
@@ -119,7 +122,8 @@ bashcli-help-show() {
       if [ -n "${commandDir}" ]; then
         bashcli-context-read "${commandDir}"
       fi
-      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${BASHCLI_CONTEXT_DESCRIPTION%%$'\n'}"
+      description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandDir}]}
+      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'}"
     done
   fi
 }

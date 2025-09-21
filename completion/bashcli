@@ -5,9 +5,6 @@ _bashcli-completion() {
   local cur prev words cword comp_args
   local directory="$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")"
   local -A BASHCLI_COMPLETIONS=()
-  local -A optionTypes=()
-  local -A completionTypes=()
-  local -A optionDescriptions=()
   local commandStack=()
   local index option word subcommand completion completionFn completionFns
   
@@ -32,14 +29,14 @@ _bashcli-completion() {
       --?*)
         option=${word#--}
         option=${option%%=*}
-        if bashcli-options-resolve-alias "${option}"; then
-          option=${REPLY}
+        if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}" ]; then
+          option=${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
         fi
         if [[ ${index} -lt ${cword} ]]; then
           if [[ ${word} == *=* ]]; then
             option=
           else
-            case ${optionTypes[${option}]} in
+            case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
               single|multi) ((++index)) ;;
               *) option=
             esac
@@ -53,10 +50,10 @@ _bashcli-completion() {
         local optionsIndex
         for ((optionsIndex = 0; optionsIndex < ${#options}; ++optionsIndex)); do
           option="${options:${optionsIndex}:1}"
-          if bashcli-options-resolve-alias "${option}"; then
-            option=${REPLY}
+          if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}" ]; then
+            option=${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
           fi
-          case ${optionTypes[${option}]} in
+          case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
             single|multi)
               if [[ ${optionsIndex} -eq $((${#options} - 1)) ]]; then
                 ((++index))
@@ -71,7 +68,7 @@ _bashcli-completion() {
         if bashcli-command-resolve "${commandStack[@]}" "${word}"; then
           local commandDir=${REPLY}
           commandStack+=("${word}")
-          bashcli-context-merge-options "${commandDir}" optionTypes completionTypes optionDescriptions
+          bashcli-context-read "${commandDir}"
           if [ -f "${commandDir}"/completion ]; then
             # shellcheck source=/dev/null
             . "${commandDir}"/completion
@@ -80,21 +77,21 @@ _bashcli-completion() {
     esac
   done
 
-  if [ "${option}" ] && [ "${completionTypes[${option}]}" ]; then
-    readarray -t completionFns <<<"${completionTypes[${option}]//,/$'\n'}"
-  elif [ -z "${option}" ] && [ "${completionTypes[%parameter]}" ]; then
-    readarray -t completionFns <<<"${completionTypes[%parameter]//,/$'n'}"
+  if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}" ]; then
+    readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]//,/$'\n'}"
+  elif [ -z "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}" ]; then
+    readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]//,/$'n'}"
   elif [ "${option}" ]; then
     completionFns=('file')
   elif [[ "${cur}" == -* ]]; then
-    for option in "${!optionTypes[@]}"; do
+    for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
       if [ ${#option} -gt 1 ]; then
         local suffix
-        case ${optionTypes[${option}]} in
+        case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
           single|multi) suffix='=' ;;
           *)            suffix=' ' ;;
         esac
-        BASHCLI_COMPLETIONS[--${option}${suffix}]=${optionDescriptions[${option}]}
+        BASHCLI_COMPLETIONS[--${option}${suffix}]=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
       fi
     done
   else
@@ -104,7 +101,7 @@ _bashcli-completion() {
         if bashcli-command-resolve "${commandStack[@]}" "${subcommand}"; then
           local commandDir=${REPLY}
           bashcli-context-read "${REPLY}" || continue
-          BASHCLI_COMPLETIONS["${subcommand} "]=${BASHCLI_CONTEXT_DESCRIPTION%%$'\n'*}
+          BASHCLI_COMPLETIONS["${subcommand} "]=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandDir}]%%$'\n'*}
         fi
       done
     else
