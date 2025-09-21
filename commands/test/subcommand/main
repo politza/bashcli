@@ -4,9 +4,9 @@ bashcli-log-debug "Test subcommand called with arguments $*"
 
 declare -A options=()
 declare parameters=()
-declare -a multiOptionOptions=()
+declare -a xmultiOptionOptions=()
 
-bashcli-options-parse options parameters multiOptionOptions -- "$@" || {
+bashcli-options-parse options parameters xmultiOptionOptions -- "$@" || {
   bashcli-fatal "Failed to parse options"
 }
 
@@ -14,4 +14,4 @@ bashcli-log-debug "Options successfully parsed"
 
 declare -p options
 declare -p parameters
-declare -p multiOptionOptions
+declare -p xmultiOptionOptions

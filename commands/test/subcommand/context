@@ -4,33 +4,35 @@
 
 DESCRIPTION="\
 This command is for testing only.
+
+It is otherwise a super subcommand.
 "
 
 OPTIONS=(
-  enum-option         single
-  boolean-option      boolean
-  single-option       single
-  multi-option        multi
-  enum-option-first   enum:enum-option
-  enum-option-second  enum:enum-option
-  enum-option-third   enum:enum-option
+  xenum-option         single
+  xboolean-option      boolean
+  xsingle-option       single
+  xmulti-option        multi
+  xenum-option-first   enum:enum-option
+  xenum-option-second  enum:enum-option
+  xenum-option-third   enum:enum-option
 )
 
 OPTION_DESCRIPTIONS=(
-  boolean-option "An option without an argument."
-  single-option  "An option with an argument that is supposed to be used only once."
-  multi-option   "An option with an argument that may be used multiple times."
+  xboolean-option "An option without an argument."
+  xsingle-option  "An option with an argument that is supposed to be used only once."
+  xmulti-option   "An option with an argument that may be used multiple times."
 )
 
 OPTION_ALIASES=(
-  boolean-option b,B
-  single-option  s,S
-  multi-option   m,M
+  xboolean-option x,X
+  xsingle-option  s,S
+  xmulti-option   m,M
 )
 
 OPTION_COMPLETIONS=(
-  single-option file
-  multi-option  directory,service
+  xsingle-option file
+  xmulti-option  directory,service
 )
 
 CONFIG=(

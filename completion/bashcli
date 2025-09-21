@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2155
+_bashcli-completion() {
+  local cur prev words cword comp_args
+  local directory="$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")"
+  local -A BASHCLI_COMPLETIONS=()
+  local -A optionTypes=()
+  local -A completionTypes=()
+  local -A optionDescriptions=()
+  local commandStack=()
+  local index option word subcommand completion completionFn completionFns
+  
+  local BASHCLI_DIR=~/src/bashcli
+  local BASHCLI_CLI_NAME=bashcli
+  local BASHCLI_CLI_DIR=~/src/bashcli
+
+  # bash-completion >= 2.12
+  if type _comp_initialize >/dev/null 2>&1 ; then
+    _comp_initialize -s -- "$@" || return
+  else
+    # bash-completion < 2.12
+    _init_completion -s -- "$@" || return
+  fi
+  
+  . "${directory}"/../lib/all || return
+
+  for ((index = 0; index <= cword; ++index)); do
+    word=${words[index]}
+    option=
+    case ${word} in
+      --?*)
+        option=${word#--}
+        option=${option%%=*}
+        if bashcli-options-resolve-alias "${option}"; then
+          option=${REPLY}
+        fi
+        if [[ ${index} -lt ${cword} ]]; then
+          if [[ ${word} == *=* ]]; then
+            option=
+          else
+            case ${optionTypes[${option}]} in
+              single|multi) ((++index)) ;;
+              *) option=
+            esac
+          fi
+        elif [[ ${word} != *=* ]]; then
+          option=
+        fi
+        ;;
+      -[^-]*)
+        local options=${word#-}
+        local optionsIndex
+        for ((optionsIndex = 0; optionsIndex < ${#options}; ++optionsIndex)); do
+          option="${options:${optionsIndex}:1}"
+          if bashcli-options-resolve-alias "${option}"; then
+            option=${REPLY}
+          fi
+          case ${optionTypes[${option}]} in
+            single|multi)
+              if [[ ${optionsIndex} -eq $((${#options} - 1)) ]]; then
+                ((++index))
+              else
+                option=
+              fi
+              break ;;
+          esac
+          option=
+        done ;;
+      *)
+        if bashcli-command-resolve "${commandStack[@]}" "${word}"; then
+          local commandDir=${REPLY}
+          commandStack+=("${word}")
+          bashcli-context-merge-options "${commandDir}" optionTypes completionTypes optionDescriptions
+          if [ -f "${commandDir}"/completion ]; then
+            # shellcheck source=/dev/null
+            . "${commandDir}"/completion
+          fi
+        fi
+    esac
+  done
+
+  if [ "${option}" ] && [ "${completionTypes[${option}]}" ]; then
+    readarray -t completionFns <<<"${completionTypes[${option}]//,/$'\n'}"
+  elif [ -z "${option}" ] && [ "${completionTypes[%parameter]}" ]; then
+    readarray -t completionFns <<<"${completionTypes[%parameter]//,/$'n'}"
+  elif [ "${option}" ]; then
+    completionFns=('file')
+  elif [[ "${cur}" == -* ]]; then
+    for option in "${!optionTypes[@]}"; do
+      if [ ${#option} -gt 1 ]; then
+        local suffix
+        case ${optionTypes[${option}]} in
+          single|multi) suffix='=' ;;
+          *)            suffix=' ' ;;
+        esac
+        BASHCLI_COMPLETIONS[--${option}${suffix}]=${optionDescriptions[${option}]}
+      fi
+    done
+  else
+    bashcli-command-subcommands "${commandStack[@]}"
+    if [ ${#REPLY[@]} -gt 0 ]; then
+      for subcommand in "${REPLY[@]}"; do
+        if bashcli-command-resolve "${commandStack[@]}" "${subcommand}"; then
+          local commandDir=${REPLY}
+          bashcli-context-read "${REPLY}" || continue
+          BASHCLI_COMPLETIONS["${subcommand} "]=${BASHCLI_CONTEXT_DESCRIPTION%%$'\n'*}
+        fi
+      done
+    else
+      completionFns=('file')
+    fi
+  fi
+
+  completionFns=("${completionFns[@]//*/bashcli-complete-&}")
+  for completionFn in "${completionFns[@]}"; do
+    if declare -pf "${completionFn}" &>/dev/null; then
+      "${completionFn}" "${cur}"
+    else
+      bashcli-log-warning "Completion function ${completionFn} not defined"
+    fi
+  done
+
+  COMPREPLY=()
+  # shellcheck disable=SC2016
+  _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"'
+  case ${COMP_TYPE} in
+    9|37) ;;
+    *)
+      if [ ${#COMPREPLY[@]} -gt 1 ]; then
+        local padding=0
+        for completion in "${COMPREPLY[@]}"; do
+          if [[ ${#completion} -gt ${padding} ]]; then
+            padding=${#completion}
+          fi
+        done
+        for index in "${!COMPREPLY[@]}"; do
+          completion=${COMPREPLY[index]}
+          printf -v completion "%-${padding}s  %s    " "${completion}" "${BASHCLI_COMPLETIONS[${completion}]}"
+          COMPREPLY[index]="${completion}"
+        done 
+      fi ;;
+  esac
+}
+
+complete -o nospace -F _bashcli-completion bashcli

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034
+
+bashcli-complete-directory() {
+  local completion
+
+  _comp_compgen_filedir -d
+
+  for completion in "${COMPREPLY[@]}"; do
+    BASHCLI_COMPLETIONS[${completion}]=''
+  done
+
+  COMPREPLY=()
+}
+
+bashcli-complete-file() {
+  local completion
+
+  _comp_compgen_filedir
+
+  for completion in "${COMPREPLY[@]}"; do
+    BASHCLI_COMPLETIONS[${completion}]=''
+  done
+
+  COMPREPLY=()
+}

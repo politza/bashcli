@@ -114,6 +114,9 @@ bashcli-context-merge-options() {
   if [ $# -gt 2 ]; then
     local -n _completions=$3
   fi
+  if [ $# -gt 3 ]; then
+    local -n _descriptions=$4
+  fi
 
   if [ -f "${_commandContext}" ]; then
     # shellcheck source=/dev/null
@@ -121,15 +124,30 @@ bashcli-context-merge-options() {
     for _option in "${!OPTIONS[@]}"; do
       _options[${_option}]=${OPTIONS[${_option}]}
       if [ $# -gt 2 ]; then
-        _completions[${_option}]=${COMPLETIONS[${_option}]}
+        _completions[${_option}]=${OPTION_COMPLETIONS[${_option}]}
+      fi
+      if [ $# -gt 3 ]; then
+        _descriptions[${_option}]=${OPTION_DESCRIPTIONS[${_option}]:-"No description available."}
       fi
       for _alias in ${OPTION_ALIASES[${_option}]}; do
         _options[${_alias}]=${OPTIONS[${_option}]}
         if [ $# -gt 2 ]; then
-          _completions[${_alias}]=${COMPLETIONS[${_option}]}
+          _completions[${_alias}]=${OPTION_COMPLETIONS[${_option}]}
+        fi
+        if [ $# -gt 3 ]; then
+          _descriptions[${_alias}]=${OPTION_DESCRIPTIONS[${_option}]:-"No description available."}
         fi
       done
     done
+    if [ $# -gt 2 ]; then
+      _completions[%parameter]=${OPTION_COMPLETIONS[%parameter]}
+    fi
+    if [ -z "${_options[help]}" ]; then
+      _options[help]=boolean
+      if [ $# -gt 3 ]; then
+        _descriptions[help]='Shows a help message'
+      fi
+    fi
     return 0
   fi
   return 1
