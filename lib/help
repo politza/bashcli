@@ -5,6 +5,11 @@ declare -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
   regular $'\033[0m'
 )
+
+if ! [ -t 1 ]; then
+  BASHCLI_HELP_FACES=()
+fi
+
 declare BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 
 # shellcheck disable=2215
@@ -42,8 +47,7 @@ bashcli-help-show() {
   printf "%sUsage:%s\n%s%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
          "${commandList[*]}" "${optionsInfo}" "${parameterInfo}"
   if [ -n "${description}" ]; then
-    echo
-    fmt --width "${BASHCLI_HELP_WIDTH}" <<<"${description%%$'\n'}"
+    fmt --width "${BASHCLI_HELP_WIDTH}" <<<$'\n'"${description%$'\n'}"
   fi
 }
 
@@ -53,8 +57,9 @@ bashcli-help-show() {
   local index optionDashes option optionAliases optionVariants optionVariant
   local optionValueType optionType optionLabel description
   local IFS=$'\n'
+  local options=($(LC_ALL=C sort <<<"${!BASHCLI_CONTEXT_OPTIONS[@]}"))
 
-  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+  for option in "${options[@]}"; do
     # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
     bashcli-option-aliases "${option}"
     optionAliases=("${REPLY[@]}")
@@ -86,14 +91,17 @@ bashcli-help-show() {
     optionLabels[${option}]=${optionLabel}
   done
 
-  # Now print the options aligned with their descriptions.
+  # Now print the options with their description.
   if [ ${#optionLabels[@]} -gt 0 ]; then
     printf "\n%sOptions:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
-    for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+    for ((index = 0; index < ${#options[@]}; ++index)); do
+      option=${options[index]}
+      if [ ${index} -gt 0 ]; then
+        echo
+      fi
       printf "%s\n" "${optionLabels[${option}]}"
       description=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
       fmt --width "$((${BASHCLI_HELP_WIDTH} - 2))"  <<< "${description%$'\n'}" | pr --indent 2 --omit-pagination
-      echo
     done
   fi
 }
@@ -123,7 +131,7 @@ bashcli-help-show() {
         bashcli-context-read "${commandDir}"
       fi
       description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandDir}]}
-      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'}"
+      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'*}"
     done
   fi
 }
