@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [[ $# -eq 1 && "$1" == --completion ]]; then
+  bashcli-completion-script
+  exit 0
+fi
+
 bashcli-log-debug "Main called with arguments $@"
 
 declare -A options=()

@@ -1,26 +1,36 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2155
-_bashcli-completion() {
+# shellcheck disable=SC2155,SC2128
+bashcli-completion-complete() {
+  # shellcheck disable=SC2034
   local cur prev words cword comp_args
-  local directory="$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")"
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=()
   local index option word subcommand completion completionFn completionFns
-  
-  local BASHCLI_DIR=~/src/bashcli
-  local BASHCLI_CLI_NAME=bashcli
-  local BASHCLI_CLI_DIR=~/src/bashcli
 
-  # bash-completion >= 2.12
+  # shellcheck disable=SC2153
+  if ! [[ -d "${BASHCLI_DIR}" && -n "${BASHCLI_CLI_NAME}" && -d "${BASHCLI_CLI_DIR}" ]]; then
+    echo "[error]: bashcli variables not properly initialized" >&2
+    return
+  fi
+
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  fi
+
   if type _comp_initialize >/dev/null 2>&1 ; then
+    # bash-completion >= 2.12
     _comp_initialize -s -- "$@" || return
-  else
+  elif type _init_completion >/dev/null 2>&1; then
     # bash-completion < 2.12
     _init_completion -s -- "$@" || return
+  else
+    echo "[error]: bash-completion is not available or could not be loaded" >&2
+    return
   fi
-  
-  . "${directory}"/../lib/all || return
+
+  # shellcheck source=/dev/null
+  . "${BASHCLI_DIR}"/lib/all || return
 
   for ((index = 0; index <= cword; ++index)); do
     word=${words[index]}
@@ -135,9 +145,22 @@ _bashcli-completion() {
           completion=${COMPREPLY[index]}
           printf -v completion "%-${padding}s  %s    " "${completion}" "${BASHCLI_COMPLETIONS[${completion}]}"
           COMPREPLY[index]="${completion}"
-        done 
+        done
       fi ;;
   esac
 }
 
-complete -o nospace -F _bashcli-completion bashcli
+bashcli-completion-script() {
+  cat <<EOF
+_${BASHCLI_CLI_NAME}_complete() {
+  local BASHCLI_DIR="${BASHCLI_DIR}"
+  local BASHCLI_CLI_NAME="${BASHCLI_CLI_NAME}"
+  local BASHCLI_CLI_DIR="${BASHCLI_CLI_DIR}"
+
+  if ! type bashcli-completion-complete &>/dev/null; then
+    . "${BASHCLI_DIR}/lib/completion" || return
+  fi
+  bashcli-completion-complete "\$@"
+} && complete -o nospace -o default -F _${BASHCLI_CLI_NAME}_complete ${BASHCLI_CLI_NAME}
+EOF
+}
