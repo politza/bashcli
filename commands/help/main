@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+#shellcheck disable=SC2034
+
 bashcli-debug "Showing help for command $*"
 
-bashcli-help-show "$@"
+declare -A options=()
+declare parameters=()
+
+bashcli-options-parse options parameters -- "$@" || exit 1
+
+bashcli-help-show "${BASHCLI_CLI_NAME}" "$@"
