@@ -41,19 +41,19 @@ bashcli-debug() {
     context="${BASHCLI_COMMAND_STACK[*]}"
   fi
 
-  printf "[%s]%-${minContextWidth}s %s\n" "${BASHCLI_COLORS[debug]}debug${BASHCLI_COLORS[none]}" "(${context})" "$*" >&2
+  printf "[%s]%-${minContextWidth}s %s\n" "${BASHCLI_COLORS[debug]}debug${BASHCLI_COLORS[none]}" "(${context})" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-info() {
-  printf "[%s] %s\n" "${BASHCLI_COLORS[info]}info${BASHCLI_COLORS[none]}" "$*" >&2
+  printf "[%s] %s\n" "${BASHCLI_COLORS[info]}info${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-warning() {
-  printf "[%s] %s\n" "${BASHCLI_COLORS[warn]}warn${BASHCLI_COLORS[none]}" "$*" >&2
+  printf "[%s] %s\n" "${BASHCLI_COLORS[warn]}warn${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-error() {
-  printf "[%s] %s\n" "${BASHCLI_COLORS[error]}error${BASHCLI_COLORS[none]}" "$*" >&2
+  printf "[%s] %s\n" "${BASHCLI_COLORS[error]}error${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-fatal() {

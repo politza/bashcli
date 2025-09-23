@@ -6,6 +6,7 @@ bashcli-load-library bashcli/complete
 declare -A options=()
 declare -a input=()
 
+bashcli-debug "Complete called with arguments $*"
 bashcli-options-parse options input -- "$@" || exit 1
 
 if [ "${options[script]}" ]; then
