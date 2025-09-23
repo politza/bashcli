@@ -5,6 +5,7 @@ declare -g -a BASHCLI_COMMAND_DIRS=(
   "${BASHCLI_CLI_DIR}/commands"
 )
 declare -g -a BASHCLI_COMMAND_STACK=()
+declare -g -a BASHCLI_COMMAND_NEXT=()
 
 if ! [ "${BASHCLI_CLI_DIR}" -ef "${BASHCLI_DIR}" ]; then
     BASHCLI_COMMAND_DIRS+=("${BASHCLI_DIR}/commands")
@@ -33,7 +34,28 @@ bashcli-command-resolve() {
 }
 
 bashcli-command-exec() {
-  local command commandDir
+  if [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; then
+    bashcli-fatal "A Command is already pending for execution, try bashcli-command-exec-2"
+  fi
+  BASHCLI_COMMAND_NEXT=("$@")
+}
+
+bashcli-command-exec-next() {
+  set -- "${BASHCLI_COMMAND_NEXT[@]}"
+  if [ $# -eq 0 ]; then
+    bashcli-error "No command pending for execution"
+    return 1
+  fi
+  BASHCLI_COMMAND_NEXT=()
+  bashcli-command-exec-now "$@"
+}
+
+bashcli-command-local-unset() {
+  unset "$@"
+}
+
+bashcli-command-exec-now() {
+  local command
   local commandList=("${BASHCLI_COMMAND_STACK[@]}")
 
   if [ ${#BASHCLI_COMMAND_STACK[@]} -eq 0 ]; then
@@ -51,11 +73,11 @@ bashcli-command-exec() {
 
   bashcli-debug "${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
-  commandDir=$REPLY
 
   BASHCLI_COMMAND_STACK+=("${command}")
+  bashcli-command-local-unset command commandList
   # shellcheck source=/dev/null
-  . "${commandDir}"/main "$@"
+  . "${REPLY}"/main "$@"
 }
 
 bashcli-command-subcommands() {

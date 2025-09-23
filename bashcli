@@ -8,3 +8,6 @@ BASHCLI_DIR=$(dirname "$(realpath "$0")")
 . "${BASHCLI_DIR}"/lib/bashcli/init
 
 bashcli-command-exec "$@"
+while [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; do
+  bashcli-command-exec-next || exit $?
+done
