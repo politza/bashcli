@@ -5,11 +5,9 @@ This is the main command.
 "
 
 OPTIONS=(
-  log-level single
 )
 
 OPTION_DESCRIPTIONS=(
-  log-level   "Sets the log level of the command invocation."
 )
 
 OPTION_ALIASES=(

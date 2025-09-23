@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+bashcli-load-library bashcli/completion
+bashcli-load-library bashcli/complete
+
+declare -A options=()
+declare -a input=()
+
+bashcli-options-parse options input -- "$@" || exit 1
+
+if [ "${options[script]}" ]; then
+  bashcli-completion-script
+  exit 0
+fi
+
+declare COMP_CWORD=${options[comp-cword]}
+declare COMP_KEY=${options[comp-key]}
+declare COMP_LINE=${options[comp-line]}
+declare COMP_POINT=${options[comp-point]}
+declare COMP_TYPE=${options[comp-type]}
+declare COMP_WORDS
+
+readarray -t COMP_WORDS <<<"${options[comp-words]}"
+
+bashcli-context-clear
+bashcli-completion-complete "${input[@]}"

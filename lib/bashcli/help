@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2190
 
-declare -A BASHCLI_HELP_FACES=(
+declare -g -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
   regular $'\033[0m'
 )
@@ -10,14 +10,14 @@ if ! [ -t 1 ]; then
   BASHCLI_HELP_FACES=()
 fi
 
-declare BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
+declare -g BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 
 # shellcheck disable=2215
 bashcli-help-show() {
   local commandList=("$@")
   local commandDir
 
-  bashcli-log-debug "Showing help for ${commandList[*]}"
+  bashcli-debug "Showing help for ${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
   commandDir=${REPLY}
   bashcli-context-clear

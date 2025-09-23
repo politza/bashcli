@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-bashcli-log-debug "Test called with arguments $*"
+bashcli-debug "Test called with arguments $*"
 
 declare -A options=()
 declare parameters=()
@@ -10,7 +10,7 @@ bashcli-options-parse options parameters multiOptionOptions -- "$@" || {
   bashcli-fatal "Failed to parse options"
 }
 
-bashcli-log-debug "Options successfully parsed"
+bashcli-debug "Options successfully parsed"
 
 declare -p options
 declare -p parameters

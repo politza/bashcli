@@ -2,17 +2,10 @@
 
 # shellcheck disable=SC2155,SC2128
 bashcli-completion-complete() {
-  # shellcheck disable=SC2034
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=()
   local index option word subcommand completion completionFn completionFns
-
-  # shellcheck disable=SC2153
-  if ! [[ -d "${BASHCLI_DIR}" && -n "${BASHCLI_CLI_NAME}" && -d "${BASHCLI_CLI_DIR}" ]]; then
-    echo "[error]: bashcli variables not properly initialized" >&2
-    return
-  fi
 
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -25,12 +18,9 @@ bashcli-completion-complete() {
     # bash-completion < 2.12
     _init_completion -s -- "$@" || return
   else
-    echo "[error]: bash-completion is not available or could not be loaded" >&2
-    return
+    bashcli-error "bash-completion is not available or could not be loaded"
+    return 1
   fi
-
-  # shellcheck source=/dev/null
-  . "${BASHCLI_DIR}"/lib/all || return
 
   for ((index = 0; index <= cword; ++index)); do
     word=${words[index]}
@@ -75,7 +65,7 @@ bashcli-completion-complete() {
           option=
         done ;;
       *)
-        if bashcli-command-resolve "${commandStack[@]}" "${word}"; then
+        if bashcli-command-resolve "${commandStack[@]}" "${word}" &>/dev/null; then
           local commandDir=${REPLY}
           commandStack+=("${word}")
           bashcli-context-read "${commandDir}"
@@ -124,7 +114,7 @@ bashcli-completion-complete() {
     if declare -pf "${completionFn}" &>/dev/null; then
       "${completionFn}" "${cur}"
     else
-      bashcli-log-warning "Completion function ${completionFn} not defined"
+      bashcli-warning "Completion function ${completionFn} not defined"
     fi
   done
 
@@ -148,19 +138,33 @@ bashcli-completion-complete() {
         done
       fi ;;
   esac
+  for  completion in "${COMPREPLY[@]}"; do
+    printf "%s\n" "${completion%%$'\n'*}"
+  done
 }
 
 bashcli-completion-script() {
-  cat <<EOF
-_${BASHCLI_CLI_NAME}_complete() {
-  local BASHCLI_DIR="${BASHCLI_DIR}"
-  local BASHCLI_CLI_NAME="${BASHCLI_CLI_NAME}"
-  local BASHCLI_CLI_DIR="${BASHCLI_CLI_DIR}"
+  local cliName=${BASHCLI_CLI_NAME}
 
-  if ! type bashcli-completion-complete &>/dev/null; then
-    . "${BASHCLI_DIR}/lib/completion" || return
-  fi
-  bashcli-completion-complete "\$@"
-} && complete -o nospace -o default -F _${BASHCLI_CLI_NAME}_complete ${BASHCLI_CLI_NAME}
+  cat <<EOF
+_${cliName}_complete() {
+  readarray -t COMPREPLY < <(
+    BASHCLI_DIR="${BASHCLI_DIR}"
+    BASHCLI_CLI_SCRIPT="${BASHCLI_CLI_SCRIPT}"
+    BASHCLI_CLI_DIR="${BASHCLI_CLI_DIR}"
+    BASHCLI_CLI_NAME="${BASHCLI_CLI_NAME}"
+    IFS=$'\n'
+    
+    "${BASHCLI_CLI_SCRIPT}" \\
+      complete \\
+      --comp-cword "\${COMP_CWORD}"    \\
+      --comp-line  "\${COMP_LINE}"     \\
+      --comp-point "\${COMP_POINT}"    \\
+      --comp-type  "\${COMP_TYPE}"     \\
+      --comp-words "\${COMP_WORDS[*]}" \\
+      -- \\
+      "\$@"
+  )
+} && complete -o nospace -o default -F _${cliName}_complete ${cliName}
 EOF
 }

@@ -2,14 +2,16 @@
 
 # shellcheck disable=SC2034
 
-declare -A BASHCLI_CONTEXT_DESCRIPTIONS=()
-declare -A BASHCLI_CONTEXT_OPTIONS=()
-declare -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
-declare -A BASHCLI_CONTEXT_OPTION_ALIASES=()
-declare -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
-declare -A BASHCLI_CONTEXT_CONFIG=()
-declare -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
-declare -A BASHCLI_CONTEXT_READ=()
+declare -g -A BASHCLI_CONTEXT_DESCRIPTIONS=()
+declare -g -A BASHCLI_CONTEXT_OPTIONS=()
+declare -g -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
+declare -g -A BASHCLI_CONTEXT_OPTION_ALIASES=()
+declare -g -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
+declare -g -A BASHCLI_CONTEXT_CONFIG=()
+declare -g -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
+declare -g -A BASHCLI_CONTEXT_READ=()
+
+declare -g -r BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented'
 
 bashcli-context-clear() {
   BASHCLI_CONTEXT_DESCRIPTIONS=()
@@ -34,7 +36,7 @@ bashcli-context-read() {
 
   if [ -z "${BASHCLI_CONTEXT_READ[${commandDir}]}" ]; then
     if [ -f "${commandContext}" ]; then
-      bashcli-log-debug "Reading from ${commandContext}"
+      bashcli-debug "Reading from ${commandContext}"
       # shellcheck source=/dev/null
       . "${commandContext}"
       bashcli-context-validate
@@ -42,7 +44,7 @@ bashcli-context-read() {
       bashcli-context-merge "${commandDir}"
       BASHCLI_CONTEXT_READ[${commandDir}]=true
     else
-      bashcli-log-warning "No context in directory: ${commandDir}"
+      bashcli-warning "No context in directory: ${commandDir}"
     fi
   fi
 }
@@ -72,7 +74,7 @@ bashcli-context-defaults() {
 bashcli-context-validate() {
   local option optionType alias IFS
   if [ -z "${DESCRIPTIONS}" ]; then
-    DESCRIPTIONS="No description available."
+    DESCRIPTIONS="${BASHCLI_CONTEXT_NOT_DOCUMENTED}"
   fi
 
   for option in "${!OPTIONS[@]}"; do
@@ -90,13 +92,13 @@ bashcli-context-validate() {
       *) bashcli-fatal "Option-type must be one of boolean, single, multi or enum:\${name}: ${optionType}" ;;
     esac
     if [ -z "${OPTION_DESCRIPTIONS[${option}]}" ]; then
-      OPTION_DESCRIPTIONS[${option}]="No description available."
+      OPTION_DESCRIPTIONS[${option}]="${BASHCLI_CONTEXT_NOT_DOCUMENTED}"
     fi
   done
 
   for option in "${!OPTION_DESCRIPTIONS[@]}"; do
     if [ -z "${OPTIONS[${option}]}" ]; then
-      bashcli-log-warning "Description for non-existing option provided: ${option}"
+      bashcli-warning "Description for non-existing option provided: ${option}"
       unset "OPTION_DESCRIPTIONS[${option}]"
     fi
   done
@@ -104,7 +106,7 @@ bashcli-context-validate() {
   for alias in "${!OPTION_ALIASES[@]}"; do
     option=${OPTION_ALIASES[${alias}]}
     if [ -z "${OPTIONS[${option}]}" ]; then
-      bashcli-log-warning "Alias for non-existing option provided: ${alias} -> ${option}"
+      bashcli-warning "Alias for non-existing option provided: ${alias} -> ${option}"
       unset "OPTION_ALIASES[${option}]"
     fi
   done
@@ -120,7 +122,7 @@ bashcli-context-validate() {
       continue
     fi
     if [ -z "${OPTIONS[${option}]}" ]; then
-      bashcli-log-warning "Completions for non-existing option provided: ${option}"
+      bashcli-warning "Completions for non-existing option provided: ${option}"
       unset "OPTION_COMPLETIONS[${option}]"
     fi
   done

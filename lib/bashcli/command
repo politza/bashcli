@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-declare -a BASHCLI_COMMAND_DIRS=(
+declare -g -a BASHCLI_COMMAND_DIRS=(
   "${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/commands"
   "${BASHCLI_CLI_DIR}/commands"
 )
-declare -a BASHCLI_COMMAND_STACK=()
+declare -g -a BASHCLI_COMMAND_STACK=()
 
 if ! [ "${BASHCLI_CLI_DIR}" -ef "${BASHCLI_DIR}" ]; then
     BASHCLI_COMMAND_DIRS+=("${BASHCLI_DIR}/commands")
@@ -22,13 +22,13 @@ bashcli-command-resolve() {
     commandDir=${directory}/${commandPath}
     if [ -f "${commandDir}"/main ]; then
       unset IFS
-      bashcli-log-debug "${commandList[*]} -> ${commandDir}"
+      bashcli-debug "${commandList[*]} -> ${commandDir}"
       REPLY="${commandDir}"
       return 0
     fi
   done
 
-  bashcli-log-warning "Command not found: ${commandList[*]}"
+  bashcli-warning "Command not found: ${commandList[*]}"
   return 1
 }
 
@@ -37,7 +37,7 @@ bashcli-command-exec() {
   local commandList=("${BASHCLI_COMMAND_STACK[@]}")
 
   if [ ${#BASHCLI_COMMAND_STACK[@]} -eq 0 ]; then
-    command=${BASHCLI_CLI_NAME}
+    command="${BASHCLI_CLI_NAME}"
   else
     command=$1
     commandList+=("${command}")
@@ -45,11 +45,11 @@ bashcli-command-exec() {
   fi
 
   if [ -z "${command}" ]; then
-    bashcli-log-error "No command given"
+    bashcli-error "No command given"
     return 1
   fi
 
-  bashcli-log-debug "${commandList[*]}"
+  bashcli-debug "${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
   commandDir=$REPLY
 
@@ -77,4 +77,23 @@ bashcli-command-subcommands() {
     fi
   done
   REPLY=("${!subcommands[@]}")
+}
+
+bashcli-command-defines-subcommands() {
+  local commandList=("$@")
+  local IFS=/
+  local commandPath="${commandList[*]:1}"
+  local directory command commandDir
+
+  for directory in "${BASHCLI_COMMAND_DIRS[@]}"; do
+    commandDir=${directory}/${commandPath}
+    if [ -f "${commandDir}"/main ]; then
+      for command in "${commandDir}"/*; do
+        if [ -f "${command}"/main ]; then
+          return 0
+        fi
+      done
+    fi
+  done
+  return 1
 }

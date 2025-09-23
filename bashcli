@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
+BASHCLI_CLI_SCRIPT=${BASHCLI_CLI_SCRIPT:-$(realpath -s "$0")}
+BASHCLI_CLI_DIR=${BASHCLI_CLI_DIR:-$(dirname "${BASHCLI_CLI_SCRIPT}")}
+BASHCLI_CLI_NAME=$(basename "${BASHCLI_CLI_SCRIPT}")
 BASHCLI_DIR=$(dirname "$(realpath "$0")")
-BASHCLI_CLI_NAME=${BASHCLI_CLI_NAME:-$(basename "$0")}
-BASHCLI_CLI_DIR=${BASHCLI_CLI_DIR:-$(dirname "$(realpath -s "$0")")}
 
-. "${BASHCLI_DIR}"/lib/all
+. "${BASHCLI_DIR}"/lib/bashcli/init
 
 bashcli-command-exec "$@"

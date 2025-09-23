@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+#shellcheck disable=SC2190,SC2155
+
+declare -g -A BASHCLI_LIBRARIES_LOADED=()
+declare -g -A BASHCLI_COLORS=(
+  error  $'\033[91m'
+  warn   $'\033[93m'
+  debug  $'\033[96m'
+  info   $'\033[92m'
+  none   $'\033[39m'
+)
+
+if ! [ -t 2 ]; then
+  BASHCLI_COLORS=()
+fi
+
+bashcli-debug() {
+  local context
+  local fnName
+  local minContextWidth=20
+  local cliName=${BASHCLI_CLI_NAME}
+
+  if [ "${BASHCLI_DEBUG}" != true ]; then
+    return 0
+  fi
+
+  if [[ -n "${FUNCNAME[1]}" && "${FUNCNAME[1]}" != source ]]; then
+    fnName="${FUNCNAME[1]}"
+    if [[ ${fnName} == ?(-)bashcli-* ]]; then
+      fnName=${fnName#-}
+      fnName=${fnName#bashcli-}
+    elif [[ ${fnName} == ${cliName}-* ]]; then
+      # shellcheck disable=SC2295
+      fnName=${fnName#${cliName}-}
+    fi
+    context+="${fnName}"
+  elif [ ${#BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
+    context="${BASHCLI_COMMAND_STACK[*]:1}"
+  else
+    context="${BASHCLI_COMMAND_STACK[*]}"
+  fi
+
+  printf "[%s]%-${minContextWidth}s %s\n" "${BASHCLI_COLORS[debug]}debug${BASHCLI_COLORS[none]}" "(${context})" "$*" >&2
+}
+
+bashcli-info() {
+  printf "[%s] %s\n" "${BASHCLI_COLORS[info]}info${BASHCLI_COLORS[none]}" "$*" >&2
+}
+
+bashcli-warning() {
+  printf "[%s] %s\n" "${BASHCLI_COLORS[warn]}warn${BASHCLI_COLORS[none]}" "$*" >&2
+}
+
+bashcli-error() {
+  printf "[%s] %s\n" "${BASHCLI_COLORS[error]}error${BASHCLI_COLORS[none]}" "$*" >&2
+}
+
+bashcli-fatal() {
+  bashcli-error "$@"
+  exit 1
+}
+
+bashcli-load-library() {
+  local library=$1
+  local libraryDirectories=("${BASHCLI_CLI_DIR}/lib" "${BASHCLI_DIR}/lib")
+  local directory=
+  
+  if [[ "${BASHCLI_LIBRARIES_LOADED[${library}]}" == true && "${BASHCLI_DEBUG}" != true ]]; then
+    return 0
+  else
+    for directory in "${libraryDirectories[@]}"; do 
+      if [ -f "${directory}/${library}" ]; then
+        BASHCLI_LIBRARIES_LOADED[${library}]=true
+        #shellcheck source=/dev/null
+        . "${directory}/${library}"
+        return 0
+      fi
+    done
+  fi
+  bashcli-error "Library ${library} not found in ${libraryDirectories[*]}" >&2
+  return 1
+}
+
+bashcli-load-library bashcli/command
+bashcli-load-library bashcli/context
+bashcli-load-library bashcli/help
+bashcli-load-library bashcli/options
+bashcli-load-library bashcli/progress
+bashcli-load-library bashcli/string
