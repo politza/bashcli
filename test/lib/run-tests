@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -e
+#!/usr/bin/env bash
+
+# Execute all functions having a name starting with 'test-', print the result in the TAP format and
+# exit.
+
+set -Eeuo pipefail
+
+TEST_FUNCTIONS=()
+TEST_FAILURES=0
+
+readarray -t TEST_FUNCTIONS <<<"$(compgen -A function | grep '^test-')"
+
+echo "1..${#TEST_FUNCTIONS[@]}"
+
+for ((index = 0; index < ${#TEST_FUNCTIONS[@]}; ++index)); do
+  test=${TEST_FUNCTIONS[index]}
+  if ${test} 1>&2; then
+    echo "ok $((index + 1)) ${test}"
+  else
+    echo "not ok $((index + 1)) ${test}"
+    ((++TEST_FAILURES))
+  fi
+done
+
+exit $((TEST_FAILURES > 0))

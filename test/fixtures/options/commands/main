@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+#shellcheck disable=SC2034
+declare -A options=()
+declare multiOptions=()
+declare parameters=()
+
+bashcli-options-parse options parameters multiOptions=multi -- "$@" || exit 1
+
+echo "boolean=${options[boolean]}"
+echo "single=${options[single]}"
+for ((index = 0; index < ${#multiOptions[@]}; ++index)); do
+  echo "multi[${index}]=${multiOptions[index]}"
+done
+echo "enum=${options[enum]}"
+for ((index = 0; index < ${#parameters[@]}; ++index)); do
+  echo "parameter[${index}]=${parameters[index]}"
+done

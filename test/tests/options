@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+PATH=$PWD/fixtures/options:${PATH}
+
+test-empty-options() {
+  diff <(cli) - <<EOF
+boolean=
+single=
+enum=
+EOF
+}
+
+test-boolean-options() {
+  diff <(cli --boolean) - <<EOF
+boolean=true
+single=
+enum=
+EOF
+}
+
+test-single-options() {
+  diff <(cli --single 0) - <<EOF
+boolean=
+single=0
+enum=
+EOF
+}
+
+test-multi-options() {
+  diff <(cli --multi a --multi b) - <<EOF
+boolean=
+single=
+multi[0]=a
+multi[1]=b
+enum=
+EOF
+}
+
+test-enum-options() {
+  diff <(cli --primary) - <<EOF
+boolean=
+single=
+enum=primary
+EOF
+}
+
+test-parameter-options() {
+  diff <(cli a b) - <<EOF
+boolean=
+single=
+enum=
+parameter[0]=a
+parameter[1]=b
+EOF
+}
+
+# shellcheck source=/dev/null
+. ./lib/run-tests
