@@ -10,3 +10,10 @@ OPTIONS=(
   primary    enum:enum
   secondary  enum:enum
 )
+
+OPTION_ALIASES=(
+  b boolean
+  s single
+  m multi
+  e enum
+)

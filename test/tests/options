@@ -1,33 +1,40 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2210
 
 PATH=$PWD/fixtures/options:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
 
-test-empty-options() {
-  diff <(cli) - <<EOF
+test-empty-option() {
+  cli &> "${output}"
+  diff "${output}" - <<EOF
 boolean=
 single=
 enum=
 EOF
 }
 
-test-boolean-options() {
-  diff <(cli --boolean) - <<EOF
+test-boolean-option() {
+  cli --boolean &> "${output}"
+  diff "${output}" - <<EOF
 boolean=true
 single=
 enum=
 EOF
 }
 
-test-single-options() {
-  diff <(cli --single 0) - <<EOF
+test-single-option() {
+  cli --single 0 &> "${output}"
+  diff "${output}" - <<EOF
 boolean=
 single=0
 enum=
 EOF
 }
 
-test-multi-options() {
-  diff <(cli --multi a --multi b) - <<EOF
+test-multi-option() {
+  cli --multi a --multi b &> "${output}"
+  diff "${output}" - <<EOF
 boolean=
 single=
 multi[0]=a
@@ -36,21 +43,65 @@ enum=
 EOF
 }
 
-test-enum-options() {
-  diff <(cli --primary) - <<EOF
+test-enum-option() {
+  cli --primary &> "${output}"
+  diff "${output}" - <<EOF
 boolean=
 single=
 enum=primary
 EOF
 }
 
-test-parameter-options() {
-  diff <(cli a b) - <<EOF
+test-alias-options() {
+  cli -b -s a -m a -m b -e primary &> "${output}"
+  diff -u "${output}" - <<EOF
+boolean=true
+single=a
+multi[0]=a
+multi[1]=b
+enum=primary
+EOF
+}
+
+test-concatenated-options() {
+  cli -bs a -bbm a &> "${output}"
+  diff -u "${output}" - <<EOF
+boolean=true
+single=a
+multi[0]=a
+enum=
+EOF
+}
+
+test-parameter-option() {
+  cli a b &> "${output}"
+  diff "${output}" - <<EOF
 boolean=
 single=
 enum=
 parameter[0]=a
 parameter[1]=b
+EOF
+}
+
+test-unknown-option() {
+  cli --no-such-option &> "${output}" && exit 1
+  diff "${output}" - <<EOF
+cli: unrecognized option: --no-such-option
+EOF
+}
+
+test-single-requires-argument() {
+  cli --single &> "${output}" && exit 1
+  diff "${output}" - <<EOF
+cli: option requires an argument: --single
+EOF
+}
+
+test-multi-requires-argument() {
+  cli --multi &> "${output}" && exit 1
+  diff "${output}" - <<EOF
+cli: option requires an argument: --multi
 EOF
 }
 

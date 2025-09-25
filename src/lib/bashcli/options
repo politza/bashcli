@@ -71,7 +71,7 @@ bashcli-options-parse() {
         case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
           single|multi) ;;
           *) printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option does not accept arguments: ${_arguments[0]}" >&2
-             exit 1;;
+             return 1;;
         esac
         shift
         set --  "${_arguments[@]}" "$@"
@@ -87,12 +87,18 @@ bashcli-options-parse() {
           _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
           if [ -z "${_optionType}" ]; then
             printf "%s\n" "${_commandStack[*]}: unrecognized option: -${_option}" >&2
-            exit 1
+            return 1
           fi
-          _arguments+=("-${_option}")
+          if [ "${_option:0:2}" ]; then
+            _arguments+=("--${_option}")
+          else
+            _arguments+=("-${_option}")
+          fi
           case ${_optionType} in
             single|multi)
-              _arguments+=("${1:_index + 1}")
+              if [ $((_index + 1)) -lt ${#1} ]; then
+                _arguments+=("${1:_index + 1}")
+              fi
               break ;;
           esac
         done
@@ -100,55 +106,56 @@ bashcli-options-parse() {
         set -- "${_arguments[@]}" "$@"
         continue
         ;;
-      --?*|-[^-]) _option=${1#-}
-          _option=${_option#-}
-          if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
-            _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
-          fi
-          if [[ "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" &&
-                  "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" != "${_commandDir}" ]]; then
-            # Let subcommand options shadow their parent command's options.
-            _parsedParameters+=("$1")
-            case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
-              single|multi)
-                if [ $# -gt 1 ]; then
-                  shift
-                  _parsedParameters+=("$1")
-                fi ;;
-            esac
-          elif [ -n "${BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
-            _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
-            case ${_optionType} in
-              single|multi)
-                if [ $# -lt 2 ]; then
-                  printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option requires an argument: $1" >&2
-                  exit 1
-                fi ;;
-            esac
-            case ${_optionType} in
-              single)
-                _parsedOptions[${_option}]=$2
-                shift ;;
-              multi)
-                if [ -n "${_parsedOptions[${_option}]}" ]; then
-                  _parsedOptions[${_option}]+=$'\n'
-                fi
-                _parsedOptions[${_option}]+=$2
-                if [ -R "${_multiOptionRefs[${_option}]}" ]; then
-                  eval "${_multiOptionRefs[${_option}]}+=(\"$2\")" || return 1
-                fi
-                shift ;;
-              boolean)
-                _parsedOptions[${_option}]=true ;;
-              enum:?*)
-                _parsedOptions[${_optionType#enum:}]=${_option} ;;
-              *)
-                bashcli-fatal "Internal error" ;;
-            esac
-          else
-            printf "%s\n" "${_commandStack[*]}: unrecognized option: $1" >&2
-            exit 1
-          fi ;;
+      --?*|-[^-])
+        _option=${1#-}
+        _option=${_option#-}
+        if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
+          _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
+        fi
+        if [[ "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" &&
+                "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" != "${_commandDir}" ]]; then
+          # Let subcommand options shadow their parent command's options.
+          _parsedParameters+=("$1")
+          case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
+            single|multi)
+              if [ $# -gt 1 ]; then
+                shift
+                _parsedParameters+=("$1")
+              fi ;;
+          esac
+        elif [ -n "${BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
+          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
+          case ${_optionType} in
+            single|multi)
+              if [ $# -lt 2 ]; then
+                printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option requires an argument: $1" >&2
+                return 1
+              fi ;;
+          esac
+          case ${_optionType} in
+            single)
+              _parsedOptions[${_option}]=$2
+              shift ;;
+            multi)
+              if [ -n "${_parsedOptions[${_option}]}" ]; then
+                _parsedOptions[${_option}]+=$'\n'
+              fi
+              _parsedOptions[${_option}]+=$2
+              if [ -R "${_multiOptionRefs[${_option}]}" ]; then
+                eval "${_multiOptionRefs[${_option}]}+=(\"$2\")" || return 1
+              fi
+              shift ;;
+            boolean)
+              _parsedOptions[${_option}]=true ;;
+            enum:?*)
+              _parsedOptions[${_optionType#enum:}]=${_option} ;;
+            *)
+              bashcli-fatal "Internal error" ;;
+          esac
+        else
+          printf "%s\n" "${_commandStack[*]}: unrecognized option: $1" >&2
+          return 1
+        fi ;;
       --)
         if [ "${_definesSubcommands}" != true ]; then
           shift
