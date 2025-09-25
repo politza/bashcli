@@ -171,28 +171,13 @@ bashcli-options-parse() {
 }
 
 -bashcli-options-resolve-multivar() {
-  local option step optionType
+  local option optionType
 
   if [[ $1 == *=* ]]; then
     option=${1#*=}
     optionType="${BASHCLI_CONTEXT_OPTIONS[${option}]}"
   else
-    for step in 1 2 3 4 5; do
-      case ${step} in
-        1)   option=$1 ;;
-        2)   bashcli-string-camel-to-kebab "$1"
-             option=$REPLY ;;
-        3|5) option=${option%-options} ;;
-        4)   bashcli-string-snake-to-kebab "$1"
-             option=$REPLY ;;
-      esac
-      if [[ -n "${option}" ]]; then
-        optionType="${BASHCLI_CONTEXT_OPTIONS[${option}]}"
-        if [ -n "${optionType}" ]; then
-          break
-        fi
-      fi
-    done
+    return 1
   fi
 
   REPLY=

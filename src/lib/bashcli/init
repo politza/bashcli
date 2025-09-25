@@ -87,4 +87,3 @@ bashcli-load-library bashcli/context
 bashcli-load-library bashcli/help
 bashcli-load-library bashcli/options
 bashcli-load-library bashcli/progress
-bashcli-load-library bashcli/string
