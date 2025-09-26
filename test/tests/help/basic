@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2064
+
+PATH=$PWD/fixtures/help/basic:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+test-command-help() {
+  cli command --help &> "${output}"
+  diff "${output}" - <<EOF
+Usage:
+cli command [ OPTIONS ]
+
+Command description first line.  Command description second line.  Command
+description third line with trailing newlines.
+
+Options:
+--boolean, -b
+  Boolean option description.
+
+--enum, -e ENUM-VALUE
+  Enum option description with trailing newlines.
+
+--help
+  Shows a help message.
+
+--multi, -m MULTI-VALUE
+  Multi option description.
+
+--primary
+  Primary option description.
+
+--single, -s SINGLE-VALUE
+  Single option first line.  Single option second line.  Single option
+  third line.
+
+Subcommands:
+subcommand-1    Subcommand-1 description.
+subcommand-0    Subcommand-0 description.
+EOF
+}
+
+test-subcommand-help() {
+  cli command subcommand-0 --help &> "${output}"
+  diff "${output}" - <<EOF
+Usage:
+cli command subcommand-0 [ OPTIONS ]
+
+Subcommand-0 description.
+
+Options:
+--help
+  Shows a help message.
+EOF
+}
+
+# shellcheck source=/dev/null
+. ./lib/run-tests

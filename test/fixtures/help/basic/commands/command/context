@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+DESCRIPTION="\
+Command description first line.
+Command description second line.
+Command description third line with trailing newlines.
+
+
+
+"
+
+OPTIONS=(
+  boolean    boolean
+  single     single
+  multi      multi
+  enum       single
+  primary    enum:enum
+)
+
+OPTION_ALIASES=(
+  b boolean
+  s single
+  m multi
+  e enum
+)
+
+OPTION_DESCRIPTIONS=(
+  boolean "Boolean option description."
+  single  "Single option first line.
+Single option second line.
+Single option third line."
+  multi "\
+Multi option description."
+  enum "Enum option description with trailing newlines.\
+
+
+"
+  primary "Primary option description."
+)
+
+OPTION_COMPLETIONS=(
+  boolean boolean-value
+  single single-value
+  multi multi-value
+  enum enum-value
+)

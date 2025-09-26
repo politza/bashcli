@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2190
+# shellcheck disable=SC2190,SC2064
 
 declare -g -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
@@ -16,6 +16,9 @@ declare -g BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 bashcli-help-show() {
   local commandList=("$@")
   local commandDir
+
+  trap "$(shopt -p extglob)" EXIT RETURN
+  shopt -s extglob
 
   bashcli-debug "Showing help for ${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
@@ -47,7 +50,7 @@ bashcli-help-show() {
   printf "%sUsage:%s\n%s%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
          "${commandList[*]}" "${optionsInfo}" "${parameterInfo}"
   if [ -n "${description}" ]; then
-    fmt --width "${BASHCLI_HELP_WIDTH}" <<<$'\n'"${description%$'\n'}"
+    fmt --width "${BASHCLI_HELP_WIDTH}" <<<$'\n'"${description%%*($'\n')}"
   fi
 }
 
@@ -101,7 +104,7 @@ bashcli-help-show() {
       fi
       printf "%s\n" "${optionLabels[${option}]}"
       description=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
-      fmt --width "$((${BASHCLI_HELP_WIDTH} - 2))"  <<< "${description%$'\n'}" | pr --indent 2 --omit-pagination
+      fmt --width "$((${BASHCLI_HELP_WIDTH} - 2))"  <<< "${description%%*($'\n')}" | pr --indent 2 --omit-pagination
     done
   fi
 }

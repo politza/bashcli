@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2210
+# shellcheck disable=SC2064
 
 PATH=$PWD/fixtures/options/subcommands:${PATH}
 output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 
-test-empty-option() {
+test-no-options() {
   cli parent &> "${output}"
   diff "${output}" - <<EOF
 EOF
