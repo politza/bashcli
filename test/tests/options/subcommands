@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2210
+
+PATH=$PWD/fixtures/options/subcommands:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+test-empty-option() {
+  cli parent &> "${output}"
+  diff "${output}" - <<EOF
+EOF
+}
+
+test-parent-option() {
+  cli parent --parent-option a &> "${output}"
+  diff "${output}" - <<EOF
+parent-option[0]=a
+EOF
+}
+
+test-child-option() {
+  cli parent child --child-option a &> "${output}"
+  diff "${output}" - <<EOF
+child-option[0]=a
+EOF
+}
+
+test-parent-option-after-child() {
+  cli parent child --parent-option a &> "${output}"
+  diff "${output}" - <<EOF
+parent-option[0]=a
+EOF
+}
+
+test-shared-options() {
+  cli parent --shared-option a child --shared-option b &> "${output}"
+  diff "${output}" - <<EOF
+parent-shared-option[0]=a
+child-shared-option[0]=b
+EOF
+}
+
+test-shared-alias-options() {
+  cli parent --shared-alias a child --shared-alias b &> "${output}"
+  diff "${output}" - <<EOF
+parent-shared-option[0]=a
+child-shared-option[0]=b
+EOF
+}
+
+test-shared-alias-mixed-options() {
+  cli parent --shared-option a child --shared-alias b &> "${output}"
+  diff "${output}" - <<EOF
+parent-shared-option[0]=a
+child-shared-option[0]=b
+EOF
+}
+
+test-child-option-before-child() {
+  cli parent --child-option a child &> "${output}" && exit 1
+  diff "${output}" - <<EOF
+cli parent: unrecognized option: --child-option
+EOF
+}
+
+# shellcheck source=/dev/null
+. ./lib/run-tests

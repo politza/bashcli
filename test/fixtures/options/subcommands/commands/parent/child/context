@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034
+
+OPTIONS=(
+  child-option multi
+  shared-option multi
+)
+
+OPTION_ALIASES=(
+  child-alias child-option
+  shared-alias shared-option
+)

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+#shellcheck disable=SC2034
+declare -A options=()
+declare childOptions=()
+declare sharedOptions=()
+declare parameters=()
+
+bashcli-options-parse \
+  options \
+  parameters \
+  childOptions=child-option \
+  sharedOptions=shared-option \
+  -- "$@" || exit 1
+
+for ((index = 0; index < ${#childOptions[@]}; ++index)); do
+  echo "child-option[${index}]=${childOptions[index]}"
+done
+for ((index = 0; index < ${#sharedOptions[@]}; ++index)); do
+  echo "child-shared-option[${index}]=${sharedOptions[index]}"
+done
