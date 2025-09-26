@@ -12,7 +12,7 @@ fi
 
 declare -g BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 
-# shellcheck disable=2215
+# shellcheck disable=SC2215
 bashcli-help-show() {
   local commandList=("$@")
   local commandDir

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#shellcheck disable=SC2215
 
 declare -g -a BASHCLI_COMMAND_DIRS=(
   "${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/commands"
@@ -50,10 +51,6 @@ bashcli-command-exec-next() {
   bashcli-command-exec-now "$@"
 }
 
-bashcli-command-local-unset() {
-  unset "$@"
-}
-
 bashcli-command-exec-now() {
   local command
   local commandList=("${BASHCLI_COMMAND_STACK[@]}")
@@ -75,7 +72,7 @@ bashcli-command-exec-now() {
   bashcli-command-resolve "${commandList[@]}" || return 1
 
   BASHCLI_COMMAND_STACK+=("${command}")
-  bashcli-command-local-unset command commandList
+  -bashcli-command-local-unset command commandList
   # shellcheck source=/dev/null
   . "${REPLY}"/main "$@"
 }
@@ -118,4 +115,8 @@ bashcli-command-defines-subcommands() {
     fi
   done
   return 1
+}
+
+-bashcli-command-local-unset() {
+  unset "$@"
 }

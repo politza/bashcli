@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+while IFS= read -d '' -r file; do
+  head -n1 "${file}" | \
+    grep -Eq '^#!(/usr/bin/env bash|/bin/bash)' && \
+    printf "%s\n" "${file}"
+done < <(git ls-files -z)
