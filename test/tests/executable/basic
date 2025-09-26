@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2064
+
+PATH=$PWD/fixtures/executable/basic:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+test-executable-setup() {
+  cli command a b c &> "${output}"
+  diff "${output}" - <<EOF
+a
+b
+c
+EOF
+}
+
+test-executable-help() {
+  cli command --help &> "${output}"
+  diff "${output}" - <<EOF
+Usage:
+cli command [ OPTIONS ]
+
+Options:
+--help
+  Shows a help message.
+
+--option
+  A boolean option.
+EOF
+}
+
+# shellcheck source=/dev/null
+. ./lib/run-tests

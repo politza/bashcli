@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034
+
+OPTIONS=(
+  option boolean
+)
+
+OPTION_DESCRIPTIONS=(
+  option "A boolean option."
+)

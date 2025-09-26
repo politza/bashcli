@@ -1,4 +1,4 @@
 .PHONY: test
 
 test:
-	cd test && prove -r --ext '' tests
+	cd test && BASHCLI_DEBUG= prove -r --ext '' tests
