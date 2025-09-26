@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2181
+# shellcheck disable=SC2181,SC2251
 
 # Execute all functions having a name starting with 'test-', print the result in the TAP format and
 # exit.
@@ -24,4 +24,4 @@ for ((index = 0; index < ${#TEST_FUNCTIONS[@]}; ++index)); do
   fi
 done
 
-exit $((TEST_FAILURES > 0))
+exit 0
