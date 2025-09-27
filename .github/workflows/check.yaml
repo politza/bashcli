@@ -1,4 +1,4 @@
-name: Test
+name: Check
 on:
   pull_request:
   push: 
@@ -7,11 +7,11 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Check
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Run tests
-      run: make test
+    - name: Run checks
+      run: make

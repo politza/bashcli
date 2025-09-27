@@ -1,9 +1,11 @@
 SHELL = bash
 
-.PHONY: test lint
+.PHONY: check test lint
+
+check: test lint
 
 test:
-	cd test && BASHCLI_DEBUG= prove -r --ext '' tests
+	./bin/run-tests
 
 lint:
-	shellcheck $$(./bin/project-bash-files)
+	./bin/run-linter

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+cd "$(dirname "$0")"/..
+IFS=$'\n'
+#shellcheck disable=SC2046
+shellcheck $(./bin/project-bash-files)
