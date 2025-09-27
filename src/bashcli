@@ -6,7 +6,7 @@ BASHCLI_CLI_DIR=${BASHCLI_CLI_DIR:-$(dirname "${BASHCLI_CLI_SCRIPT}")}
 BASHCLI_CLI_NAME=$(basename "${BASHCLI_CLI_SCRIPT}")
 BASHCLI_DIR=$(dirname "$(realpath "$0")")
 
-. "${BASHCLI_DIR}"/lib/bashcli/load
+. "${BASHCLI_DIR}"/lib/bashcli/init
 
 bashcli-command-exec-now "$@"
 while [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; do
