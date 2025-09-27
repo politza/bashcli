@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2064
+# shellcheck disable=SC2064,SC1091
 
 PATH=$PWD/fixtures/options/basic:${PATH}
 output=$(mktemp)
@@ -105,5 +105,4 @@ test-multi-requires-argument() {
 EOF
 }
 
-# shellcheck source=/dev/null
 . ./lib/run-tests

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2064
+# shellcheck disable=SC2064,SC1091
 
 PATH=$PWD/fixtures/executable/basic:${PATH}
 output=$(mktemp)
@@ -29,5 +29,4 @@ Options:
 EOF
 }
 
-# shellcheck source=/dev/null
 . ./lib/run-tests

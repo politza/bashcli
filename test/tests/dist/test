@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2064,SC1091
+
+PATH=$PWD/../bin:${PATH}
+output=$(mktemp)
+dist=$(mktemp -d)
+trap "rm -r -- '${output}' '${dist}'" EXIT
+export XDG_CACHE_HOME=${dist}/.cache
+
+test-distributable() {
+  mkdist ./fixtures/options/basic/cli "${dist}"
+  test -x "${XDG_CACHE_HOME}/.cache/bashcli/dist/cli/bashcli/bashcli" 
+  test -L "${XDG_CACHE_HOME}/.cache/bashcli/dist/cli/cli/cli" 
+  "${dist}"/cli &> "${output}"
+  diff "${output}" - <<EOF
+boolean=
+single=
+enum=
+EOF
+}
+
+. ./lib/run-tests
