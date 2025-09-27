@@ -6,7 +6,7 @@ usage() {
   cat <<EOF
 usage:$(basename "$0") CLI [DIRECTORY]
 
-Create a single-file distribution of a CLI in DIRECTORY, which defaults to the current directory.
+Create a single-file distribution of a CLI in DIRECTORY defaulting to the current directory.
 EOF
 }
 
@@ -34,6 +34,11 @@ outputDir=${2:-$PWD}
   exit 1
 }
 
+[ "$(realpath "${cli}")" -ef "${bashcli}" ] || {
+  echo "not a bashcli link: ${cli}"
+  exit 1
+}
+
 cliName=$(basename "${cli}")
 
 [ -e "${outputDir}/${cliName}" ] && {
@@ -53,13 +58,14 @@ cp --archive "$(dirname "${cli}")/." "${tempDir}/${cliName}"
 ln --force --symbolic ../bashcli/bashcli "${tempDir}/${cliName}/${cliName}" 
 
 tar -cJf "${archiveName}" -C "${tempDir}" bashcli "${cliName}"
+hashSum=$(sha1sum "${archiveName}" | cut -d' ' -f1)
 
 cat > "${outputDir}/${cliName}" <<EOF
 #!/usr/bin/env bash
 
 set -e
 
-CACHE_DIR=\${XDG_CACHE_HOME:-\${HOME}/.cache}/bashcli/dist/${cliName}
+CACHE_DIR=\${XDG_CACHE_HOME:-\${HOME}/.cache}/bashcli/dist/${cliName}/${hashSum}
 CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
 
 if ! [ -f "\${CLI_SCRIPT}" ]; then
