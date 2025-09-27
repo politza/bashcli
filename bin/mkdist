@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+set -e
+
+usage() {
+  cat <<EOF
+usage:$(basename "$0") CLI [DIRECTORY]
+
+Create a single-file distribution of a CLI in DIRECTORY, which defaults to the current directory.
+EOF
+}
+
+[ $# -eq 1 ] || [ $# -eq 2 ] || {
+  usage
+  exit 1
+}
+
+bashcli=$(realpath "$(dirname "$0")/../src/bashcli")
+cli=$1
+outputDir=${2:-$PWD}
+
+[ -f "${bashcli}" ] || {
+  echo "no such file: ${bashcli}"
+  exit 1
+}
+
+[ "$(basename "${bashcli}")" == bashcli ] || {
+  echo "no bashcli: ${bashcli}"
+  exit 1
+}
+
+[ -L "${cli}" ] || {
+  echo "not a symbolic link: ${cli}"
+  exit 1
+}
+
+cliName=$(basename "${cli}")
+
+[ -e "${outputDir}/${cliName}" ] && {
+  echo "file already exists: ${outputDir}/${cliName}"
+  exit 1
+}
+
+mkdir --parents "${outputDir}"
+
+tempDir=$(mktemp -d)
+trap 'rm -rf -- "${tempDir}"' EXIT
+
+archiveName=${tempDir}/${cliName}.tar.xz
+
+cp --archive "$(dirname "${bashcli}")/." "${tempDir}/bashcli"
+cp --archive "$(dirname "${cli}")/." "${tempDir}/${cliName}"
+ln --force --symbolic ../bashcli/bashcli "${tempDir}/${cliName}/${cliName}" 
+
+tar -cJf "${archiveName}" -C "${tempDir}" bashcli "${cliName}"
+
+cat > "${outputDir}/${cliName}" <<EOF
+#!/usr/bin/env bash
+
+set -e
+
+CACHE_DIR=\${XDG_CACHE_HOME:-\${HOME}/.cache}/bashcli/dist/${cliName}
+CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
+
+if ! [ -f "\${CLI_SCRIPT}" ]; then
+   mkdir --parents "\${CACHE_DIR}"
+   ARCHIVE_LINE=\$(awk '/^__ARCHIVE__/ {print NR + 1; exit 0; }' "\${0}")
+   tail -n+\${ARCHIVE_LINE} "\${0}" | tar -xJ -C \${CACHE_DIR}
+fi
+
+exec "\${CLI_SCRIPT}" "\$@"
+
+__ARCHIVE__
+EOF
+
+cat "${archiveName}" >> "${outputDir}/${cliName}"
+chmod u+x "${outputDir}/${cliName}"
