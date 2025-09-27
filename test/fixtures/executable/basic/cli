@@ -1,8 +1,1 @@
-#!/usr/bin/env bash
-
-# shellcheck disable=SC2155
-
-export BASHCLI_CLI_SCRIPT=$0
-export BASHCLI_CLI_DIR="$(dirname "$0")/cli-dir"
-
-exec "$PWD"/../src/bashcli "$@"
+../../../../src/bashcli
