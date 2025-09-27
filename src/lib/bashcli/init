@@ -78,7 +78,7 @@ bashcli-load-library() {
       fi
     done
   fi
-  bashcli-error "Library ${library} not found in ${libraryDirectories[*]}" >&2
+  bashcli-error "library ${library} not found in ${libraryDirectories[*]}" >&2
   return 1
 }
 

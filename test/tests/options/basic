@@ -87,21 +87,21 @@ EOF
 test-unknown-option() {
   cli --no-such-option &> "${output}" && exit 1
   diff "${output}" - <<EOF
-cli: unrecognized option: --no-such-option
+[error] unrecognized option: --no-such-option
 EOF
 }
 
 test-single-requires-argument() {
   cli --single &> "${output}" && exit 1
   diff "${output}" - <<EOF
-cli: option requires an argument: --single
+[error] option requires an argument: --single
 EOF
 }
 
 test-multi-requires-argument() {
   cli --multi &> "${output}" && exit 1
   diff "${output}" - <<EOF
-cli: option requires an argument: --multi
+[error] option requires an argument: --multi
 EOF
 }
 

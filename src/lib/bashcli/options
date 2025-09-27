@@ -17,7 +17,7 @@ bashcli-options-parse() {
   # Parse this functions arguments: OPTIONS-MAP PARAMETERS-ARRAY [ MULTI-OPTION-MAP ... ] -- ARGUMENTS
   for ((_index = 1; _index <= $# + 1; ++_index)); do
     if [ ${_index} -eq $(($# + 1)) ]; then
-      bashcli-error "Option separator (--) missing"
+      bashcli-error "option separator (--) missing"
       return 1
     fi
     _argument="${!_index}"
@@ -29,7 +29,7 @@ bashcli-options-parse() {
     case ${_index} in
       1)
         if ! declare -p "${_argument}" | grep -q "^declare -[[:alpha:]]*A"; then
-          bashcli-error "Variable ${_argument} must be declared with the -A attribute"
+          bashcli-error "variable ${_argument} must be declared with the -A attribute"
           return 1
         fi
         _parsedOptions=${_argument} ;;
@@ -70,7 +70,7 @@ bashcli-options-parse() {
         fi
         case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
           single|multi) ;;
-          *) printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option does not accept arguments: ${_arguments[0]}" >&2
+          *) bashcli-error "option does not accept arguments: ${_arguments[0]}" >&2
              return 1;;
         esac
         shift
@@ -86,7 +86,7 @@ bashcli-options-parse() {
           fi
           _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
           if [ -z "${_optionType}" ]; then
-            printf "%s\n" "${_commandStack[*]}: unrecognized option: -${_option}" >&2
+            bashcli-error "unrecognized option: -${_option}" >&2
             return 1
           fi
           if [ "${_option:0:2}" ]; then
@@ -128,7 +128,7 @@ bashcli-options-parse() {
           case ${_optionType} in
             single|multi)
               if [ $# -lt 2 ]; then
-                printf "%s\n" "${BASHCLI_COMMAND_STACK[*]}: option requires an argument: $1" >&2
+                bashcli-error "option requires an argument: $1" >&2
                 return 1
               fi ;;
           esac
@@ -153,7 +153,7 @@ bashcli-options-parse() {
               bashcli-fatal "Internal error" ;;
           esac
         else
-          printf "%s\n" "${_commandStack[*]}: unrecognized option: $1" >&2
+          bashcli-error "unrecognized option: $1" >&2
           return 1
         fi ;;
       --)
@@ -194,9 +194,9 @@ bashcli-options-parse() {
       REPLY="${option}" ;;
     *)
       if [ -n "${optionType}" ]; then
-        bashcli-error "Matched variable $1 with non-multi option ${option}"
+        bashcli-error "matched variable $1 with non-multi option ${option}"
       else
-        bashcli-error "Failed to match variable $1 with any options"
+        bashcli-error "failed to match variable $1 with any options"
       fi
       return 1 ;;
   esac

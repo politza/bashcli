@@ -59,7 +59,7 @@ EOF
 test-child-option-before-child() {
   cli parent --child-option a child &> "${output}" && exit 1
   diff "${output}" - <<EOF
-cli parent: unrecognized option: --child-option
+[error] unrecognized option: --child-option
 EOF
 }
 

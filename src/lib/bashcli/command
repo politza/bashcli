@@ -30,7 +30,7 @@ bashcli-command-resolve() {
     fi
   done
 
-  bashcli-warning "Command not found: ${commandList[*]}"
+  bashcli-error "no such command: ${commandList[*]}"
   return 1
 }
 
@@ -44,7 +44,7 @@ bashcli-command-exec() {
 bashcli-command-exec-next() {
   set -- "${BASHCLI_COMMAND_NEXT[@]}"
   if [ $# -eq 0 ]; then
-    bashcli-error "No command pending for execution"
+    bashcli-error "no command pending for execution"
     return 1
   fi
   BASHCLI_COMMAND_NEXT=()
@@ -64,7 +64,7 @@ bashcli-command-exec-now() {
   fi
 
   if [ -z "${command}" ]; then
-    bashcli-error "No command given"
+    bashcli-error "no command given"
     return 1
   fi
 

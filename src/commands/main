@@ -6,6 +6,9 @@ declare parameters=()
 
 bashcli-options-parse options parameters -- "$@" || exit 1
 
-if [ ${#parameters[@]} -gt 0 ]; then
-  bashcli-command-exec "${parameters[@]}"
-fi
+[ ${#parameters[@]} -eq 0 ] && {
+  bashcli-error "no command given"
+  exit 1
+}
+
+bashcli-command-exec "${parameters[@]}"
