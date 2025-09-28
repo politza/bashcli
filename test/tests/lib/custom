@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2064,SC1091
+
+PATH=$PWD/fixtures/lib/custom:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+test-init-library() {
+  cli command &> "${output}"
+  diff "${output}" - <<EOF
+loading cli/init
+EOF
+}
+
+test-load-library() {
+  cli command --load-test-lib &> "${output}"
+  diff "${output}" - <<EOF
+loading cli/init
+loading cli/test
+EOF
+}
+
+. ./lib/run-tests
