@@ -57,8 +57,8 @@ cp --archive "$(dirname "${bashcli}")/." "${tempDir}/bashcli"
 cp --archive "$(dirname "${cli}")/." "${tempDir}/${cliName}"
 ln --force --symbolic ../bashcli/bashcli "${tempDir}/${cliName}/${cliName}" 
 
+hashSum=$(cd "${tempDir}" && find . -type f -print0 | xargs -0rn1 sha1sum | sha1sum - | cut -d' ' -f1)
 tar -cJf "${archiveName}" -C "${tempDir}" bashcli "${cliName}"
-hashSum=$(sha1sum "${archiveName}" | cut -d' ' -f1)
 
 cat > "${outputDir}/${cliName}" <<EOF
 #!/usr/bin/env bash
