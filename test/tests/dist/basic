@@ -4,18 +4,28 @@
 PATH=$PWD/../bin:${PATH}
 output=$(mktemp)
 dist=$(mktemp -d)
-trap "rm -r -- '${output}' '${dist}'" EXIT
+trap "rm -r -- '${output}' '${dist}'" EXIT RETURN
 export XDG_CACHE_HOME=${dist}/.cache
 
-test-distributable() {
-  mkdist ./fixtures/options/basic/cli "${dist}"
-  test -x "${XDG_CACHE_HOME}/.cache/bashcli/dist/cli/bashcli/bashcli" 
-  test -L "${XDG_CACHE_HOME}/.cache/bashcli/dist/cli/cli/cli" 
-  "${dist}"/cli &> "${output}"
+test-dist-with-symlink() {
+  local distDir=${dist}/symlink
+  mkdist ./fixtures/options/basic/cli "${distDir}"
+  "${distDir}"/cli &> "${output}"
   diff "${output}" - <<EOF
 boolean=
 single=
 enum=
+EOF
+}
+
+test-dist-with-script() {
+  local distDir=${dist}/script
+  mkdist ./fixtures/executable/script/cli "${distDir}"
+  "${distDir}"/cli command a b c &> "${output}"
+  diff "${output}" - <<EOF
+a
+b
+c
 EOF
 }
 

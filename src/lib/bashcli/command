@@ -18,7 +18,10 @@ bashcli-command-resolve() {
   REPLY=()
 
   for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
-    commandDir=${commandRoot}/${commandPath}
+    commandDir=${commandRoot}
+    if [ "${commandPath}" ]; then
+      commandDir+=/${commandPath}
+    fi
     if [ -f "${commandDir}"/main ]; then
       bashcli-debug "${commandList[*]} -> ${commandDir}"
       REPLY=("${commandDir}" "${commandRoot}" "${commandPath}")

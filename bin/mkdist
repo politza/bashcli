@@ -29,13 +29,8 @@ outputDir=${2:-$PWD}
   exit 1
 }
 
-[ -L "${cli}" ] || {
-  echo "not a symbolic link: ${cli}"
-  exit 1
-}
-
-[ "$(realpath "${cli}")" -ef "${bashcli}" ] || {
-  echo "not a bashcli link: ${cli}"
+[ -f "${cli}" ] || {
+  echo "not such file: ${cli}"
   exit 1
 }
 
@@ -55,7 +50,9 @@ archiveName=${tempDir}/${cliName}.tar.xz
 
 cp --archive "$(dirname "${bashcli}")/." "${tempDir}/bashcli"
 cp --archive "$(dirname "${cli}")/." "${tempDir}/${cliName}"
-ln --force --symbolic ../bashcli/bashcli "${tempDir}/${cliName}/${cliName}" 
+[ "$(realpath "${cli}")" -ef "${bashcli}" ] && {
+  ln --force --symbolic ../bashcli/bashcli "${tempDir}/${cliName}/${cliName}"
+}
 
 hashSum=$(cd "${tempDir}" && find . -type f -print0 | xargs -0rn1 sha1sum | sha1sum - | cut -d' ' -f1)
 tar -cJf "${archiveName}" -C "${tempDir}" bashcli "${cliName}"
@@ -67,13 +64,20 @@ set -e
 
 CACHE_DIR=\${XDG_CACHE_HOME:-\${HOME}/.cache}/bashcli/dist/${cliName}/${hashSum}
 CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
+export BASHCLI_DIR="\${CACHE_DIR}/bashcli"
 
 if ! [ -f "\${CLI_SCRIPT}" ]; then
+   if [ "${BASHCLI_DEBUG}" == true ]; then
+      echo "[debug](cli archive) extracting archive to \${CACHE_DIR}" >&2
+   fi
    mkdir --parents "\${CACHE_DIR}"
    ARCHIVE_LINE=\$(awk '/^__ARCHIVE__/ {print NR + 1; exit 0; }' "\${0}")
    tail -n+\${ARCHIVE_LINE} "\${0}" | tar -xJ -C \${CACHE_DIR}
 fi
 
+if [ "${BASHCLI_DEBUG}" == true ]; then
+   echo "[debug](cli archive) starting cli from \${CLI_SCRIPT}" >&2
+fi
 exec "\${CLI_SCRIPT}" "\$@"
 
 __ARCHIVE__
