@@ -10,7 +10,8 @@ bashcli-options-parse() {
   local _commandDir _subcommandDir _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
   local _definesSubcommands
 
-  if bashcli-command-defines-subcommands "${_commandStack[@]}"; then
+  bashcli-command-subcommands "${_commandStack[@]}"
+  if [ ${#REPLY[@]} -gt 0 ]; then
     _definesSubcommands=true
   fi
 

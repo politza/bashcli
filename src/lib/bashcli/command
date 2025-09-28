@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #shellcheck disable=SC2215
 
-declare -g -a BASHCLI_COMMAND_DIRS=(
+declare -g -a BASHCLI_COMMAND_ROOTS=(
   "${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/commands"
   "${BASHCLI_CLI_DIR}/commands"
   "${BASHCLI_DIR}/commands"
@@ -13,15 +13,15 @@ bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
   local commandPath="${commandList[*]:1}"
-  local commandDir directory
+  local commandRoot commandDir
   unset IFS
-  REPLY=
-  
-  for directory in "${BASHCLI_COMMAND_DIRS[@]}"; do
-    commandDir=${directory}/${commandPath}
+  REPLY=()
+
+  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
+    commandDir=${commandRoot}/${commandPath}
     if [ -f "${commandDir}"/main ]; then
       bashcli-debug "${commandList[*]} -> ${commandDir}"
-      REPLY="${commandDir}"
+      REPLY=("${commandDir}" "${commandRoot}" "${commandPath}")
       return 0
     fi
   done
@@ -48,16 +48,9 @@ bashcli-command-exec-next() {
 }
 
 bashcli-command-exec-now() {
-  local command
-  local commandList=("${BASHCLI_COMMAND_STACK[@]}")
-
-  if [ ${#BASHCLI_COMMAND_STACK[@]} -eq 0 ]; then
-    command="${BASHCLI_CLI_NAME}"
-  else
-    command=$1
-    commandList+=("${command}")
-    shift
-  fi
+  local command=$1
+  local commandList=("${BASHCLI_COMMAND_STACK[@]}" "${command}")
+  shift
 
   if [ -z "${command}" ]; then
     bashcli-error "no command given"
@@ -70,47 +63,41 @@ bashcli-command-exec-now() {
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
   # shellcheck source=/dev/null
-  . "${REPLY}"/main "$@"
+  . "${REPLY[0]}"/main "$@"
 }
 
 bashcli-command-subcommands() {
-  local commandList=("$@")
-  local IFS=/
-  local commandPath="${commandList[*]:1}"
-  local directory command commandDir
-  local -A subcommands=()
+  bashcli-command-resolve "$@" || return 1
 
+  local commandDir=${REPLY[0]}
+  local commandPath=${REPLY[2]}
+  local -A subcommands=()
+  local commandRoot subcommand subcommandDir
   REPLY=()
-  for directory in "${BASHCLI_COMMAND_DIRS[@]}"; do
-    commandDir=${directory}/${commandPath}
+
+  # Check if the command defines subcommands on its own.
+  for subcommand in "${commandDir}"/*/main; do
+    if [ -f "${subcommand}" ]; then
+      break;
+    fi
+    subcommand=
+  done
+
+  if [ -z "${subcommand}" ]; then
+    return 0
+  fi
+
+  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
+    commandDir=${commandRoot}/${commandPath}
     if [ -d "${commandDir}" ]; then
-      for command in "${commandDir}"/*; do
-        if [ -f "${command}"/main ]; then
-          subcommands["${command##*/}"]=present
+      for subcommandDir in "${commandDir}"/*; do
+        if [ -f "${subcommandDir}"/main ]; then
+          subcommands["${subcommandDir##*/}"]=present
         fi
       done
     fi
   done
   REPLY=("${!subcommands[@]}")
-}
-
-bashcli-command-defines-subcommands() {
-  local commandList=("$@")
-  local IFS=/
-  local commandPath="${commandList[*]:1}"
-  local directory command commandDir
-
-  for directory in "${BASHCLI_COMMAND_DIRS[@]}"; do
-    commandDir=${directory}/${commandPath}
-    if [ -f "${commandDir}"/main ]; then
-      for command in "${commandDir}"/*; do
-        if [ -f "${command}"/main ]; then
-          return 0
-        fi
-      done
-    fi
-  done
-  return 1
 }
 
 -bashcli-command-local-unset() {
