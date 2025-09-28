@@ -35,7 +35,7 @@ bashcli-context-read() {
 
   if [ -z "${BASHCLI_CONTEXT_READ[${commandDir}]}" ]; then
     if [ -f "${commandContext}" ]; then
-      bashcli-debug "Reading from ${commandContext}"
+      bashcli-debug "${commandContext}"
       # shellcheck source=/dev/null
       . "${commandContext}"
       bashcli-context-validate

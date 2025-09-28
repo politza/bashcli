@@ -20,7 +20,7 @@ bashcli-help-show() {
   trap "$(shopt -p extglob)" EXIT RETURN
   shopt -s extglob
 
-  bashcli-debug "Showing help for ${commandList[*]}"
+  bashcli-debug "${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
   commandDir=${REPLY}
   bashcli-context-clear

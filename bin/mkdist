@@ -37,7 +37,7 @@ outputDir=${2:-$PWD}
 cliName=$(basename "${cli}")
 
 [ -e "${outputDir}/${cliName}" ] && {
-  echo "file already exists: ${outputDir}/${cliName}"
+  echo "file exists: ${outputDir}/${cliName}"
   exit 1
 }
 
@@ -68,7 +68,7 @@ export BASHCLI_DIR="\${CACHE_DIR}/bashcli"
 
 if ! [ -f "\${CLI_SCRIPT}" ]; then
    if [ "${BASHCLI_DEBUG}" == true ]; then
-      echo "[debug](cli archive) extracting archive to \${CACHE_DIR}" >&2
+      echo "[debug](${cliName}) extracting to \${CACHE_DIR}" >&2
    fi
    mkdir --parents "\${CACHE_DIR}"
    ARCHIVE_LINE=\$(awk '/^__ARCHIVE__/ {print NR + 1; exit 0; }' "\${0}")
@@ -76,7 +76,7 @@ if ! [ -f "\${CLI_SCRIPT}" ]; then
 fi
 
 if [ "${BASHCLI_DEBUG}" == true ]; then
-   echo "[debug](cli archive) starting cli from \${CLI_SCRIPT}" >&2
+   echo "[debug](${cliName}) executing \${CLI_SCRIPT}" >&2
 fi
 exec "\${CLI_SCRIPT}" "\$@"
 
