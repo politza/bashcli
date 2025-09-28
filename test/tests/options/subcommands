@@ -63,4 +63,12 @@ test-child-option-before-child() {
 EOF
 }
 
+test-double-dash-option() {
+  cli parent child -- --child-option a &> "${output}"
+  diff "${output}" - <<EOF
+parameter[0]=--child-option
+parameter[1]=a
+EOF
+}
+
 . ./lib/run-tests

@@ -19,3 +19,6 @@ done
 for ((index = 0; index < ${#sharedOptions[@]}; ++index)); do
   echo "child-shared-option[${index}]=${sharedOptions[index]}"
 done
+for ((index = 0; index < ${#parameters[@]}; ++index)); do
+  echo "parameter[${index}]=${parameters[index]}"
+done
