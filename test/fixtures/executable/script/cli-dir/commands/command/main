@@ -3,9 +3,10 @@
 
 declare -A options
 declare -a parameters
+declare parameter
 
 bashcli-options-parse options parameters -- "$@" || exit 1
 
-for parameter; do
+for parameter in "${parameters[@]}"; do
   printf "%s\n" "${parameter}"
 done
