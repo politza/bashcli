@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+#shellcheck disable=SC2154
+
+declare -p parentVariable 2>/dev/null || {
+  echo "parentVariable not found"
+}
+declare -p parentFunction 2>/dev/null || {
+  echo "parentFunction not found"
+}

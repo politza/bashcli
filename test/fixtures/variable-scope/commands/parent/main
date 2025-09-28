@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+#shellcheck disable=SC2034
+declare parentVariable=()
+parentFunction() {
+  :
+}
+
+if [ $# -gt 0 ]; then
+  bashcli-command-exec "$@"
+fi

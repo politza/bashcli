@@ -42,8 +42,6 @@ bashcli-context-read() {
       bashcli-context-defaults
       bashcli-context-merge "${commandDir}"
       BASHCLI_CONTEXT_READ[${commandDir}]=true
-    else
-      bashcli-warning "No context in directory: ${commandDir}"
     fi
   fi
 }

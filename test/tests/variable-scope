@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2064,SC1091
+
+PATH=$PWD/fixtures/variable-scope:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+test-parent-variable-scope() {
+  cli parent child &> "${output}"
+  diff "${output}" - <<EOF
+parentVariable not found
+parentFunction not found
+EOF
+}
+
+. ./lib/run-tests
