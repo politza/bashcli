@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034,SC1090,SC1091
 
 BASHCLI_CLI_SCRIPT=${BASHCLI_CLI_SCRIPT:-$(realpath -s "$0")}
-BASHCLI_CLI_DIR=${BASHCLI_CLI_DIR:-$(dirname "${BASHCLI_CLI_SCRIPT}")}
+BASHCLI_CLI_DIR=$(dirname "${BASHCLI_CLI_SCRIPT}")
 BASHCLI_CLI_NAME=$(basename "${BASHCLI_CLI_SCRIPT}")
 BASHCLI_DIR=$(dirname "$(realpath "$0")")
 
