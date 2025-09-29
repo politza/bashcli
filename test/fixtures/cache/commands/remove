@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+bashcli-load-library bashcli/cache
+
+declare -A options=()
+#shellcheck disable=SC2034
+declare parameters=()
+
+bashcli-options-parse options parameters -- "$@" || exit 1
+
+bashcli-cache-remove "${options[name]}"

@@ -10,12 +10,18 @@ readarray -t tests <<<"$(compgen -A function | grep '^test-')"
 echo "1..${#tests[@]}"
 
 for ((index = 0; index < ${#tests[@]}; ++index)); do
+  if declare -F before-each &>/dev/null; then
+    before-each
+  fi
   test=${tests[index]}
   (set -e; ${test}) 1>&2
   if [ $? -eq 0 ]; then
-    echo "ok $((index + 1)) ${test}"
+    echo "ok $((index + 1)) - ${test}"
   else
-    echo "not ok $((index + 1)) ${test}"
+    echo "not ok $((index + 1)) - ${test}"
+  fi
+  if declare -F after-each &>/dev/null; then
+    after-each
   fi
 done
 

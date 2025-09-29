@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2215
+
+declare -g BASHCLI_CACHE_DIR=${BASHCLI_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/${BASHCLI_CLI_NAME}/cache}
+
+bashcli-cache-get() {
+  local name=$1
+  local validator=$2
+  local baseName keyFile valueFile
+
+  -bashcli-cache-check-name "${name}" || return 1
+  -bashcli-cache-check-function "${validator}" || return 1
+
+  baseName=${BASHCLI_CACHE_DIR}/${name}
+  keyFile=${baseName}.key
+  valueFile=${baseName}.value
+
+  bashcli-debug "keyFile=${keyFile} valueValue=${valueFile}"
+
+  if [ -f "${keyFile}" ] && [ -f "${valueFile}" ]; then
+    if [ -z "${validator}" ] || "${validator}" "${name}" "${keyFile}"; then
+      cat "${valueFile}"
+      return $?
+    fi
+  fi
+
+  rm -f -- "${keyFile}" "${valueFile}"
+  return 1
+}
+
+bashcli-cache-put() {
+  local name=$1
+  local value=$2
+  local keyFn=$3
+  local baseName keyFile valueFile
+
+  bashcli-debug "name=${name} value=${value}"
+  -bashcli-cache-check-name "${name}" || return 1
+  -bashcli-cache-check-function "${keyFn}" || return 1
+
+  baseName=${BASHCLI_CACHE_DIR}/${name}
+  keyFile=${baseName}.key
+  valueFile=${baseName}.value
+
+  mkdir -p "${BASHCLI_CACHE_DIR}"
+
+  if [ "${keyFn}" ]; then
+    "${keyFn}" "${name}" "${keyFile}" || return 1
+  fi
+
+  if ! [ -f "${keyFile}" ]; then
+    touch "${keyFile}" || return 1
+  fi
+
+  printf "%s" "${value}" > "${valueFile}"
+}
+
+bashcli-cache-remove() {
+  local name=$1
+  local baseName keyFile valueFile
+
+  -bashcli-cache-check-name "${name}" || return 1
+
+  baseName=${BASHCLI_CACHE_DIR}/${name}
+  keyFile=${baseName}.key
+  valueFile=${baseName}.value
+
+  rm -f -- "${keyFile}" "${valueFile}"
+}
+
+-bashcli-cache-check-name() {
+  local name=$1
+
+  if [ -z "${name}" ]; then
+    bashcli-error "name must not be empty"
+    return 1
+  fi
+  if [[ ${name} == */* ]]; then
+    bashcli-error "name must not contain slashes: ${name}"
+    return 1
+  fi
+}
+
+-bashcli-cache-check-function() {
+  local fn=$1
+
+  [ -z "${fn}" ] || declare -F -p "${fn}" &>/dev/null || {
+      bashcli-error "function expected: ${fn}"
+      return 1
+    }
+}

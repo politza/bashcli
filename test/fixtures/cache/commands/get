@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+bashcli-load-library bashcli/cache
+
+
+declare -A options=()
+#shellcheck disable=SC2034
+declare parameters=()
+declare validator=cli-cache-validator
+
+bashcli-options-parse options parameters -- "$@" || exit 1
+
+cli-cache-validator() {
+  local name=$1
+  local keyFile=$2
+
+  [ "${name}" == "${options[name]}" ] \
+    && [ "$(cat "${keyFile}")" == "${options[key]}" ]
+}
+
+if [ -z "${options[key]}" ]; then
+  validator=
+fi
+
+bashcli-cache-get "${options[name]}" ${validator}

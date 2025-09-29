@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2064,SC1091
+
+PATH=$PWD/fixtures/cache:${PATH}
+output=$(mktemp)
+cache=$(mktemp -d)
+trap "rm -r -- '${output}' '${cache}'" EXIT
+export XDG_CACHE_HOME=${cache}/.cache
+
+after-each() {
+  rm -rf "${XDG_CACHE_HOME}"
+}
+
+test-empty-cache() {
+  cli get --name name  &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+test-cache-put() {
+  cli put --name name --value value
+  cli get --name name &> "${output}"
+  diff -w "${output}" <(printf value)
+}
+
+test-cache-not-available() {
+  cli get --name name &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+test-cache-other-name() {
+  cli put --name name --value value
+  cli get --name other &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+test-cache-with-key-put() {
+  cli put --name name --value value --key key
+  cli get --name name --key key &> "${output}"
+  diff "${output}" <(printf value)
+}
+
+test-cache-with-key-not-available() {
+  cli get --name name --key key &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+test-cache-other-name() {
+  cli put --name name --value value --key key
+  cli get --name other --key key &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+test-cache-with-key-other-key() {
+  cli put --name name --value value --key key
+  cli get --name name --key other &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+test-cache-remove() {
+  cli put --name name --value value
+  cli get --name name &> "${output}"
+  diff "${output}" <(printf value)
+
+  cli remove --name name
+  cli get --name name &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+test-cache-with-key-remove() {
+  cli put --name name --value value --key key
+
+  cli get --name name --key key &> "${output}"
+  diff "${output}" <(printf value)
+
+  cli remove --name name
+  cli get --name name --key key &> "${output}" && return 1
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
+. ./lib/run-tests
