@@ -9,7 +9,7 @@ export XDG_CACHE_HOME=${dist}/.cache
 
 test-dist-with-symlink() {
   local distDir=${dist}/symlink
-  mkdist ./fixtures/options/basic/cli "${distDir}"
+  mkdist ./fixtures/options/cli "${distDir}"
   "${distDir}"/cli &> "${output}"
   diff "${output}" - <<EOF
 boolean=
@@ -20,7 +20,7 @@ EOF
 
 test-dist-with-script() {
   local distDir=${dist}/script
-  mkdist ./fixtures/executable/script/cli "${distDir}"
+  mkdist ./fixtures/script-cli/cli "${distDir}"
   "${distDir}"/cli command a b c &> "${output}"
   diff "${output}" - <<EOF
 a

@@ -3,4 +3,4 @@
 set -e
 export BASHCLI_DEBUG=
 cd "$(dirname "$0")"/../test
-prove -r --ext '' tests
+prove -r --ext 'test' tests

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2064,SC1091
 
-PATH=$PWD/fixtures/options/subcommands:${PATH}
+PATH=$PWD/fixtures/subcommand-options:${PATH}
 output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 

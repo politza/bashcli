@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 export BASHCLI_CLI_SCRIPT=$0
-BASHCLI_DIR=${BASHCLI_DIR:-"$(dirname "$0")/../../../../src"}
+BASHCLI_DIR=${BASHCLI_DIR:-"$(dirname "$0")/../../../src"}
 
 exec "${BASHCLI_DIR}"/bashcli "$@"
