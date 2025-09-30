@@ -1,26 +1,21 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2181,SC2251
+# shellcheck disable=SC2181
 
 # Execute all functions having a name starting with 'test-', print the result in the TAP format and
 # exit.
 
-set -Eeuo pipefail
+tests=()
+readarray -t tests <<<"$(compgen -A function | grep '^test-')"
 
-TEST_FUNCTIONS=()
-TEST_FAILURES=0
+echo "1..${#tests[@]}"
 
-readarray -t TEST_FUNCTIONS <<<"$(compgen -A function | grep '^test-')"
-
-echo "1..${#TEST_FUNCTIONS[@]}"
-
-for ((index = 0; index < ${#TEST_FUNCTIONS[@]}; ++index)); do
-  test=${TEST_FUNCTIONS[index]}
-  ! ${test} 1>&2
-  if [ $? -ne 0 ]; then
+for ((index = 0; index < ${#tests[@]}; ++index)); do
+  test=${tests[index]}
+  (set -e; ${test}) 1>&2
+  if [ $? -eq 0 ]; then
     echo "ok $((index + 1)) ${test}"
   else
     echo "not ok $((index + 1)) ${test}"
-    ((++TEST_FAILURES))
   fi
 done
 
