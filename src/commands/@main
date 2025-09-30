@@ -7,7 +7,7 @@ declare parameters=()
 bashcli-options-parse options parameters -- "$@" || exit 1
 
 [ ${#parameters[@]} -eq 0 ] && {
-  bashcli-error "no command given"
+  bashcli-error "no command given (try: ${BASHCLI_CLI_NAME} --help)"
   exit 1
 }
 
