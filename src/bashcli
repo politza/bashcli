@@ -7,10 +7,12 @@ BASHCLI_CLI_NAME=$(basename "${BASHCLI_CLI_SCRIPT}")
 BASHCLI_DIR=$(dirname "$(realpath "$0")")
 
 . "${BASHCLI_DIR}"/lib/bashcli/init
-[ -f "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/init" ] &&
-  . "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/init"
+if [ "${BASHCLI_CLI_NAME}" != bashcli ]; then
+  [ -f "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/init" ] &&
+    . "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/init"
+fi
 
-bashcli-command-exec-now "${BASHCLI_CLI_NAME}" "$@"
+bashcli-command-exec-now . "$@"
 while [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; do
   bashcli-command-exec-next || exit $?
 done

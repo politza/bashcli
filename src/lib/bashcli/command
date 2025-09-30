@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#shellcheck disable=SC2215
+#shellcheck disable=SC2215,SC2053
 
 declare -g -a BASHCLI_COMMAND_ROOTS=(
   "${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/commands"
@@ -8,28 +8,53 @@ declare -g -a BASHCLI_COMMAND_ROOTS=(
 )
 declare -g -a BASHCLI_COMMAND_STACK=()
 declare -g -a BASHCLI_COMMAND_NEXT=()
+declare -g BASHCLI_COMMAND_PATTERN='?(.|+([^.@]))'
+declare -g BASHCLI_COMMAND_MAIN=@main
 
+# shellcheck disable=SC2059
 bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
-  local commandPath="${commandList[*]:1}"
-  local commandRoot commandDir
-  unset IFS
+  local commandPath="${commandList[*]}"
+  local round commandName commandRoot commandMain
   REPLY=()
 
-  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
-    commandDir=${commandRoot}
-    if [ "${commandPath}" ]; then
-      commandDir+=/${commandPath}
-    fi
-    if [ -f "${commandDir}"/main ]; then
-      bashcli-debug "${commandList[*]} -> ${commandDir}"
-      REPLY=("${commandDir}" "${commandRoot}" "${commandPath}")
-      return 0
+  if [ ${#commandList[@]} -eq 0 ]; then
+    bashcli-error "command-list is empty"
+    return 1
+  fi
+
+  bashcli-debug "resolving ${commandPath}"
+
+  for commandName in "${commandList[@]}"; do
+    if [[ "${commandName}" != ${BASHCLI_COMMAND_PATTERN} ]]; then
+      bashcli-error "invalid command name: ${commandName}"
+      return 1
     fi
   done
 
-  bashcli-error "no such command: ${commandList[*]}"
+  commandName=${BASHCLI_COMMAND_MAIN}
+
+  for ((round = 0; round < 2; ++round)); do
+    for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
+      commandMain=${commandRoot}/${commandPath}/${commandName}
+      if [ -f "${commandMain}" ]; then
+        bashcli-debug "${commandList[*]} -> ${commandMain}"
+        REPLY=("${commandMain}" "${commandPath}/${commandName}")
+        return 0
+      fi
+    done
+
+    if [ ${#commandList[@]} -gt 1 ]; then
+      commandName=${commandPath##*/}
+      commandPath=${commandPath%/*}
+    else
+      break
+    fi
+  done
+
+  IFS=' '
+  bashcli-error "no such command: ${commandList[*]:1}"
   return 1
 }
 
@@ -66,40 +91,38 @@ bashcli-command-exec-now() {
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
   # shellcheck source=/dev/null
-  . "${REPLY[0]}"/main "$@"
+  . "${REPLY[0]}" "$@"
 }
 
 bashcli-command-subcommands() {
+  REPLY=()
   bashcli-command-resolve "$@" || return 1
 
-  local commandDir=${REPLY[0]}
-  local commandPath=${REPLY[2]}
+  local commandPath=${REPLY[1]%/*}
+  local commandMain=${REPLY[1]##*/}
   local -A subcommands=()
-  local commandRoot subcommand subcommandDir
+  local commandRoot subcommandMain subcommandName commandDir
   REPLY=()
 
-  # Check if the command defines subcommands on its own.
-  for subcommand in "${commandDir}"/*/main; do
-    if [ -f "${subcommand}" ]; then
-      break;
-    fi
-    subcommand=
-  done
-
-  if [ -z "${subcommand}" ]; then
-    return 0
+  if [ "${commandMain}" != "${BASHCLI_COMMAND_MAIN}" ]; then
+    return 1
   fi
 
   for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
     commandDir=${commandRoot}/${commandPath}
     if [ -d "${commandDir}" ]; then
-      for subcommandDir in "${commandDir}"/*; do
-        if [ -f "${subcommandDir}"/main ]; then
-          subcommands["${subcommandDir##*/}"]=present
+      for subcommandMain in "${commandDir}"/*; do
+        if [ -f "${subcommandMain}" ] || [ -f "${subcommandMain}/${BASHCLI_COMMAND_MAIN}" ]; then
+          subcommandName=${subcommandMain##*/}
+          if [[ "${subcommandName}" == ${BASHCLI_COMMAND_PATTERN} ]]; then
+            subcommands["${subcommandName}"]=1
+          fi
         fi
       done
     fi
   done
+
+  bashcli-debug "$* -> ${!subcommands[*]}"
   REPLY=("${!subcommands[@]}")
 }
 

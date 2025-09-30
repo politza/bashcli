@@ -4,7 +4,7 @@
 bashcli-completion-complete() {
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
-  local commandStack=()
+  local commandStack=(.)
   local index option word subcommand completion completionFn completionFns
 
   if [ -f /usr/share/bash-completion/bash_completion ]; then
@@ -21,6 +21,8 @@ bashcli-completion-complete() {
     bashcli-error "bash-completion is not available or could not be loaded"
     return 1
   fi
+
+  bashcli-context-clear
 
   for ((index = 0; index <= cword; ++index)); do
     word=${words[index]}
@@ -66,12 +68,12 @@ bashcli-completion-complete() {
         done ;;
       *)
         if bashcli-command-resolve "${commandStack[@]}" "${word}" &>/dev/null; then
-          local commandDir=${REPLY}
+          local commandMain=${REPLY}
           commandStack+=("${word}")
-          bashcli-context-read "${commandDir}"
-          if [ -f "${commandDir}"/completion ]; then
+          bashcli-context-read "${commandMain}"
+          if [ -f "${commandMain}".completion ]; then
             # shellcheck source=/dev/null
-            . "${commandDir}"/completion
+            . "${commandMain}".completion
           fi
         fi
     esac
@@ -99,9 +101,9 @@ bashcli-completion-complete() {
     if [ ${#REPLY[@]} -gt 0 ]; then
       for subcommand in "${REPLY[@]}"; do
         if bashcli-command-resolve "${commandStack[@]}" "${subcommand}"; then
-          local commandDir=${REPLY}
+          local commandMain=${REPLY}
           bashcli-context-read "${REPLY}" || continue
-          BASHCLI_COMPLETIONS["${subcommand} "]=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandDir}]%%$'\n'*}
+          BASHCLI_COMPLETIONS["${subcommand} "]=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]%%$'\n'*}
         fi
       done
     else
@@ -154,7 +156,7 @@ _${cliName}_complete() {
     BASHCLI_CLI_DIR="${BASHCLI_CLI_DIR}"
     BASHCLI_CLI_NAME="${BASHCLI_CLI_NAME}"
     IFS=$'\n'
-    
+
     "${BASHCLI_CLI_SCRIPT}" \\
       complete \\
       --comp-cword "\${COMP_CWORD}"    \\

@@ -30,30 +30,30 @@ bashcli-context-read() {
   local -A OPTION_ALIASES=()
   local -A OPTION_COMPLETIONS=()
   local -A CONFIG=()
-  local commandDir=$1
-  local commandContext=${commandDir}/context
+  local commandMain=$1
+  local commandContext=${commandMain}.context
 
-  if [ -z "${BASHCLI_CONTEXT_READ[${commandDir}]}" ]; then
+  if [ -z "${BASHCLI_CONTEXT_READ[${commandMain}]}" ]; then
     if [ -f "${commandContext}" ]; then
       bashcli-debug "${commandContext}"
       # shellcheck source=/dev/null
       . "${commandContext}"
       bashcli-context-validate
       bashcli-context-defaults
-      bashcli-context-merge "${commandDir}"
-      BASHCLI_CONTEXT_READ[${commandDir}]=true
+      bashcli-context-merge "${commandMain}"
+      BASHCLI_CONTEXT_READ[${commandMain}]=true
     fi
   fi
 }
 
 bashcli-context-merge() {
-  local alias option commandDir=$1
+  local alias option commandMain=$1
   for option in "${!OPTIONS[@]}"; do
-    BASHCLI_CONTEXT_DESCRIPTIONS["${commandDir}"]=${DESCRIPTION}
+    BASHCLI_CONTEXT_DESCRIPTIONS["${commandMain}"]=${DESCRIPTION}
     BASHCLI_CONTEXT_OPTIONS[${option}]=${OPTIONS[${option}]}
     BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]=${OPTION_DESCRIPTIONS[${option}]}
     BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]=${OPTION_COMPLETIONS[${option}]}
-    BASHCLI_CONTEXT_OPTIONS_SOURCE[${option}]=${commandDir}
+    BASHCLI_CONTEXT_OPTIONS_SOURCE[${option}]=${commandMain}
   done
 
   for alias in "${!OPTION_ALIASES[@]}"; do
@@ -70,8 +70,8 @@ bashcli-context-defaults() {
 
 bashcli-context-validate() {
   local option optionType alias IFS
-  if [ -z "${DESCRIPTIONS}" ]; then
-    DESCRIPTIONS="${BASHCLI_CONTEXT_NOT_DOCUMENTED}"
+  if [ -z "${DESCRIPTION}" ]; then
+    DESCRIPTION="${BASHCLI_CONTEXT_NOT_DOCUMENTED}"
   fi
 
   for option in "${!OPTIONS[@]}"; do

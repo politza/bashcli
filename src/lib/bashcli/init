@@ -69,7 +69,7 @@ bashcli-load-library() {
   if [[ "${BASHCLI_LIBRARIES_LOADED[${library}]}" == true && "${BASHCLI_DEBUG}" != true ]]; then
     return 0
   else
-    for directory in "${libraryDirectories[@]}"; do 
+    for directory in "${libraryDirectories[@]}"; do
       if [ -f "${directory}/${library}" ]; then
         BASHCLI_LIBRARIES_LOADED[${library}]=true
         #shellcheck source=/dev/null

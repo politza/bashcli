@@ -9,4 +9,4 @@ declare parameters=()
 
 bashcli-options-parse options parameters -- "$@" || exit 1
 
-bashcli-help-show "${BASHCLI_CLI_NAME}" "$@"
+bashcli-help-show . "$@"

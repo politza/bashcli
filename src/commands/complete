@@ -6,7 +6,7 @@ bashcli-load-library bashcli/complete
 declare -A options=()
 declare -a parameters=()
 
-bashcli-debug "Complete called with arguments $*"
+bashcli-debug "complete called with arguments $*"
 bashcli-options-parse options parameters -- "$@" || exit 1
 
 if [ "${options[script]}" ]; then
@@ -23,5 +23,4 @@ declare COMP_WORDS
 
 readarray -t COMP_WORDS <<<"${options[comp-words]}"
 
-bashcli-context-clear
 bashcli-completion-complete "${parameters[@]}"

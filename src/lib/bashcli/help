@@ -15,27 +15,27 @@ declare -g BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 # shellcheck disable=SC2215
 bashcli-help-show() {
   local commandList=("$@")
-  local commandDir
+  local commandMain
 
   trap "$(shopt -p extglob)" EXIT RETURN
   shopt -s extglob
 
   bashcli-debug "${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
-  commandDir=${REPLY}
+  commandMain=${REPLY}
   bashcli-context-clear
-  bashcli-context-read "${commandDir}"
+  bashcli-context-read "${commandMain}"
 
-  -bashcli-help-show-intro "${commandDir}" "${commandList[@]}"
+  -bashcli-help-show-intro "${commandMain}" "${commandList[@]}"
   -bashcli-help-show-options
   -bashcli-help-show-subcommands "${commandList[@]}"
 }
 
 -bashcli-help-show-intro() {
-  local commandDir=$1
+  local commandMain=$1
   shift
   local commandList=("$@")
-  local description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandDir}]}
+  local description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
   local optionsInfo parameterInfo parameterTypes
 
   if [ ${#BASHCLI_CONTEXT_OPTIONS[@]} -gt 0 ]; then
@@ -47,6 +47,7 @@ bashcli-help-show() {
     parameterInfo=" ${parameterTypes^^} ..."
   fi
 
+  commandList[0]=${BASHCLI_CLI_NAME}
   printf "%sUsage:%s\n%s%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
          "${commandList[*]}" "${optionsInfo}" "${parameterInfo}"
   if [ -n "${description}" ]; then
@@ -113,7 +114,7 @@ bashcli-help-show() {
   local commandList=("$@")
   local maxSubcommandLength=0
   local padding=4
-  local subcommand subcommand commandDir description
+  local subcommand subcommand description
 
   bashcli-command-subcommands "${commandList[@]}" || return 1
 
@@ -129,11 +130,11 @@ bashcli-help-show() {
     ((maxSubcommandLength += padding))
     for subcommand in "${REPLY[@]}"; do
       bashcli-command-resolve "${commandList[@]}" "${subcommand}"
-      commandDir=${REPLY}
-      if [ -n "${commandDir}" ]; then
-        bashcli-context-read "${commandDir}"
+      commandMain=${REPLY}
+      if [ -n "${commandMain}" ]; then
+        bashcli-context-read "${commandMain}"
       fi
-      description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandDir}]}
+      description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
       printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'*}"
     done
   fi

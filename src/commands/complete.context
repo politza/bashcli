@@ -3,7 +3,7 @@
 #shellcheck disable=SC2034
 
 DESCRIPTION="\
-Complete options and parameters. 
+Complete options and parameters.
 "
 
 OPTIONS=(
