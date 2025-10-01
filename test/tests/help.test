@@ -34,6 +34,9 @@ Options:
   Single option first line.  Single option second line.  Single option
   third line.
 
+--version
+  Prints the version of the program.
+
 Subcommands:
 subcommand-1    Subcommand-1 description.
 subcommand-0    Subcommand-0 description.
@@ -51,6 +54,9 @@ Subcommand-0 description.
 Options:
 --help
   Shows a help message.
+
+--version
+  Prints the version of the program.
 EOF
 }
 

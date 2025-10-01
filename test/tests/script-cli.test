@@ -26,6 +26,9 @@ Options:
 
 --option
   A boolean option.
+
+--version
+  Prints the version of the program.
 EOF
 }
 
