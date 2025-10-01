@@ -6,6 +6,11 @@ declare parameters=()
 
 bashcli-options-parse options parameters -- "$@" || exit 1
 
+[ "${options[version]}" ] && {
+  echo "${BASHCLI_CLI_NAME} ${BASHCLI_CLI_VERSION:-unknown} (bashcli ${BASHCLI_VERSION})"
+  exit 0
+}
+
 [ ${#parameters[@]} -eq 0 ] && {
   bashcli-error "no command given (try: ${BASHCLI_CLI_NAME} --help)"
   exit 1
