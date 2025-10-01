@@ -66,6 +66,10 @@ bashcli-context-defaults() {
     OPTIONS[help]=boolean
     OPTION_DESCRIPTIONS[help]="Shows a help message."
   fi
+  if [ -z "${OPTIONS[version]}" ]; then
+    OPTIONS[version]=boolean
+    OPTION_DESCRIPTIONS[version]="Prints the version of the program."
+  fi
 }
 
 bashcli-context-validate() {

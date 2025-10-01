@@ -62,6 +62,9 @@ bashcli-options-parse() {
       --help)
         bashcli-help-show "${_commandStack[@]}"
         exit 0 ;;
+      --version)
+        echo "${BASHCLI_CLI_NAME} ${BASHCLI_CLI_VERSION:-unknown} (bashcli ${BASHCLI_VERSION})"
+        exit 0 ;;
       --*=*)
         # Split long options with a value: --option=value .
         _arguments=("${1%%=*}" "${1#*=}")
