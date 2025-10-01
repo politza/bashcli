@@ -20,8 +20,6 @@ test-executable-help() {
 Usage:
 cli command [ OPTIONS ]
 
-Not documented.
-
 Options:
 --help
   Shows a help message.

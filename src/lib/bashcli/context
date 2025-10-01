@@ -74,9 +74,6 @@ bashcli-context-defaults() {
 
 bashcli-context-validate() {
   local option optionType alias IFS
-  if [ -z "${DESCRIPTION}" ]; then
-    DESCRIPTION="${BASHCLI_CONTEXT_NOT_DOCUMENTED}"
-  fi
 
   for option in "${!OPTIONS[@]}"; do
     if [[ ${option} == -* ]]; then

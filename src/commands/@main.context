@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-DESCRIPTION="\
-This is the main command.
-"
+DESCRIPTION=""
 
 OPTIONS=(
 )
