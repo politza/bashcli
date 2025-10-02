@@ -21,14 +21,14 @@ Usage:
 cli command [ OPTIONS ]
 
 Options:
---help
-  Shows a help message.
-
 --option
   A boolean option.
 
 --version
   Prints the version of the program.
+
+--help
+  Shows a help message.
 EOF
 }
 

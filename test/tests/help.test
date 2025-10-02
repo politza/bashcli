@@ -21,9 +21,6 @@ Options:
 --enum, -e ENUM-VALUE
   Enum option description with trailing newlines.
 
---help
-  Shows a help message.
-
 --multi, -m MULTI-VALUE
   Multi option description.
 
@@ -36,6 +33,9 @@ Options:
 
 --version
   Prints the version of the program.
+
+--help
+  Shows a help message.
 
 Subcommands:
 subcommand-1    Subcommand-1 description.
@@ -52,11 +52,11 @@ cli command subcommand-0 [ OPTIONS ]
 Subcommand-0 description.
 
 Options:
---help
-  Shows a help message.
-
 --version
   Prints the version of the program.
+
+--help
+  Shows a help message.
 EOF
 }
 
