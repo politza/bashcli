@@ -10,6 +10,7 @@ declare -g -A BASHCLI_CONTEXT_CONFIG=()
 declare -g -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
 declare -g -A BASHCLI_CONTEXT_READ=()
 
+declare -g -a BASHCLI_CONTEXT_DEFAULT_OPTIONS=(version help)
 declare -g -r BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
 
 bashcli-context-clear() {

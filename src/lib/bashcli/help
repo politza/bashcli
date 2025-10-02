@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2190,SC2064
+# shellcheck disable=SC2190,SC2064,SC2184,SC2215
 
 declare -g -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
@@ -55,13 +55,13 @@ bashcli-help-show() {
   fi
 }
 
-# shellcheck disable=SC2206,SC2207,SC2004
+# shellcheck disable=SC2206,SC2004
 -bashcli-help-show-options() {
   local -A optionLabels=()
   local index optionDashes option optionAliases optionVariants optionVariant
   local optionValueType optionType optionLabel description
-  local IFS=$'\n'
-  local options=($(LC_ALL=C sort <<<"${!BASHCLI_CONTEXT_OPTIONS[@]}"))
+  local options=($(-bashcli-help-sorted-options))
+
 
   for option in "${options[@]}"; do
     # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
@@ -138,4 +138,28 @@ bashcli-help-show() {
       printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'*}"
     done
   fi
+}
+
+# shellcheck disable=SC2207
+-bashcli-help-sorted-options() {
+  local index option default
+  local IFS=$'\n'
+  local options=($(LC_ALL=C sort <<<"${!BASHCLI_CONTEXT_OPTIONS[@]}"))
+  for ((index = 0; index < ${#options[@]}; ++index)); do
+    option=${options[index]}
+    for default in "${BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
+      if [ "${option}" == "${default}" ]; then
+        break
+      fi
+      default=
+    done
+    if [ -z "${default}" ]; then
+      printf "%s\n" "${option}"
+    fi
+  done
+  for option in "${BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
+    if [ "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
+      printf "%s\n" "${option}"
+    fi
+  done
 }
