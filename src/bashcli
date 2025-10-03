@@ -18,5 +18,9 @@ fi
 
 bashcli-command-exec-now . "$@"
 while [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; do
-  bashcli-command-exec-next || exit $?
+  bashcli-command-exec-next
+  REPLY=$?
+  if [ ${REPLY} -ne 0 ]; then
+    exit ${REPLY}
+  fi
 done
