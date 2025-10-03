@@ -2,7 +2,8 @@
 
 bashcli-string-trim() {
   local -n _string=$1
+  local LC_ALL=C
 
-  _string=${_string##+([[:blank:]])}
-  _string=${_string%%+([[:blank:]] )}
+  _string=${_string##+([[:space:]])}
+  _string=${_string%%+([[:space:]])}
 }

@@ -38,6 +38,8 @@ bashcli-help-show() {
   local description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
   local optionsInfo parameterInfo parameterTypes
 
+  bashcli-string-trim description
+
   if [ ${#BASHCLI_CONTEXT_OPTIONS[@]} -gt 0 ]; then
     optionsInfo=" [ OPTIONS ]"
   fi
@@ -116,9 +118,7 @@ bashcli-help-show() {
   local padding=4
   local subcommand subcommand description
 
-  bashcli-command-subcommands "${commandList[@]}" || return 0
-
-  if [ ${#REPLY} -gt 0 ]; then
+  if bashcli-command-subcommands "${commandList[@]}"; then
     printf "\n%sSubcommands:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
 
     for subcommand in "${REPLY[@]}"; do
@@ -135,7 +135,8 @@ bashcli-help-show() {
         bashcli-context-read "${commandMain}"
       fi
       description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
-      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'*}"
+      bashcli-string-trim description
+      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description}"
     done
   fi
 }

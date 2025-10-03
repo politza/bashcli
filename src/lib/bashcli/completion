@@ -97,8 +97,7 @@ bashcli-completion-complete() {
       fi
     done
   else
-    bashcli-command-subcommands "${commandStack[@]}"
-    if [ ${#REPLY[@]} -gt 0 ]; then
+    if bashcli-command-subcommands "${commandStack[@]}"; then
       for subcommand in "${REPLY[@]}"; do
         if bashcli-command-resolve "${commandStack[@]}" "${subcommand}"; then
           local commandMain=${REPLY}

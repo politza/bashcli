@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-DESCRIPTION="Subcommand-0 description."
+DESCRIPTION="
+Subcommand-0 description.
+"

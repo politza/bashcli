@@ -95,7 +95,6 @@ bashcli-command-exec-now() {
 }
 
 bashcli-command-subcommands() {
-  REPLY=()
   bashcli-command-resolve "$@" || return 1
 
   local commandPath=${REPLY[1]%/*}
@@ -124,6 +123,7 @@ bashcli-command-subcommands() {
 
   bashcli-debug "$* -> ${!subcommands[*]}"
   REPLY=("${!subcommands[@]}")
+  [ ${#REPLY} -gt 0 ]
 }
 
 -bashcli-command-local-unset() {
