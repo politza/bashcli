@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2064,SC1091
+# shellcheck disable=SC2064,SC1091,SC2317
 
 PATH=$PWD/fixtures/cache:${PATH}
 output=$(mktemp)

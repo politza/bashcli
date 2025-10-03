@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2190,SC2064,SC2184,SC2215
+# shellcheck disable=SC2190,SC2064,SC2184,SC2215,SC2207
 
 declare -g -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
