@@ -25,3 +25,13 @@ bashcli-complete-file() {
 
   COMPREPLY=()
 }
+
+bashcli-complete-config-profile() {
+  local profile
+
+  bashcli-config-initialize
+
+  for profile in "${!BASHCLI_CONFIG_KNOWN_PROFILES[@]}"; do
+    BASHCLI_COMPLETIONS[${profile}]=''
+  done
+}

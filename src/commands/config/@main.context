@@ -16,6 +16,7 @@ OPTION_ALIASES=(
 )
 
 OPTION_COMPLETIONS=(
+  profile config-profile
 )
 
 CONFIG=(

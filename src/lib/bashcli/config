@@ -12,6 +12,7 @@ declare -g BASHCLI_CONFIG_INITIALIZED='false'
 
 declare -g -A BASHCLI_CONFIG_PROPERTIES=()
 declare -g -A BASHCLI_CONFIG_PROPERTY_PROFILE=()
+declare -g -A BASHCLI_CONFIG_KNOWN_PROFILES=()
 declare -g -A BASHCLI_CONFIG_ENV=()
 
 declare -g BASHCLI_CONFIG_PROFILES=()
@@ -30,7 +31,7 @@ bashcli-config-get() {
 
   bashcli-config-initialize
   bashcli-config-check-property "${property}"
-  
+
   printf "%s\n" "${BASHCLI_CONFIG_PROPERTIES[${property}]}"
 }
 
@@ -85,8 +86,8 @@ bashcli-config-list() {
   property=${REPLY[1]}
 
   bashcli-config-check-property "${property}"
-  bashcli-debug "${profile:-"''"}" "${property}" "${value}" 
-  -bashcli-config-write-value "${unset}" "${profile}" "${property}" "${value}" 
+  bashcli-debug "${profile:-"''"}" "${property}" "${value}"
+  -bashcli-config-write-value "${unset}" "${profile}" "${property}" "${value}"
 }
 
 bashcli-config-initialize() {
@@ -102,7 +103,7 @@ bashcli-config-initialize() {
     mkdir -p "$(dirname "${BASHCLI_CONFIG_GLOBAL}")" \
       && cp "${BASHCLI_CONFIG_DEFAULTS}" "${BASHCLI_CONFIG_GLOBAL}"
   fi
-  
+
   while IFS= read -r line; do
     variable=${line%%=*}
     BASHCLI_CONFIG_ENV[${variable}]=1
@@ -115,7 +116,7 @@ bashcli-config-initialize() {
   local IFS=,
   local propertyFiles=()
   local propertyFile
-  
+
   if [ -z "${BASHCLI_CONFIG_SCOPE}" ] || [ "${BASHCLI_CONFIG_SCOPE}" == global ]; then
     propertyFiles+=("${BASHCLI_CONFIG_GLOBAL}")
   fi
@@ -152,8 +153,12 @@ bashcli-config-initialize() {
       value=${REPLY[2]}
       propertyProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
 
-      if [ "${profile}" ] && [ -z "${profileOrder[${profile}]}" ]; then
-        continue
+      if [ "${profile}" ]; then
+        # shellcheck disable=2034
+        BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
+        if [ -z "${profileOrder[${profile}]}" ]; then
+          continue
+        fi
       fi
 
       if [ -z "${propertyProfile}" ] \
@@ -175,7 +180,7 @@ bashcli-config-initialize() {
   if [[ ${line} == *( )\#* ]]; then
     return 1
   fi
-  
+
   property=${line%%=*}
   value=${line#*=}
   bashcli-string-trim property
@@ -211,7 +216,7 @@ bashcli-config-initialize() {
 bashcli-config-file() {
   local propertyFile
   local scope=${BASHCLI_CONFIG_SCOPE}
-  
+
   if [ -z "${scope}" ]; then
     if [ "${BASHCLI_CONFIG_LOCAL}" ]; then
       scope=local
@@ -245,7 +250,7 @@ bashcli-config-file() {
   bashcli-config-file
   # shellcheck disable=SC2128
   propertyFile=${REPLY}
-  
+
   if [ "${profile}" ]; then
     profilePrefix="%${profile}."
   fi
@@ -278,7 +283,7 @@ bashcli-config-file() {
   local variant
 
   -bashcli-config-env-init
-  
+
   for ((variant = 0; variant < 3; ++variant)); do
     case ${variant} in
       0) ;;
