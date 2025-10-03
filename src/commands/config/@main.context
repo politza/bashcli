@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+DESCRIPTION=""
+
+OPTIONS=(
+  local    enum:scope
+  global   enum:scope
+  profile  multi
+)
+
+OPTION_DESCRIPTIONS=(
+)
+
+OPTION_ALIASES=(
+)
+
+OPTION_COMPLETIONS=(
+)
+
+CONFIG=(
+)

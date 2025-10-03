@@ -116,7 +116,7 @@ bashcli-completion-complete() {
     if declare -pf "${completionFn}" &>/dev/null; then
       "${completionFn}" "${cur}"
     else
-      bashcli-warning "Completion function ${completionFn} not defined"
+      bashcli-warn "Completion function ${completionFn} not defined"
     fi
   done
 

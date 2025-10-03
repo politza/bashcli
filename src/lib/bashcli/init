@@ -48,7 +48,7 @@ bashcli-info() {
   printf "[%s] %s\n" "${BASHCLI_COLORS[info]}info${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
-bashcli-warning() {
+bashcli-warn() {
   printf "[%s] %s\n" "${BASHCLI_COLORS[warn]}warn${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
@@ -82,8 +82,11 @@ bashcli-load-library() {
   return 1
 }
 
+bashcli-load-library bashcli/cache
 bashcli-load-library bashcli/command
+bashcli-load-library bashcli/config
 bashcli-load-library bashcli/context
 bashcli-load-library bashcli/help
 bashcli-load-library bashcli/options
 bashcli-load-library bashcli/progress
+bashcli-load-library bashcli/string

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+bashcli-string-trim() {
+  local -n _string=$1
+
+  _string=${_string##+([[:blank:]])}
+  _string=${_string%%+([[:blank:]] )}
+}
