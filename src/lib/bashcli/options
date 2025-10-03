@@ -200,7 +200,6 @@ bashcli-options-parse() {
   REPLY=
   case ${optionType} in
     multi)
-      bashcli-debug "$1 -> ${option}"
       REPLY="${option}" ;;
     *)
       if [ -n "${optionType}" ]; then

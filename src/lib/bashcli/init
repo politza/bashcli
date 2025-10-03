@@ -18,7 +18,7 @@ fi
 bashcli-debug() {
   local context
   local fnName
-  local minContextWidth=20
+  local minContextWidth=24
   local cliName=${BASHCLI_CLI_NAME}
 
   case ${BASHCLI_DEBUG} in

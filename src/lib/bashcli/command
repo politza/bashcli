@@ -24,8 +24,6 @@ bashcli-command-resolve() {
     return 1
   fi
 
-  bashcli-debug "resolving ${commandPath}"
-
   for commandName in "${commandList[@]}"; do
     if [[ "${commandName}" != ${BASHCLI_COMMAND_PATTERN} ]]; then
       bashcli-error "invalid command name: ${commandName}"
@@ -39,7 +37,6 @@ bashcli-command-resolve() {
     for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
       commandMain=${commandRoot}/${commandPath}/${commandName}
       if [ -f "${commandMain}" ]; then
-        bashcli-debug "${commandList[*]} -> ${commandMain}"
         REPLY=("${commandMain}" "${commandPath}/${commandName}")
         return 0
       fi
@@ -85,8 +82,8 @@ bashcli-command-exec-now() {
     return 1
   fi
 
-  bashcli-debug "${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}" || return 1
+  bashcli-debug "${commandList[*]} -> ${REPLY}"
 
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
