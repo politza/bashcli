@@ -24,7 +24,8 @@ bashcli-config-get() {
     0) bashcli-error "property-name parameter missing"
        return 1 ;;
     1) ;;
-    *) bashcli-error "too many parameters: $*" ;;
+    *) bashcli-error "too many parameters: $*"
+       return 1;;
   esac
 
   bashcli-config-initialize
@@ -43,6 +44,11 @@ bashcli-config-unset() {
 }
 
 bashcli-config-list() {
+  if [ $# -gt 0 ]; then
+    bashcli-error "too many parameters: $*"
+    return 1
+  fi
+
   bashcli-config-initialize
   local IFS=$'\n'
   local property
@@ -67,7 +73,8 @@ bashcli-config-list() {
          return 1
        fi;;
     3) ;;
-    *) bashcli-error "too many parameters: $*" ;;
+    *) bashcli-error "too many parameters: $*"
+       return 1;;
   esac
 
   bashcli-string-trim property
