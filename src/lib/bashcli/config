@@ -27,15 +27,14 @@ bashcli-config-get() {
     *) bashcli-error "too many parameters: $*" ;;
   esac
 
-  -bashcli-config-initialize
-
-  bashcli-config-check-property "${property}" || return 1
+  bashcli-config-initialize
+  bashcli-config-check-property "${property}"
   
   printf "%s\n" "${BASHCLI_CONFIG_PROPERTIES[${property}]}"
 }
 
 bashcli-config-set() {
-  -bashcli-config-initialize
+  bashcli-config-initialize
   -bashcli-config-set false "$@"
 }
 
@@ -44,7 +43,7 @@ bashcli-config-unset() {
 }
 
 bashcli-config-list() {
-  -bashcli-config-initialize
+  bashcli-config-initialize
   local IFS=$'\n'
   local property
   local properties=($(LC_ALL=C sort <<<"${!BASHCLI_CONFIG_PROPERTIES[@]}"))
@@ -78,12 +77,12 @@ bashcli-config-list() {
   profile=${REPLY[0]}
   property=${REPLY[1]}
 
-  bashcli-config-check-property "${property}" || return 1
+  bashcli-config-check-property "${property}"
   bashcli-debug "${profile:-"''"}" "${property}" "${value}" 
   -bashcli-config-write-value "${unset}" "${profile}" "${property}" "${value}" 
 }
 
--bashcli-config-initialize() {
+bashcli-config-initialize() {
   local IFS line variable
 
   if [ "${BASHCLI_CONFIG_INITIALIZED}" == true ]; then
