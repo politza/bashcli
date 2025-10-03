@@ -80,7 +80,7 @@ bashcli-options-parse() {
         set --  "${_arguments[@]}" "$@"
         continue ;;
       -[^-]?*)
-        # Split multiple concatenated short options with a possible value: -abcVALUE .
+        # Split multiple concatenated short options with optional value, e.g. -abcVALUE .
         _arguments=()
         for ((_index = 1; _index < ${#1}; ++_index)); do
           _option=${1:_index:1}
@@ -92,7 +92,7 @@ bashcli-options-parse() {
             bashcli-error "unrecognized option: -${_option}" >&2
             return 1
           fi
-          if [ "${_option:0:2}" ]; then
+          if [ "${_option:1}" ]; then
             _arguments+=("--${_option}")
           else
             _arguments+=("-${_option}")
