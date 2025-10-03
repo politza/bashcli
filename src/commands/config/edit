@@ -4,8 +4,6 @@
 declare -A options=()
 declare parameters=()
 
-bashcli-options-parse options parameters -- "$@" || exit 1
-
+bashcli-options-parse options parameters -- "$@"
 bashcli-config-file
-
 exec "${EDITOR:-vi}" "${REPLY}"

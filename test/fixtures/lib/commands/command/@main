@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-#shellcheck disable=SC2034
 declare -A options=()
-declare parameters=()
 
-bashcli-options-parse options parameters -- "$@"
+bashcli-options-parse options -- "$@"
 
 if [ "${options[load-test-lib]}" ]; then
   bashcli-load-library cli/test

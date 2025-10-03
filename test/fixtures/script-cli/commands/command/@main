@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2034
 
-declare -A options
 declare -a parameters
 declare parameter
 
-bashcli-options-parse options parameters -- "$@"
+bashcli-options-parse '' parameters -- "$@"
 
 for parameter in "${parameters[@]}"; do
   printf "%s\n" "${parameter}"

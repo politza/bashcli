@@ -3,11 +3,9 @@
 bashcli-load-library bashcli/cache
 
 declare -A options=()
-#shellcheck disable=SC2034
-declare parameters=()
 declare keyFn=cli-cache-key-fn
 
-bashcli-options-parse options parameters -- "$@"
+bashcli-options-parse options -- "$@"
 
 cli-cache-key-fn() {
   local name=$1

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2215,SC2165,SC2167,SC2004,SC2059
+# shellcheck disable=SC2215,SC2165,SC2167,SC2004,SC2059,SC2178
 bashcli-options-parse() {
   local _options _option _optionType _index _argument _arguments
   local _multiOptionRefPattern='__%s_ref' _multiOptionRef _multiOptionVar
-  local -n _parsedOptions _parsedParameters
+  local -A _parsedOptions=()
+  local _parsedParameters=()
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
   local _commandMain _subcommandMain _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
@@ -28,12 +29,18 @@ bashcli-options-parse() {
 
     case ${_index} in
       1)
-        if ! declare -p "${_argument}" | grep -q "^declare -[[:alpha:]]*A"; then
-          bashcli-error "variable ${_argument} must be declared with the -A attribute"
-          return 1
-        fi
-        _parsedOptions=${_argument} ;;
-      2) _parsedParameters=${_argument} ;;
+        if [ "${_argument}" ]; then
+          if ! declare -p "${_argument}" | grep -q "^declare -[[:alpha:]]*A"; then
+            bashcli-error "variable ${_argument} must be declared with the -A attribute"
+            return 1
+          fi
+          unset _parsedOptions
+          local -n _parsedOptions=${_argument}
+        fi ;;
+      2) if [ "${_argument}" ]; then
+           unset _parsedParameters
+           local -n _parsedParameters=${_argument}
+         fi ;;
       *) _multiOptionVars+=("${_argument}") ;;
     esac
   done

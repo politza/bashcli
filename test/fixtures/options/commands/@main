@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-#shellcheck disable=SC2034
 declare -A options=()
-declare multiOptions=()
 declare parameters=()
+declare multiOptions=()
 
 bashcli-options-parse options parameters multiOptions=multi -- "$@"
 

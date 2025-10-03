@@ -4,11 +4,9 @@ bashcli-load-library bashcli/cache
 
 
 declare -A options=()
-#shellcheck disable=SC2034
-declare parameters=()
 declare validator=cli-cache-validator
 
-bashcli-options-parse options parameters -- "$@"
+bashcli-options-parse options -- "$@"
 
 cli-cache-validator() {
   local name=$1

@@ -4,7 +4,7 @@
 declare -A options=()
 declare parameters=()
 
-bashcli-options-parse options parameters BASHCLI_CONFIG_PROFILES=profile -- "$@" || exit 1
+bashcli-options-parse options parameters BASHCLI_CONFIG_PROFILES=profile -- "$@"
 
 BASHCLI_CONFIG_SCOPE=${options[scope]}
 
@@ -12,7 +12,6 @@ if [ "${BASHCLI_CONFIG_SCOPE}" == local ] && [ -z "${BASHCLI_CONFIG_LOCAL}" ]; t
   bashcli-fatal "local scope not supported"
 fi
 
-bashcli-config-check-profiles || exit 1
-bashcli-config-check-scope || exit 1
-
+bashcli-config-check-profiles
+bashcli-config-check-scope
 bashcli-command-exec "${parameters[@]}"
