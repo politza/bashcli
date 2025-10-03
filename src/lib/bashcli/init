@@ -21,9 +21,9 @@ bashcli-debug() {
   local minContextWidth=20
   local cliName=${BASHCLI_CLI_NAME}
 
-  if [ "${BASHCLI_DEBUG}" != true ]; then
-    return 0
-  fi
+  case ${BASHCLI_DEBUG} in
+    false|'') return 0 ;;
+  esac
 
   if [[ -n "${FUNCNAME[1]}" && "${FUNCNAME[1]}" != source ]]; then
     fnName="${FUNCNAME[1]}"
@@ -39,6 +39,10 @@ bashcli-debug() {
     context="${BASHCLI_COMMAND_STACK[*]:1}"
   else
     context="${BASHCLI_COMMAND_STACK[*]}"
+  fi
+
+  if [ "${BASHCLI_DEBUG}" != true ] && ! [[ "${context}" =~ ${BASHCLI_DEBUG} ]]; then
+    return 0
   fi
 
   printf "[%s]%-${minContextWidth}s %s\n" "${BASHCLI_COLORS[debug]}debug${BASHCLI_COLORS[none]}" "(${context})" "${*//$'\n'/\\n}" >&2
