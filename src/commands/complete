@@ -7,7 +7,7 @@ declare -A options=()
 declare -a parameters=()
 
 bashcli-debug "complete called with arguments $*"
-bashcli-options-parse options parameters -- "$@" || exit 1
+bashcli-options-parse options parameters -- "$@"
 
 if [ "${options[script]}" ]; then
   bashcli-completion-script

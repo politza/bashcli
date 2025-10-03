@@ -116,7 +116,7 @@ bashcli-help-show() {
   local padding=4
   local subcommand subcommand description
 
-  bashcli-command-subcommands "${commandList[@]}" || return 1
+  bashcli-command-subcommands "${commandList[@]}" || return 0
 
   if [ ${#REPLY} -gt 0 ]; then
     printf "\n%sSubcommands:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"

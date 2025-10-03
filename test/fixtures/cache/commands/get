@@ -8,7 +8,7 @@ declare -A options=()
 declare parameters=()
 declare validator=cli-cache-validator
 
-bashcli-options-parse options parameters -- "$@" || exit 1
+bashcli-options-parse options parameters -- "$@"
 
 cli-cache-validator() {
   local name=$1

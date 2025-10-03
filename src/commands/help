@@ -7,6 +7,5 @@ bashcli-debug "Showing help for command $*"
 declare -A options=()
 declare parameters=()
 
-bashcli-options-parse options parameters -- "$@" || exit 1
-
+bashcli-options-parse options parameters -- "$@"
 bashcli-help-show . "$@"

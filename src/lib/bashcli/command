@@ -54,7 +54,7 @@ bashcli-command-resolve() {
   done
 
   IFS=' '
-  bashcli-error "no such command: ${commandList[*]:1}"
+  bashcli-error "no such command: ${commandList[*]:1} (try ${BASHCLI_CLI_NAME:-bashcli} --help)"
   return 1
 }
 

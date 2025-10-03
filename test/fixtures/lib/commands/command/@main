@@ -4,7 +4,7 @@
 declare -A options=()
 declare parameters=()
 
-bashcli-options-parse options parameters -- "$@" || exit 1
+bashcli-options-parse options parameters -- "$@"
 
 if [ "${options[load-test-lib]}" ]; then
   bashcli-load-library cli/test

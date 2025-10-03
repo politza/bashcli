@@ -11,7 +11,7 @@ bashcli-options-parse \
   parameters \
   childOptions=child-option \
   sharedOptions=shared-option \
-  -- "$@" || exit 1
+  -- "$@"
 
 for ((index = 0; index < ${#childOptions[@]}; ++index)); do
   echo "child-option[${index}]=${childOptions[index]}"

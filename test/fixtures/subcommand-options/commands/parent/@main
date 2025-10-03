@@ -11,7 +11,7 @@ bashcli-options-parse \
   parameters \
   parentOptions=parent-option \
   sharedOptions=shared-option \
-  -- "$@" || exit 1
+  -- "$@"
 
 for ((index = 0; index < ${#parentOptions[@]}; ++index)); do
   echo "parent-option[${index}]=${parentOptions[index]}"
@@ -20,6 +20,4 @@ for ((index = 0; index < ${#sharedOptions[@]}; ++index)); do
   echo "parent-shared-option[${index}]=${sharedOptions[index]}"
 done
 
-if [ ${#parameters[@]} -gt 0 ]; then
-  bashcli-command-exec "${parameters[@]}"
-fi
+bashcli-command-exec "${parameters[@]}"

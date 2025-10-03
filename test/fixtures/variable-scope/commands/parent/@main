@@ -6,6 +6,4 @@ parentFunction() {
   :
 }
 
-if [ $# -gt 0 ]; then
-  bashcli-command-exec "$@"
-fi
+bashcli-command-exec "$@"

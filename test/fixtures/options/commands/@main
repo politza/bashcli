@@ -5,7 +5,7 @@ declare -A options=()
 declare multiOptions=()
 declare parameters=()
 
-bashcli-options-parse options parameters multiOptions=multi -- "$@" || exit 1
+bashcli-options-parse options parameters multiOptions=multi -- "$@"
 
 echo "boolean=${options[boolean]}"
 echo "single=${options[single]}"
