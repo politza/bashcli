@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2034
 
-declare -A options=()
 declare parameters=()
+declare configFile
 
-bashcli-options-parse options parameters -- "$@"
-bashcli-config-file
-exec ${EDITOR:-vi} "${REPLY}"
+bashcli-options-parse '' parameters -- "$@"
+
+if [ ${#parameters} -ne 0 ]; then
+    bashcli-error "too many arguments: $*"
+    exit 1
+fi
+
+configFile=$(bashcli-config-file)
+
+exec ${EDITOR:-vi} "${configFile}"

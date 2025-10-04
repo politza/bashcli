@@ -24,7 +24,7 @@ bashcli-config-get() {
     0) bashcli-error "property-name parameter missing"
        return 1 ;;
     1) ;;
-    *) bashcli-error "too many parameters: $*"
+    *) bashcli-error "too many arguments: $*"
        return 1;;
   esac
 
@@ -35,17 +35,34 @@ bashcli-config-get() {
 }
 
 bashcli-config-set() {
-  bashcli-config-initialize
+  case $# in
+    0) bashcli-error "property-name parameter missing"
+       return 1 ;;
+    1) bashcli-error "property-value parameter missing"
+       return 1 ;;
+    2) ;;
+    *) bashcli-error "too many arguments: $*"
+       return 1 ;;
+  esac
+
   -bashcli-config-set false "$@"
 }
 
 bashcli-config-unset() {
+  case $# in
+    0) bashcli-error "property-name parameter missing"
+       return 1 ;;
+    1) ;;
+    *) bashcli-error "too many arguments: $*"
+       return 1 ;;
+  esac
+
   -bashcli-config-set true "$@"
 }
 
 bashcli-config-list() {
   if [ $# -gt 0 ]; then
-    bashcli-error "too many parameters: $*"
+    bashcli-error "too many arguments: $*"
     return 1
   fi
 
@@ -57,36 +74,6 @@ bashcli-config-list() {
   for property in "${properties[@]}"; do
     printf "%s=%s\n" "${property}" "${BASHCLI_CONFIG_PROPERTIES[${property}]}"
   done
-}
-
--bashcli-config-set() {
-  local unset=$1
-  local property=$2
-  local value=$3
-  local profile=
-
-  if [ ${#BASHCLI_CONFIG_PROFILES[@]} -gt 0 ]; then
-    profile=${BASHCLI_CONFIG_PROFILES[-1]}
-  fi
-
-  case $# in
-    1) bashcli-error "property-name parameter missing"
-       return 1;;
-    2) if [ "${unset}" != true ]; then
-         bashcli-error "property-value parameter missing"
-         return 1
-       fi;;
-    3) ;;
-    *) bashcli-error "too many parameters: $*"
-       return 1;;
-  esac
-
-  bashcli-string-trim property
-  bashcli-string-trim value
-
-  bashcli-config-check-property "${property}"
-  bashcli-debug "${profile:-"''"}" "${property}" "${value}"
-  -bashcli-config-write-value "${unset}" "${profile}" "${property}" "${value}"
 }
 
 bashcli-config-initialize() {
@@ -109,6 +96,47 @@ bashcli-config-initialize() {
   done < <(env)
 
   -bashcli-config-read
+}
+
+bashcli-config-file() {
+  local propertyFile
+  local scope=${BASHCLI_CONFIG_SCOPE}
+
+  if [ -z "${scope}" ]; then
+    if [ "${BASHCLI_CONFIG_LOCAL}" ]; then
+      scope=local
+    else
+      scope=global
+    fi
+  fi
+
+  case ${scope} in
+    global) propertyFile=${BASHCLI_CONFIG_GLOBAL} ;;
+    local) propertyFile=${BASHCLI_CONFIG_LOCAL} ;;
+    *) bashcli-fatal "internal error: invalid scope: ${scope}" ;;
+  esac
+  if [ -z "${propertyFile}" ]; then
+    bashcli-fatal "internal error: property file unset"
+  fi
+  printf "%s" "${propertyFile}"
+}
+
+-bashcli-config-set() {
+  local unset=$1
+  local property=$2
+  local value=$3
+  local profile=
+
+  if [ ${#BASHCLI_CONFIG_PROFILES[@]} -gt 0 ]; then
+    profile=${BASHCLI_CONFIG_PROFILES[-1]}
+  fi
+
+  bashcli-string-trim property
+  bashcli-string-trim value
+
+  bashcli-config-check-property "${property}"
+  bashcli-debug "${profile:-"''"}" "${property}" "${value}"
+  -bashcli-config-write-value "${unset}" "${profile}" "${property}" "${value}"
 }
 
 -bashcli-config-read() {
@@ -210,29 +238,6 @@ bashcli-config-initialize() {
     profile=${profile#\%}
   fi
   REPLY=("${profile}" "${property}")
-}
-
-bashcli-config-file() {
-  local propertyFile
-  local scope=${BASHCLI_CONFIG_SCOPE}
-
-  if [ -z "${scope}" ]; then
-    if [ "${BASHCLI_CONFIG_LOCAL}" ]; then
-      scope=local
-    else
-      scope=global
-    fi
-  fi
-
-  case ${scope} in
-    global) propertyFile=${BASHCLI_CONFIG_GLOBAL} ;;
-    local) propertyFile=${BASHCLI_CONFIG_LOCAL} ;;
-    *) bashcli-fatal "internal error: invalid scope: ${scope}" ;;
-  esac
-  if [ -z "${propertyFile}" ]; then
-    bashcli-fatal "internal error: property file unset"
-  fi
-  REPLY=${propertyFile}
 }
 
 -bashcli-config-write-value() {

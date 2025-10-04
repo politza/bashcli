@@ -1,3 +1,11 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2034
+
+DESCRIPTION="
+Edits the configuration file using an editor.
+"
+
+OPTION_COMPLETIONS=(
+  %parameter config-property
+)
