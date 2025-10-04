@@ -65,6 +65,10 @@ bashcli-config-list() {
   local value=$3
   local profile=
 
+  if [ ${#BASHCLI_CONFIG_PROFILES[@]} -gt 0 ]; then
+    profile=${BASHCLI_CONFIG_PROFILES[-1]}
+  fi
+
   case $# in
     1) bashcli-error "property-name parameter missing"
        return 1;;
@@ -79,10 +83,6 @@ bashcli-config-list() {
 
   bashcli-string-trim property
   bashcli-string-trim value
-
-  -bashcli-config-split-profile "${property}"
-  profile=${REPLY[0]}
-  property=${REPLY[1]}
 
   bashcli-config-check-property "${property}"
   bashcli-debug "${profile:-"''"}" "${property}" "${value}"
