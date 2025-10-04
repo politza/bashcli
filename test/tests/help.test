@@ -37,8 +37,8 @@ Options:
   Shows a help message.
 
 Subcommands:
-subcommand-1    Subcommand-1 description.
 subcommand-0    Subcommand-0 description.
+subcommand-1    Subcommand-1 description.
 EOF
 }
 

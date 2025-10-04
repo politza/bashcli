@@ -107,6 +107,7 @@ bashcli-command-subcommands() {
   local commandMain=${REPLY[1]##*/}
   local -A subcommands=()
   local commandRoot subcommandMain subcommandName commandDir
+  local IFS
   REPLY=()
 
   if [ "${commandMain}" != "${BASHCLI_COMMAND_MAIN}" ]; then
@@ -128,7 +129,8 @@ bashcli-command-subcommands() {
   done
 
   bashcli-debug "$* -> ${!subcommands[*]}"
-  REPLY=("${!subcommands[@]}")
+  IFS=$'\n'
+  REPLY=($(LC_ALL=C sort <<<"${!subcommands[@]}"))
   [ ${#REPLY} -gt 0 ]
 }
 
