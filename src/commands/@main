@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-declare -A options=()
 declare parameters=()
 
-bashcli-options-parse options parameters BASHCLI_CONFIG_PROFILES=profile -- "$@"
+bashcli-options-parse '' parameters BASHCLI_CONFIG_PROFILES=profile -- "$@"
 bashcli-config-initialize
 bashcli-command-exec "${parameters[@]}"

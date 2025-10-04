@@ -100,11 +100,12 @@ bashcli-command-exec-now() {
     return 1
   fi
 
-  bashcli-debug "${commandList[*]}"
+  bashcli-debug "preparing ${commandList[*]}"
+  bashcli-config-read-defaults "${BASHCLI_COMMAND_STACK[@]}" "${command}"
   bashcli-command-resolve "${commandList[@]}"
-
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
+  bashcli-debug "executing ${REPLY[0]}"
   . "${REPLY[0]}" "$@"
 }
 

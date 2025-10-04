@@ -10,6 +10,8 @@ bashcli-options-parse() {
   local _commandMain _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
   local _definesSubcommands
 
+  bashcli-debug "${_commandStack[*]}"
+  
   if bashcli-command-subcommands "${_commandStack[@]}"; then
     _definesSubcommands=true
   fi
@@ -183,6 +185,8 @@ bashcli-options-parse() {
     esac
     shift
   done
+
+  bashcli-debug "parsed ${#_parsedOptions[@]} options and ${#_parsedParameters[@]} parameters"
 }
 
 -bashcli-options-resolve-multivar() {

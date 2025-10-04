@@ -6,7 +6,7 @@ declare -g BASHCLI_CONFIG_LOCAL=${BASHCLI_CONFIG_LOCAL}
 declare -g BASHCLI_CONFIG_VALID_PROPERTY_NAME='+([a-zA-Z0-9.-])'
 declare -g BASHCLI_CONFIG_VALID_PROFILE_NAME='+([a-zA-Z0-9-])'
 
-declare -g BASHCLI_CONFIG_INITIALIZED=false
+declare -g BASHCLI_CONFIG_INITIALIZED=
 
 declare -g -A BASHCLI_CONFIG_PROPERTIES=()
 declare -g -A BASHCLI_CONFIG_PROPERTY_PROFILE=()
@@ -85,23 +85,24 @@ bashcli-config-list() {
 bashcli-config-initialize() {
   local IFS line variableName profile
 
-  if [ "${BASHCLI_CONFIG_INITIALIZED}" == true ]; then
+  if [ "${BASHCLI_CONFIG_INITIALIZED}" ]; then
     return
   fi
-  BASHCLI_CONFIG_INITIALIZED=true
+  BASHCLI_CONFIG_INITIALIZED=1
 
+  bashcli-debug "initializing"
   -bashcli-config-initialize-profiles
   -bashcli-config-initialize-scope
   -bashcli-config-initialize-env
   -bashcli-config-read
   -bashcli-config-read-env
+  bashcli-config-read-defaults "${BASHCLI_COMMAND_STACK[@]}"
 
-  IFS=,
-  bashcli-debug "known profiles: [${!BASHCLI_CONFIG_KNOWN_PROFILES[*]}]"
+  bashcli-debug "read ${#BASHCLI_CONFIG_PROPERTIES[@]} properties"
 }
 
 bashcli-config-reinitialize() {
-  BASHCLI_CONFIG_INITIALIZED=false
+  BASHCLI_CONFIG_INITIALIZED=
   bashcli-config-initialize
 }
 
@@ -127,6 +128,26 @@ bashcli-config-file() {
     return 1
   fi
   printf "%s" "${configFile}"
+}
+
+bashcli-config-read-defaults() {
+  if [ -z "${BASHCLI_CONFIG_INITIALIZED}" ] || [ $# -eq 0 ]; then
+    return
+  fi
+
+  bashcli-command-resolve "$@"
+  local commandMain=${REPLY[1]}
+  local index commandRoot configDefaults
+
+  bashcli-debug "$*"
+  for ((index = 0; index < ${#BASHCLI_COMMAND_ROOTS[@]}; ++index)) do
+    commandRoot=${BASHCLI_COMMAND_ROOTS[index]}
+    configDefaults=${commandRoot}/${commandMain}.conf
+    if [ -f "${configDefaults}" ]; then
+      -bashcli-config-read-file -m keep "${configDefaults}"
+    fi
+  done
+  -bashcli-config-read-env
 }
 
 -bashcli-config-set() {
@@ -176,26 +197,17 @@ bashcli-config-file() {
   local index line property value
   local profile priority currentProfile currentPriority
   local mergeMode=update
-  local option
 
-  while getopts "m:" option; do
-    case ${option} in
-      m) case ${OPTARG} in
-           keep|update) ;;
-           *) bashcli-error "internal error: invalid merge mode: ${OPTARG}"
-              return 1;;
-         esac
-         mergeMode=${OPTARG} ;;
-      ?) return 1;;
-    esac
-  done
-
-  if [ $# -ne 1 ]; then
-    bashcli-error "internal error: single configFile argument expected"
-    return 1
+  if [ "$1" == -m ]; then
+    mergeMode=$2
+    shift 2
   fi
-  shift "$((OPTIND - 1))"
   configFile=$1
+  case $mergeMode in
+    keep|update) ;;
+    *) bashcli-error "internal error: invalid merge-mode: ${mergeMode}"
+       return 1;;
+  esac
 
   bashcli-debug "reading ${configFile}"
 
@@ -215,7 +227,9 @@ bashcli-config-file() {
         fi
       fi
 
-      if [ "${currentProfile}" ] && [ "${profileIndex[${currentProfile}]}" ]; then
+      if [ -z "${BASHCLI_CONFIG_PROPERTIES[${property}]}" ]; then
+        currentPriority=-2
+      elif [ "${currentProfile}" ] && [ "${profileIndex[${currentProfile}]}" ]; then
         currentPriority=${profileIndex[${currentProfile}]}
       fi
 
@@ -314,12 +328,11 @@ bashcli-config-file() {
 
 -bashcli-config-read-env() {
   local index property profile profileIndex
-  local profileCount=${#BASHCLI_CONFIG_PROFILES[@]}
 
   for property in "${!BASHCLI_CONFIG_PROPERTIES[@]}"; do
-    profileIndex=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]:-${profileCount}}
-    for ((index = 0; index <= ${profileIndex}; ++index)); do
-      if [ ${index} -lt "${profileCount}" ]; then
+    profileIndex=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]:--1}
+    for ((index = $((${#BASHCLI_CONFIG_PROFILES[@]} - 1)); index >= -1; --index)); do
+      if [ ${index} -ge 0 ]; then
         profile=${BASHCLI_CONFIG_PROFILES[${index}]}
       else
         profile=
@@ -342,13 +355,12 @@ bashcli-config-file() {
     envVariable+="_${profile}_"
   fi
   envVariable+=${property}
-  envVariable=${envVariable//[^a-zA-Z0-9]}
+  envVariable=${envVariable//[^a-zA-Z0-9]/_}
   envVariable=${envVariable^^}
 
-  bashcli-debug "checking ${envVariable}"
   if [ "${BASHCLI_CONFIG_ENV[${envVariable}]}" ]; then
     REPLY=${!envVariable}
-    bashcli-debug "$1 -> ${REPLY}"
+    bashcli-debug "${1:+%}$1${1:+.}$2 -> ${REPLY}"
     return 0
   fi
 
