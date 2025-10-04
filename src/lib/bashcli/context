@@ -26,21 +26,26 @@ bashcli-context-clear() {
 }
 
 bashcli-context-read() {
-  local DESCRIPTION=
-  local -A OPTIONS=()
-  local -A OPTION_DESCRIPTIONS=()
-  local -A OPTION_ALIASES=()
-  local -A OPTION_COMPLETIONS=()
-  local -A CONFIG=()
-  local commandMain commandContext
+  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
+  local DESCRIPTION commandRoot commandMain commandContext
 
   bashcli-command-resolve "$@"
-  commandMain=${REPLY[0]}
-  commandContext=${commandMain}.context
+  commandMain=${REPLY[1]}
 
-  if [ -z "${BASHCLI_CONTEXT_READ_CACHE[${commandMain}]}" ]; then
+  if [ "${BASHCLI_CONTEXT_READ_CACHE[${commandMain}]}" ]; then
+    return
+  fi
+
+  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
+    commandContext=${commandRoot}/${commandMain}.context
     if [ -f "${commandContext}" ]; then
-      bashcli-debug "${commandContext}"
+      bashcli-debug "${commandMain} -> ${commandContext}"
+      DESCRIPTION=
+      OPTIONS=()
+      OPTION_DESCRIPTIONS=()
+      OPTION_ALIASES=()
+      OPTION_COMPLETIONS=()
+      CONFIG=()
       # shellcheck source=/dev/null
       . "${commandContext}"
       bashcli-context-validate
@@ -48,21 +53,31 @@ bashcli-context-read() {
       bashcli-context-merge "${commandMain}"
       BASHCLI_CONTEXT_READ_CACHE[${commandMain}]=1
     fi
-  fi
+  done
 }
 
 bashcli-context-merge() {
-  local alias option commandMain=$1
-  for option in "${!OPTIONS[@]}"; do
-    BASHCLI_CONTEXT_DESCRIPTIONS["${commandMain}"]=${DESCRIPTION}
-    BASHCLI_CONTEXT_OPTIONS[${option}]=${OPTIONS[${option}]}
-    BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]=${OPTION_DESCRIPTIONS[${option}]}
-    BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]=${OPTION_COMPLETIONS[${option}]}
-    BASHCLI_CONTEXT_OPTIONS_SOURCE[${option}]=${commandMain}
+  local key commandMain=$1
+
+  if [ "${DESCRIPTION}" ]; then
+    BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]=${DESCRIPTION}
+  fi
+
+  for key in "${!OPTIONS[@]}"; do
+    BASHCLI_CONTEXT_OPTIONS[${key}]=${OPTIONS[${key}]}
+    BASHCLI_CONTEXT_OPTIONS_SOURCE[${key}]=${commandMain}
   done
 
-  for alias in "${!OPTION_ALIASES[@]}"; do
-    BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]=${OPTION_ALIASES[${alias}]}
+  for key in "${!OPTION_DESCRIPTIONS[@]}"; do
+    BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${key}]=${OPTION_DESCRIPTIONS[${key}]}
+  done
+
+  for key in "${!OPTION_COMPLETIONS[@]}"; do
+    BASHCLI_CONTEXT_OPTION_COMPLETIONS[${key}]=${OPTION_COMPLETIONS[${key}]}
+  done
+
+  for key in "${!OPTION_ALIASES[@]}"; do
+    BASHCLI_CONTEXT_OPTION_ALIASES[${key}]=${OPTION_ALIASES[${key}]}
   done
 }
 
@@ -113,7 +128,7 @@ bashcli-context-validate() {
       unset "OPTION_ALIASES[${option}]"
     fi
   done
-  
+
   for alias in "${!OPTION_ALIASES[@]}"; do
     if [[ ${alias} == -* ]]; then
       bashcli-fatal "Alias name must not start with a dash: ${alias}"

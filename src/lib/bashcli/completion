@@ -71,10 +71,7 @@ bashcli-completion-complete() {
           local commandMain=${REPLY}
           commandStack+=("${word}")
           bashcli-context-read "${commandStack[@]}"
-          if [ -f "${commandMain}".completion ]; then
-            # shellcheck source=/dev/null
-            . "${commandMain}".completion
-          fi
+          bashcli-completion-read "${commandStack[@]}"
         fi
     esac
   done
@@ -168,4 +165,20 @@ _${cliName}_complete() {
   )
 } && complete -o nospace -o default -F _${cliName}_complete ${cliName}
 EOF
+}
+
+bashcli-completion-read() {
+  local commandRoot commandMain commandComplete
+
+  bashcli-command-resolve "$@" || return 1
+  commandMain=${REPLY[1]}
+
+  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
+    commandComplete=${commandRoot}/${commandMain}.complete
+    if [ -f "${commandComplete}" ]; then
+      bashcli-debug "${commandMain} -> ${commandComplete}"
+      # shellcheck source=/dev/null
+      . "${commandComplete}"
+    fi
+  done
 }

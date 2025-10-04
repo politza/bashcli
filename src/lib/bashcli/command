@@ -17,7 +17,7 @@ bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
   local commandPath="${commandList[*]}"
-  local round commandName commandRoot commandMain commandFile
+  local round commandName commandRoot commandFile commandMain
   REPLY=()
 
   if [ ${#commandList[@]} -eq 0 ]; then
@@ -43,13 +43,13 @@ bashcli-command-resolve() {
 
   for ((round = 0; round < 2; ++round)); do
     for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
-      commandFile=${commandPath}/${commandName}
-      commandMain=${commandRoot}/${commandFile}
-      if [ -f "${commandMain}" ]; then
-        bashcli-debug "${commandList[*]} -> ${commandMain}"
-        REPLY=("${commandMain}" "${commandFile}")
-        bashcli-string-quote commandMain commandFile
-        BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]="${commandMain} ${commandFile}"
+      commandMain=${commandPath}/${commandName}
+      commandFile=${commandRoot}/${commandMain}
+      if [ -f "${commandFile}" ]; then
+        bashcli-debug "${commandList[*]} -> ${commandFile}"
+        REPLY=("${commandFile}" "${commandMain}")
+        bashcli-string-quote commandFile commandMain
+        BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]="${commandFile} ${commandMain}"
         return 0
       fi
     done
