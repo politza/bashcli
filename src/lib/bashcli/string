@@ -7,3 +7,11 @@ bashcli-string-trim() {
   _string=${_string##+([[:space:]])}
   _string=${_string%%+([[:space:]])}
 }
+
+bashcli-string-quote() {
+  local -n _string=$1
+
+  if [[ ${_string} != *([a-zA-Z0-9,._+:@%/-]) ]]; then
+    _string=${_string@Q}
+  fi
+}

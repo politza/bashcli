@@ -65,6 +65,20 @@ bashcli-fatal() {
   exit 1
 }
 
+bashcli-debug-command() {
+  local command=("$@")
+  local quoted=()
+  local argument index
+
+  for ((index = 0; index < ${#command[@]}; ++index)); do
+    argument=${command[index]}
+    bashcli-string-quote argument
+    quoted+=("${argument}")
+  done
+
+  bashcli-debug "${quoted[@]}"
+}
+
 bashcli-load-library() {
   local library=$1
   local libraryDirectories=("${BASHCLI_CLI_DIR}/lib" "${BASHCLI_DIR}/lib")
