@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 
 bashcli-string-trim() {
-  local -n _string=$1
+  local -n _string
   local LC_ALL=C
 
-  _string=${_string##+([[:space:]])}
-  _string=${_string%%+([[:space:]])}
+  for _string; do
+    _string=${_string##+([[:space:]])}
+    _string=${_string%%+([[:space:]])}
+  done
 }
 
 bashcli-string-quote() {
-  local -n _string=$1
+  local -n _string
 
-  if [[ ${_string} != *([a-zA-Z0-9,._+:@%/-]) ]]; then
-    _string=${_string@Q}
-  fi
+  for _string; do
+    if [[ ${_string} != *([a-zA-Z0-9,._+:@%/-]) ]]; then
+      _string=${_string@Q}
+    fi
+  done
 }

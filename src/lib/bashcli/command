@@ -10,18 +10,24 @@ declare -g -a BASHCLI_COMMAND_STACK=()
 declare -g -a BASHCLI_COMMAND_NEXT=()
 declare -g BASHCLI_COMMAND_PATTERN='?(.|+([^.@]))'
 declare -g BASHCLI_COMMAND_MAIN=@main
+declare -g -A BASHCLI_COMMAND_RESOLVE_CACHE=()
 
 # shellcheck disable=SC2059
 bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
   local commandPath="${commandList[*]}"
-  local round commandName commandRoot commandMain
+  local round commandName commandRoot commandMain commandFile
   REPLY=()
 
   if [ ${#commandList[@]} -eq 0 ]; then
     bashcli-error "command-list is empty"
     return 1
+  fi
+
+  if [ "${BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]}" ]; then
+    eval "REPLY=(${BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]})"
+    return 0
   fi
 
   bashcli-debug "resolving ${commandPath}"
@@ -37,10 +43,13 @@ bashcli-command-resolve() {
 
   for ((round = 0; round < 2; ++round)); do
     for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
-      commandMain=${commandRoot}/${commandPath}/${commandName}
+      commandFile=${commandPath}/${commandName}
+      commandMain=${commandRoot}/${commandFile}
       if [ -f "${commandMain}" ]; then
         bashcli-debug "${commandList[*]} -> ${commandMain}"
-        REPLY=("${commandMain}" "${commandPath}/${commandName}")
+        REPLY=("${commandMain}" "${commandFile}")
+        bashcli-string-quote commandMain commandFile
+        BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]="${commandMain} ${commandFile}"
         return 0
       fi
     done
