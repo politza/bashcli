@@ -6,7 +6,7 @@ declare -g BASHCLI_CONFIG_LOCAL=${BASHCLI_CONFIG_LOCAL}
 declare -g BASHCLI_CONFIG_DEFAULTS=${BASHCLI_CONFIG_DEFAULTS}
 
 declare -g BASHCLI_CONFIG_VALID_PROPERTY_NAME='+([a-zA-Z0-9.-])'
-declare -g BASHCLI_CONFIG_VALID_PROFILE_NAME='*([a-zA-Z0-9])'
+declare -g BASHCLI_CONFIG_VALID_PROFILE_NAME='*([a-zA-Z0-9-])'
 declare -g BASHCLI_CONFIG_INITIALIZED='false'
 
 declare -g -A BASHCLI_CONFIG_PROPERTIES=()
@@ -302,7 +302,7 @@ bashcli-config-file() {
 bashcli-config-check-property() {
   local property=$1
   if [[ ${property} != ${BASHCLI_CONFIG_VALID_PROPERTY_NAME} ]]; then
-    bashcli-error "invalid property name: ${property}"
+    bashcli-error "invalid property name: ${property} (should match '${BASHCLI_CONFIG_VALID_PROPERTY_NAME}')"
     return 1
   fi
 }
@@ -310,8 +310,8 @@ bashcli-config-check-property() {
 bashcli-config-check-profiles() {
   local profile
   for profile in "${BASHCLI_CONFIG_PROFILES[@]}"; do
-    if [[ $1 != ${BASHCLI_CONFIG_VALID_PROFILE_NAME} ]]; then
-      bashcli-error "invalid profile name: $1"
+    if [[ ${profile} != ${BASHCLI_CONFIG_VALID_PROFILE_NAME} ]]; then
+      bashcli-error "invalid profile name: ${profile} (should match '${BASHCLI_CONFIG_VALID_PROFILE_NAME}')"
       return 1
     fi
   done
@@ -320,7 +320,7 @@ bashcli-config-check-profiles() {
 bashcli-config-check-scope() {
   case ${BASHCLI_CONFIG_SCOPE} in
     global|local|'') ;;
-    *) bashcli-error "invalid scope: ${scope}"
+    *) bashcli-error "invalid scope: ${scope} (should be 'global', 'local' or empty)"
        return 1;;
   esac
 }
