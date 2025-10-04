@@ -8,7 +8,7 @@ declare -g -A BASHCLI_CONTEXT_OPTION_ALIASES=()
 declare -g -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
 declare -g -A BASHCLI_CONTEXT_CONFIG=()
 declare -g -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
-declare -g -A BASHCLI_CONTEXT_READ=()
+declare -g -A BASHCLI_CONTEXT_READ_CACHE=()
 
 declare -g -a BASHCLI_CONTEXT_DEFAULT_OPTIONS=(version help)
 declare -g -r BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
@@ -21,7 +21,7 @@ bashcli-context-clear() {
   BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
   BASHCLI_CONTEXT_CONFIG=()
   BASHCLI_CONTEXT_OPTIONS_SOURCE=()
-  BASHCLI_CONTEXT_READ=()
+  BASHCLI_CONTEXT_READ_CACHE=()
   bashcli-debug "context cleared"
 }
 
@@ -32,10 +32,13 @@ bashcli-context-read() {
   local -A OPTION_ALIASES=()
   local -A OPTION_COMPLETIONS=()
   local -A CONFIG=()
-  local commandMain=$1
-  local commandContext=${commandMain}.context
+  local commandMain commandContext
 
-  if [ -z "${BASHCLI_CONTEXT_READ[${commandMain}]}" ]; then
+  bashcli-command-resolve "$@"
+  commandMain=${REPLY[0]}
+  commandContext=${commandMain}.context
+
+  if [ -z "${BASHCLI_CONTEXT_READ_CACHE[${commandMain}]}" ]; then
     if [ -f "${commandContext}" ]; then
       bashcli-debug "${commandContext}"
       # shellcheck source=/dev/null
@@ -43,7 +46,7 @@ bashcli-context-read() {
       bashcli-context-validate
       bashcli-context-defaults
       bashcli-context-merge "${commandMain}"
-      BASHCLI_CONTEXT_READ[${commandMain}]=true
+      BASHCLI_CONTEXT_READ_CACHE[${commandMain}]=1
     fi
   fi
 }

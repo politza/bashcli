@@ -8,7 +8,7 @@ bashcli-options-parse() {
   local _parsedParameters=()
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
-  local _commandMain _subcommandMain _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
+  local _commandMain _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
   local _definesSubcommands
 
   if bashcli-command-subcommands "${_commandStack[@]}"; then
@@ -49,7 +49,7 @@ bashcli-options-parse() {
   bashcli-context-clear
   if bashcli-command-resolve "${_commandStack[@]}"; then
     _commandMain=${REPLY}
-    bashcli-context-read "${_commandMain}"
+    bashcli-context-read "${_commandStack[@]}"
   fi
 
   # Initialize the multi-option namerefs.
@@ -177,9 +177,8 @@ bashcli-options-parse() {
         if [ "${_definesSubcommands}" == true ] &&
              [ "$1" ] &&
              bashcli-command-resolve "${_commandStack[@]}" "$1" &>/dev/null; then
-          _subcommandMain=${REPLY}
           _commandStack+=("$1")
-          bashcli-context-read "${_subcommandMain}"
+          bashcli-context-read "${_commandStack[@]}"
         fi
         _parsedParameters+=("$1")
     esac

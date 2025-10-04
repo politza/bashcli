@@ -24,7 +24,7 @@ bashcli-help-show() {
   bashcli-command-resolve "${commandList[@]}"
   commandMain=${REPLY}
   bashcli-context-clear
-  bashcli-context-read "${commandMain}"
+  bashcli-context-read "${commandList[@]}"
 
   -bashcli-help-show-intro "${commandMain}" "${commandList[@]}"
   -bashcli-help-show-options
@@ -132,7 +132,7 @@ bashcli-help-show() {
       bashcli-command-resolve "${commandList[@]}" "${subcommand}"
       commandMain=${REPLY}
       if [ -n "${commandMain}" ]; then
-        bashcli-context-read "${commandMain}"
+        bashcli-context-read "${commandList[@]}" "${subcommand}"
       fi
       description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
       bashcli-string-trim description

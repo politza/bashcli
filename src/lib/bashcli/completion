@@ -70,7 +70,7 @@ bashcli-completion-complete() {
         if bashcli-command-resolve "${commandStack[@]}" "${word}" &>/dev/null; then
           local commandMain=${REPLY}
           commandStack+=("${word}")
-          bashcli-context-read "${commandMain}"
+          bashcli-context-read "${commandStack[@]}"
           if [ -f "${commandMain}".completion ]; then
             # shellcheck source=/dev/null
             . "${commandMain}".completion
@@ -101,7 +101,7 @@ bashcli-completion-complete() {
       for subcommand in "${REPLY[@]}"; do
         if bashcli-command-resolve "${commandStack[@]}" "${subcommand}"; then
           local commandMain=${REPLY}
-          bashcli-context-read "${REPLY}" || continue
+          bashcli-context-read "${commandStack[@]}" "${subcommand}" || continue
           BASHCLI_COMPLETIONS["${subcommand} "]=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]%%$'\n'*}
         fi
       done
