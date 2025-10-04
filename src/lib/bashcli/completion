@@ -22,7 +22,10 @@ bashcli-completion-complete() {
     return 1
   fi
 
+  bashcli-debug "completing ${words[*]}"
   bashcli-context-clear
+  bashcli-context-read .
+  bashcli-completion-read .
 
   for ((index = 0; index <= cword; ++index)); do
     word=${words[index]}
@@ -66,7 +69,7 @@ bashcli-completion-complete() {
           esac
           option=
         done ;;
-      *)
+      *?*)
         if bashcli-command-resolve "${commandStack[@]}" "${word}" &>/dev/null; then
           local commandMain=${REPLY}
           commandStack+=("${word}")
@@ -78,7 +81,7 @@ bashcli-completion-complete() {
 
   if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}" ]; then
     readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]//,/$'\n'}"
-  elif [ -z "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}" ]; then
+  elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}" ]; then
     readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]//,/$'n'}"
   elif [ "${option}" ]; then
     completionFns=('file')

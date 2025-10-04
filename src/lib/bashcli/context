@@ -27,7 +27,7 @@ bashcli-context-clear() {
 
 bashcli-context-read() {
   local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
-  local DESCRIPTION commandRoot commandMain commandContext
+  local DESCRIPTION index commandRoot commandMain commandContext
 
   bashcli-command-resolve "$@"
   commandMain=${REPLY[1]}
@@ -36,7 +36,8 @@ bashcli-context-read() {
     return
   fi
 
-  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
+  for ((index = $((${#BASHCLI_COMMAND_ROOTS[@]} - 1)); index >= 0; --index)) do
+    commandRoot=${BASHCLI_COMMAND_ROOTS[index]}
     commandContext=${commandRoot}/${commandMain}.context
     if [ -f "${commandContext}" ]; then
       bashcli-debug "${commandMain} -> ${commandContext}"
