@@ -104,6 +104,7 @@ bashcli-help-show() {
       fi
       printf "%s\n" "${optionLabels[${option}]}"
       description=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
+      bashcli-string-trim description
       fmt --width "$((${BASHCLI_HELP_WIDTH} - 2))"  <<< "${description%%*($'\n')}" | pr --indent 2 --omit-pagination
     done
   fi
