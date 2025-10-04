@@ -9,8 +9,8 @@ bashcli-cache-get() {
   local validator=$2
   local baseName keyFile valueFile
 
-  -bashcli-cache-check-name "${name}" || return 1
-  -bashcli-cache-check-function "${validator}" || return 1
+  -bashcli-cache-check-name "${name}"
+  -bashcli-cache-check-function "${validator}"
 
   baseName=${BASHCLI_CACHE_DIR}/${name}
   keyFile=${baseName}.key
@@ -36,8 +36,8 @@ bashcli-cache-put() {
   local baseName keyFile valueFile
 
   bashcli-debug "name=${name} value=${value}"
-  -bashcli-cache-check-name "${name}" || return 1
-  -bashcli-cache-check-function "${keyFn}" || return 1
+  -bashcli-cache-check-name "${name}"
+  -bashcli-cache-check-function "${keyFn}"
 
   baseName=${BASHCLI_CACHE_DIR}/${name}
   keyFile=${baseName}.key
@@ -46,11 +46,11 @@ bashcli-cache-put() {
   mkdir -p "${BASHCLI_CACHE_DIR}"
 
   if [ "${keyFn}" ]; then
-    "${keyFn}" "${name}" "${keyFile}" || return 1
+    "${keyFn}" "${name}" "${keyFile}"
   fi
 
   if ! [ -f "${keyFile}" ]; then
-    touch "${keyFile}" || return 1
+    touch "${keyFile}"
   fi
 
   printf "%s" "${value}" > "${valueFile}"
@@ -60,7 +60,7 @@ bashcli-cache-remove() {
   local name=$1
   local baseName keyFile valueFile
 
-  -bashcli-cache-check-name "${name}" || return 1
+  -bashcli-cache-check-name "${name}"
 
   baseName=${BASHCLI_CACHE_DIR}/${name}
   keyFile=${baseName}.key

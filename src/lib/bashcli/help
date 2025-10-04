@@ -21,7 +21,7 @@ bashcli-help-show() {
   shopt -s extglob
 
   bashcli-debug "${commandList[*]}"
-  bashcli-command-resolve "${commandList[@]}" || return 1
+  bashcli-command-resolve "${commandList[@]}"
   commandMain=${REPLY}
   bashcli-context-clear
   bashcli-context-read "${commandMain}"

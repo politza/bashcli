@@ -95,7 +95,7 @@ bashcli-command-exec-now() {
   fi
 
   bashcli-debug "${commandList[*]}"
-  bashcli-command-resolve "${commandList[@]}" || return 1
+  bashcli-command-resolve "${commandList[@]}"
 
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
@@ -104,7 +104,7 @@ bashcli-command-exec-now() {
 }
 
 bashcli-command-subcommands() {
-  bashcli-command-resolve "$@" || return 1
+  bashcli-command-resolve "$@"
 
   local commandPath=${REPLY[1]%/*}
   local commandMain=${REPLY[1]##*/}

@@ -54,11 +54,11 @@ bashcli-options-parse() {
 
   # Initialize the multi-option namerefs.
   for _multiOptionVar in "${_multiOptionVars[@]}"; do
-    -bashcli-options-resolve-multivar "${_multiOptionVar}" || return 1
+    -bashcli-options-resolve-multivar "${_multiOptionVar}"
     _option=${REPLY}
     _multiOptionVar=${_multiOptionVar%%=*}
     printf -v _multiOptionRef "${_multiOptionRefPattern}" "${_multiOptionVar}"
-    eval "local -n ${_multiOptionRef}=${_multiOptionVar}" || return 1
+    eval "local -n ${_multiOptionRef}=${_multiOptionVar}"
     _multiOptionRefs[${_option}]=${_multiOptionRef}
   done
 
@@ -152,7 +152,7 @@ bashcli-options-parse() {
               fi
               _parsedOptions[${_option}]+=$2
               if [ -R "${_multiOptionRefs[${_option}]}" ]; then
-                eval "${_multiOptionRefs[${_option}]}+=(\"$2\")" || return 1
+                eval "${_multiOptionRefs[${_option}]}+=(\"$2\")"
               fi
               shift ;;
             boolean)
