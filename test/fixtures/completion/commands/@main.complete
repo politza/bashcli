@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2004,SC2034
+
+bashcli-test-completions() {
+  local prefix=$1
+  local completion
+  for completion in ${prefix}-{aaa,aab,aac}; do
+    BASHCLI_COMPLETIONS[${completion}]=${completion}
+  done
+}
+
+bashcli-complete-single-0() {
+  bashcli-test-completions single-0
+}
+
+bashcli-complete-single-1() {
+  bashcli-test-completions single-1
+}
+
+bashcli-complete-multi() {
+  bashcli-test-completions multi
+}
+
+bashcli-complete-parameter() {
+  bashcli-test-completions parameter
+}

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2064,SC1091,SC2206
+
+PATH=$PWD/fixtures/completion:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+completion-exec() {
+  local IFS=$' '
+  local -A options=()
+  local prefix=${1%%|*}
+  local suffix=${1#*|}
+  local line=${prefix}${suffix}
+  local words=(${line})
+  local prefixWords=(${prefix}${suffix%% *})
+  local previous=${prefixWords[-2]}
+  local current=${prefixWords[-1]}
+
+  shift
+  IFS=$'\n'
+  options[--comp-cword]=${#prefixWords[@]}
+  options[--comp-line]=${line}
+  options[--comp-point]=${#prefix}
+  options[--comp-type]=63
+  options[--comp-words]="${words[*]}"
+
+  while [ $# -gt 0 ]; do
+    if [ $# -lt 2 ]; then
+      echo "option is missing an argument: $1"
+      return 1
+    fi
+    options[$1]=$2
+    shift 2
+  done
+
+  echo >&2 cli complete "${options[@]@K}" -- cli "${current}" "${previous}" 
+}
+
+test-complete-long-options() {
+  completion-exec 'cli --|' &> "${output}"
+  diff "${output}" - <<EOF
+--boolean boolean option
+--first   first enum option
+--multi   multi option
+--second  second enum option
+--single  single option
+EOF
+}
+
+. ./lib/run-tests
