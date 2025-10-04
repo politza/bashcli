@@ -8,21 +8,17 @@ Commands relating to configuration properties.
 OPTIONS=(
   local    enum:scope
   global   enum:scope
-  profile  multi
 )
 
 OPTION_DESCRIPTIONS=(
   local   "Enables the local configuration scope, if supported."
   global  "Enables the global configuration scope."
-  profile "Enables a specific configuration profile."
 )
 
 OPTION_ALIASES=(
-  P profile
 )
 
 OPTION_COMPLETIONS=(
-  profile config-profile
 )
 
 CONFIG=(

@@ -32,6 +32,7 @@ test-complete-long-options() {
 --first     first enum option
 --help      Shows a help message.
 --multi=    multi option
+--profile=  Enables one or more configuration profiles.
 --second    second enum option
 --single=   single option
 --version   Prints the version of the program.

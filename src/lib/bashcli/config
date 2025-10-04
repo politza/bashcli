@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 
-
 declare -g BASHCLI_CONFIG_GLOBAL=${BASHCLI_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/${BASHCLI_CLI_NAME}.conf}
 declare -g BASHCLI_CONFIG_LOCAL=${BASHCLI_CONFIG_LOCAL}
-declare -g BASHCLI_CONFIG_DEFAULTS=${BASHCLI_CONFIG_DEFAULTS}
 
 declare -g BASHCLI_CONFIG_VALID_PROPERTY_NAME='+([a-zA-Z0-9.-])'
-declare -g BASHCLI_CONFIG_VALID_PROFILE_NAME='*([a-zA-Z0-9-])'
-declare -g BASHCLI_CONFIG_INITIALIZED='false'
+declare -g BASHCLI_CONFIG_VALID_PROFILE_NAME='+([a-zA-Z0-9-])'
+
+declare -g BASHCLI_CONFIG_INITIALIZED=false
 
 declare -g -A BASHCLI_CONFIG_PROPERTIES=()
 declare -g -A BASHCLI_CONFIG_PROPERTY_PROFILE=()
-declare -g -A BASHCLI_CONFIG_KNOWN_PROFILES=()
-declare -g -A BASHCLI_CONFIG_ENV=()
 
 declare -g BASHCLI_CONFIG_PROFILES=()
+declare -g -A BASHCLI_CONFIG_PROFILE_INDEX=()
+declare -g -A BASHCLI_CONFIG_KNOWN_PROFILES=()
+
+declare -g -A BASHCLI_CONFIG_ENV=()
+
 declare -g BASHCLI_CONFIG_SCOPE=
 
 bashcli-config-get() {
@@ -81,25 +83,26 @@ bashcli-config-list() {
 }
 
 bashcli-config-initialize() {
-  local IFS line variable
+  local IFS line variableName profile
 
   if [ "${BASHCLI_CONFIG_INITIALIZED}" == true ]; then
     return
   fi
-
   BASHCLI_CONFIG_INITIALIZED=true
 
-  if [ -f "${BASHCLI_CONFIG_DEFAULTS}" ] && [ ! -f "${BASHCLI_CONFIG_GLOBAL}" ]; then
-    mkdir -p "$(dirname "${BASHCLI_CONFIG_GLOBAL}")"
-    cp "${BASHCLI_CONFIG_DEFAULTS}" "${BASHCLI_CONFIG_GLOBAL}"
-  fi
-
-  while IFS= read -r line || [ -n "${line}" ]; do
-    variable=${line%%=*}
-    BASHCLI_CONFIG_ENV[${variable}]=1
-  done < <(env)
-
+  -bashcli-config-initialize-profiles
+  -bashcli-config-initialize-scope
+  -bashcli-config-initialize-env
   -bashcli-config-read
+  -bashcli-config-read-env
+
+  IFS=,
+  bashcli-debug "known profiles: [${!BASHCLI_CONFIG_KNOWN_PROFILES[*]}]"
+}
+
+bashcli-config-reinitialize() {
+  BASHCLI_CONFIG_INITIALIZED=false
+  bashcli-config-initialize
 }
 
 bashcli-config-file() {
@@ -167,16 +170,32 @@ bashcli-config-file() {
 }
 
 -bashcli-config-read-file() {
-  local configFile=$1
-  local -A profileOrder=()
+  local configFile
+  local -n profileIndex=BASHCLI_CONFIG_PROFILE_INDEX
   local lineNumber=0
-  local index line profile property value propertyProfile
+  local index line property value
+  local profile priority currentProfile currentPriority
+  local mergeMode=update
+  local option
 
-  for ((index = 0; index < ${#BASHCLI_CONFIG_PROFILES[@]}; ++index)); do
-    if [ "${BASHCLI_CONFIG_PROFILES[${index}]}" ]; then
-      profileOrder[${BASHCLI_CONFIG_PROFILES[${index}]}]=${index}
-    fi
+  while getopts "m:" option; do
+    case ${option} in
+      m) case ${OPTARG} in
+           keep|update) ;;
+           *) bashcli-error "internal error: invalid merge mode: ${OPTARG}"
+              return 1;;
+         esac
+         mergeMode=${OPTARG} ;;
+      ?) return 1;;
+    esac
   done
+
+  if [ $# -ne 1 ]; then
+    bashcli-error "internal error: single configFile argument expected"
+    return 1
+  fi
+  shift "$((OPTIND - 1))"
+  configFile=$1
 
   bashcli-debug "reading ${configFile}"
 
@@ -185,18 +204,24 @@ bashcli-config-file() {
       profile=${REPLY[0]}
       property=${REPLY[1]}
       value=${REPLY[2]}
-      propertyProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
+      priority=-1
+      currentProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
+      currentPriority=-1
 
       if [ "${profile}" ]; then
-        # shellcheck disable=SC2034
         BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
-        if [ -z "${profileOrder[${profile}]}" ]; then
-          continue
+        if [ "${profileIndex[${profile}]}" ]; then
+          priority="${profileIndex[${profile}]}"
         fi
       fi
 
-      if [ -z "${propertyProfile}" ] \
-           || [ "${profileOrder[${profile}]}" -ge "${profileOrder[${propertyProfile}]}" ]; then
+      if [ "${currentProfile}" ] && [ "${profileIndex[${currentProfile}]}" ]; then
+        currentPriority=${profileIndex[${currentProfile}]}
+      fi
+
+      if [ "${mergeMode}" == keep ] && [ "${priority}" -le "${currentPriority}" ]; then
+        continue
+      elif [ "${priority}" -ge "${currentPriority}" ]; then
         BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
         BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]=${profile}
       fi
@@ -287,25 +312,45 @@ bashcli-config-file() {
   fi
 }
 
--bashcli-config-env-get() {
-  local variable=$1
-  local variant
+-bashcli-config-read-env() {
+  local index property profile profileIndex
+  local profileCount=${#BASHCLI_CONFIG_PROFILES[@]}
 
-  -bashcli-config-env-init
-
-  for ((variant = 0; variant < 3; ++variant)); do
-    case ${variant} in
-      0) ;;
-      1) variable=${variable//./_} ;;
-      2) variable=${variable^^} ;;
-    esac
-
-    if [ "${BASHCLI_CONFIG_ENV[${variable}]}" ]; then
-      # shellcheck disable=SC2178
-      REPLY=${!variable}
-      return 0
-    fi
+  for property in "${!BASHCLI_CONFIG_PROPERTIES[@]}"; do
+    profileIndex=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]:-${profileCount}}
+    for ((index = 0; index <= ${profileIndex}; ++index)); do
+      if [ ${index} -lt "${profileCount}" ]; then
+        profile=${BASHCLI_CONFIG_PROFILES[${index}]}
+      else
+        profile=
+      fi
+      if -bashcli-config-env-get "${profile}" "${property}"; then
+        BASHCLI_CONFIG_PROPERTIES[${property}]=${REPLY}
+        BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]=${profile}
+        break
+      fi
+    done
   done
+}
+
+-bashcli-config-env-get() {
+  local profile=$1
+  local property=$2
+  local envVariable=${BASHCLI_CLI_NAME}_
+
+  if [ "${profile}" ]; then
+    envVariable+="_${profile}_"
+  fi
+  envVariable+=${property}
+  envVariable=${envVariable//[^a-zA-Z0-9]}
+  envVariable=${envVariable^^}
+
+  bashcli-debug "checking ${envVariable}"
+  if [ "${BASHCLI_CONFIG_ENV[${envVariable}]}" ]; then
+    REPLY=${!envVariable}
+    bashcli-debug "$1 -> ${REPLY}"
+    return 0
+  fi
 
   return 1
 }
@@ -318,20 +363,56 @@ bashcli-config-check-property() {
   fi
 }
 
-bashcli-config-check-profiles() {
+-bashcli-config-initialize-profiles() {
   local profile
-  for profile in "${BASHCLI_CONFIG_PROFILES[@]}"; do
-    if [[ ${profile} != ${BASHCLI_CONFIG_VALID_PROFILE_NAME} ]]; then
-      bashcli-error "invalid profile name: ${profile} (should match '${BASHCLI_CONFIG_VALID_PROFILE_NAME}')"
-      return 1
+  local profiles=("${BASHCLI_CONFIG_PROFILES[@]}")
+  local index=0
+
+  BASHCLI_CONFIG_PROFILES=()
+  BASHCLI_CONFIG_PROFILE_INDEX=()
+
+  # Check profile-names, remove duplicate and empty profiles, while keeping the order.
+  for ((index = $((${#profiles[@]})); index >= 0; --index)); do
+    profile=${profiles[index]}
+    if [ "${profile}" ] && [ -z "${BASHCLI_CONFIG_PROFILE_INDEX[${profile}]}" ]; then
+      if [[ ${profile} != ${BASHCLI_CONFIG_VALID_PROFILE_NAME} ]]; then
+        bashcli-error "invalid profile name: ${profile} (should match '${BASHCLI_CONFIG_VALID_PROFILE_NAME}')"
+        return 1
+      fi
+      BASHCLI_CONFIG_PROFILE_INDEX[${profile}]=${index}
+      BASHCLI_CONFIG_PROFILES=("${profile}" "${BASHCLI_CONFIG_PROFILES[@]}")
+      # shellcheck disable=2034
+      BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
     fi
+  done
+
+  # Fix the index.
+  BASHCLI_CONFIG_PROFILE_INDEX=()
+  for ((index = 0; index < ${#BASHCLI_CONFIG_PROFILES[@]}; ++index)); do
+    profile=${BASHCLI_CONFIG_PROFILES[index]}
+    BASHCLI_CONFIG_PROFILE_INDEX[${profile}]=${index}
   done
 }
 
-bashcli-config-check-scope() {
+-bashcli-config-initialize-scope() {
   case ${BASHCLI_CONFIG_SCOPE} in
     global|local|'') ;;
     *) bashcli-error "invalid scope: ${scope} (should be 'global', 'local' or empty)"
        return 1;;
   esac
+
+  if [ "${BASHCLI_CONFIG_SCOPE}" == local ] && [ -z "${BASHCLI_CONFIG_LOCAL}" ]; then
+    bashcli-error "local scope not supported"
+    return 1
+  fi
+}
+
+-bashcli-config-initialize-env() {
+  local IFS line variableName
+
+  BASHCLI_CONFIG_ENV=()
+  while IFS= read -r line || [ -n "${line}" ]; do
+    variableName=${line%%=*}
+    BASHCLI_CONFIG_ENV[${variableName}]=1
+  done < <(env)
 }

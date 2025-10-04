@@ -3,14 +3,12 @@
 declare -A options=()
 declare parameters=()
 
-bashcli-options-parse options parameters BASHCLI_CONFIG_PROFILES=profile -- "$@"
+bashcli-options-parse options parameters -- "$@"
 
-BASHCLI_CONFIG_SCOPE=${options[scope]}
-
-if [ "${BASHCLI_CONFIG_SCOPE}" == local ] && [ -z "${BASHCLI_CONFIG_LOCAL}" ]; then
-  bashcli-fatal "local scope not supported"
+if [ "${options[scope]}" ]; then
+  # shellcheck disable=2034
+  BASHCLI_CONFIG_SCOPE=${options[scope]}
+  bashcli-config-reinitialize
 fi
 
-bashcli-config-check-profiles
-bashcli-config-check-scope
 bashcli-command-exec "${parameters[@]}"

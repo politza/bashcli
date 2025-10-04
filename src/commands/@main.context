@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-DESCRIPTION=""
+DESCRIPTION="
+The entry command of the CLI.
+"
 
 OPTIONS=(
+  profile  multi
 )
 
 OPTION_DESCRIPTIONS=(
+  profile "Enables one or more configuration profiles."
 )
 
 OPTION_ALIASES=(
+  P profile
 )
 
 OPTION_COMPLETIONS=(
+  profile config-profile
 )
 
 CONFIG=(
