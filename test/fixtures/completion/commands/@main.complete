@@ -4,10 +4,7 @@
 
 bashcli-test-completions() {
   local prefix=$1
-  local completion
-  for completion in ${prefix}-{aaa,aab,aac}; do
-    BASHCLI_COMPLETIONS[${completion}]=${completion}
-  done
+  BASHCLI_COMPLETIONS["${prefix}-completion"]="${prefix}-completion description"
 }
 
 bashcli-complete-single-0() {
