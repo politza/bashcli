@@ -34,3 +34,14 @@ bashcli-complete-config-profile() {
     BASHCLI_COMPLETIONS[${profile}]=''
   done
 }
+
+bashcli-complete-config-property() {
+  local property
+
+  bashcli-config-initialize
+
+  for property in "${!BASHCLI_CONFIG_PROPERTIES[@]}"; do
+    # shellcheck disable=SC2034
+    BASHCLI_COMPLETIONS[${property}]=''
+  done
+}
