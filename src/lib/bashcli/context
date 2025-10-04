@@ -47,7 +47,6 @@ bashcli-context-read() {
       OPTION_ALIASES=()
       OPTION_COMPLETIONS=()
       CONFIG=()
-      # shellcheck source=/dev/null
       . "${commandContext}"
       bashcli-context-validate
       bashcli-context-defaults

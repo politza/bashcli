@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2215
 
 declare -g BASHCLI_CACHE_DIR=${BASHCLI_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/${BASHCLI_CLI_NAME}/cache}
 

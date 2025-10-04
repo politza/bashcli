@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2034,SC2004
-
 bashcli-complete-directory() {
   local completion
 
@@ -32,6 +30,7 @@ bashcli-complete-config-profile() {
   bashcli-config-initialize
 
   for profile in "${!BASHCLI_CONFIG_KNOWN_PROFILES[@]}"; do
+    # shellcheck disable=SC2034
     BASHCLI_COMPLETIONS[${profile}]=''
   done
 }

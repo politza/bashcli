@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2215,SC2094,SC2053,SC2178,SC2207,SC2155
 
 declare -g BASHCLI_CONFIG_GLOBAL=${BASHCLI_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/${BASHCLI_CLI_NAME}.conf}
 declare -g BASHCLI_CONFIG_LOCAL=${BASHCLI_CONFIG_LOCAL}
@@ -154,7 +153,7 @@ bashcli-config-initialize() {
       propertyProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
 
       if [ "${profile}" ]; then
-        # shellcheck disable=2034
+        # shellcheck disable=SC2034
         BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
         if [ -z "${profileOrder[${profile}]}" ]; then
           continue
@@ -248,7 +247,6 @@ bashcli-config-file() {
   trap 'rm -f -- "${tempFile}"' RETURN
 
   bashcli-config-file
-  # shellcheck disable=SC2128
   propertyFile=${REPLY}
 
   if [ "${profile}" ]; then

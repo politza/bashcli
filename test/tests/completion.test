@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2064,SC1091,SC2206
 
 PATH=$PWD/fixtures/completion:${PATH}
 output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 
+# shellcheck disable=SC2206
 completion-exec() {
   local IFS=$' '
   local prefix=${1%%|*}

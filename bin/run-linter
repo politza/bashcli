@@ -3,5 +3,6 @@
 set -e
 cd "$(dirname "$0")"/..
 IFS=$'\n'
-#shellcheck disable=SC2046
-shellcheck $(./bin/project-bash-files)
+readarray -t FILES < <(./bin/project-bash-files)
+
+shellcheck -f gcc "${FILES[@]}"

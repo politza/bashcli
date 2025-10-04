@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2034,SC1091
 bashcli-completion-complete() {
+  # shellcheck disable=SC2034
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=(.)
@@ -120,7 +120,6 @@ bashcli-completion-complete() {
   done
 
   COMPREPLY=()
-  # shellcheck disable=SC2016
   _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"'
   case ${COMP_TYPE} in
     9|37) ;;
@@ -180,7 +179,6 @@ bashcli-completion-read() {
     commandComplete=${commandRoot}/${commandMain}.complete
     if [ -f "${commandComplete}" ]; then
       bashcli-debug "${commandMain} -> ${commandComplete}"
-      # shellcheck source=/dev/null
       . "${commandComplete}"
     fi
   done

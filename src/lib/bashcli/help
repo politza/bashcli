@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2190,SC2064,SC2184,SC2215,SC2207
 
 declare -g -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
@@ -12,7 +11,6 @@ fi
 
 declare -g BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 
-# shellcheck disable=SC2215
 bashcli-help-show() {
   local commandList=("$@")
   local commandMain
@@ -57,7 +55,6 @@ bashcli-help-show() {
   fi
 }
 
-# shellcheck disable=SC2206,SC2004
 -bashcli-help-show-options() {
   local -A optionLabels=()
   local index optionDashes option optionAliases optionVariants optionVariant
@@ -69,7 +66,7 @@ bashcli-help-show() {
     # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
     bashcli-option-aliases "${option}"
     optionAliases=("${REPLY[@]}")
-    optionVariants=(${option} "${optionAliases[@]}")
+    optionVariants=("${option}" "${optionAliases[@]}")
     for ((index = 0; index < ${#optionVariants[@]}; ++index)); do
       optionVariant=${optionVariants[${index}]}
       optionDashes=${optionVariant:0:2}
@@ -141,7 +138,6 @@ bashcli-help-show() {
   fi
 }
 
-# shellcheck disable=SC2207
 -bashcli-help-sorted-options() {
   local index option default
   local IFS=$'\n'

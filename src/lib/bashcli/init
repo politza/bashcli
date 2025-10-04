@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-#shellcheck disable=SC2190,SC2155
 
 declare -g -A BASHCLI_LIBRARIES_LOADED=()
 declare -g -A BASHCLI_COLORS=(
@@ -31,7 +30,6 @@ bashcli-debug() {
       fnName=${fnName#-}
       fnName=${fnName#bashcli-}
     elif [[ ${fnName} == ${cliName}-* ]]; then
-      # shellcheck disable=SC2295
       fnName=${fnName#${cliName}-}
     fi
     context+="${fnName}"
@@ -83,14 +81,13 @@ bashcli-load-library() {
   local library=$1
   local libraryDirectories=("${BASHCLI_CLI_DIR}/lib" "${BASHCLI_DIR}/lib")
   local directory=
-  
+
   if [[ "${BASHCLI_LIBRARIES_LOADED[${library}]}" == true && "${BASHCLI_DEBUG}" != true ]]; then
     return 0
   else
     for directory in "${libraryDirectories[@]}"; do
       if [ -f "${directory}/${library}" ]; then
         BASHCLI_LIBRARIES_LOADED[${library}]=true
-        #shellcheck source=/dev/null
         . "${directory}/${library}"
         return 0
       fi

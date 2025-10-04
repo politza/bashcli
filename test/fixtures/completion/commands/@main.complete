@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2004,SC2034
 
 bashcli-test-completions() {
   local prefix=$1
+  # shellcheck disable=SC2034
   BASHCLI_COMPLETIONS["${prefix}-completion"]="${prefix}-completion description"
 }
 

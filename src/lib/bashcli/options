@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2215,SC2165,SC2167,SC2004,SC2059,SC2178
 bashcli-options-parse() {
   local _options _option _optionType _index _argument _arguments
   local _multiOptionRefPattern='__%s_ref' _multiOptionRef _multiOptionVar

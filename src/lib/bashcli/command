@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#shellcheck disable=SC2215,SC2053
 
 declare -g -a BASHCLI_COMMAND_ROOTS=(
   "${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/commands"
@@ -12,7 +11,6 @@ declare -g BASHCLI_COMMAND_PATTERN='?(.|+([^.@]))'
 declare -g BASHCLI_COMMAND_MAIN=@main
 declare -g -A BASHCLI_COMMAND_RESOLVE_CACHE=()
 
-# shellcheck disable=SC2059
 bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
@@ -99,7 +97,6 @@ bashcli-command-exec-now() {
 
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
-  # shellcheck source=/dev/null
   . "${REPLY[0]}" "$@"
 }
 

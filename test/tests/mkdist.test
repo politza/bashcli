@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2064,SC1091
 
 PATH=$PWD/../bin:${PATH}
 output=$(mktemp)
