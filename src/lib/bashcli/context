@@ -22,6 +22,7 @@ bashcli-context-clear() {
   BASHCLI_CONTEXT_CONFIG=()
   BASHCLI_CONTEXT_OPTIONS_SOURCE=()
   BASHCLI_CONTEXT_READ=()
+  bashcli-debug "context cleared"
 }
 
 bashcli-context-read() {
