@@ -103,7 +103,7 @@ bashcli-config-initialize() {
       && cp "${BASHCLI_CONFIG_DEFAULTS}" "${BASHCLI_CONFIG_GLOBAL}"
   fi
 
-  while IFS= read -r line; do
+  while IFS= read -r line || [ -n "${line}" ]; do
     variable=${line%%=*}
     BASHCLI_CONFIG_ENV[${variable}]=1
   done < <(env)
@@ -145,7 +145,7 @@ bashcli-config-initialize() {
 
   bashcli-debug "reading ${propertyFile}"
 
-  while IFS= read -r line; do
+  while IFS= read -r line || [ -n "${line}" ]; do
     if -bashcli-config-read-line "${line}" "${propertyFile}" "${lineNumber}"; then
       profile=${REPLY[0]}
       property=${REPLY[1]}
@@ -254,7 +254,7 @@ bashcli-config-file() {
   fi
 
   if [ -f "${propertyFile}" ]; then
-    while IFS= read -r line; do
+    while IFS= read -r line || [ -n "${line}" ]; do
       if -bashcli-config-read-line "${line}" "${propertyFile}" "${lineNumber}"; then
         if [ "${profile}" == "${REPLY[0]}" ] && [ "${property}" == "${REPLY[1]}" ]; then
           if [ "${unset}" != true ]; then
