@@ -47,4 +47,20 @@ single-1-completion  single-1-completion description
 EOF
 }
 
+test-complete-profiles() {
+  local configFile=$(mktemp)
+  trap "rm -f -- '${configFile}'" RETURN EXIT
+
+  export BASHCLI_CONFIG_LOCAL=${configFile}
+  cat > "${configFile}" <<EOF
+%test.property=0
+%dev.property=1
+EOF
+  completion-exec 'cli --profile=|' &> "${output}"
+  diff "${output}" - <<EOF
+dev
+test
+EOF
+}
+
 . ./lib/run-tests
