@@ -31,7 +31,9 @@ bashcli-config-get() {
   bashcli-config-initialize
   bashcli-config-check-property "${property}"
 
-  printf "%s\n" "${BASHCLI_CONFIG_PROPERTIES[${property}]}"
+  if [ "${BASHCLI_CONFIG_PROPERTIES[${property}]}" ]; then
+    printf "%s\n" "${BASHCLI_CONFIG_PROPERTIES[${property}]}"
+  fi
 }
 
 bashcli-config-set() {
@@ -61,15 +63,17 @@ bashcli-config-unset() {
 }
 
 bashcli-config-list() {
+  local IFS=$'\n'
+  local property
+  local properties
+
   if [ $# -gt 0 ]; then
     bashcli-error "too many arguments: $*"
     return 1
   fi
 
   bashcli-config-initialize
-  local IFS=$'\n'
-  local property
-  local properties=($(LC_ALL=C sort <<<"${!BASHCLI_CONFIG_PROPERTIES[@]}"))
+  properties=($(LC_ALL=C sort <<<"${!BASHCLI_CONFIG_PROPERTIES[@]}"))
 
   for property in "${properties[@]}"; do
     printf "%s=%s\n" "${property}" "${BASHCLI_CONFIG_PROPERTIES[${property}]}"
@@ -86,8 +90,8 @@ bashcli-config-initialize() {
   BASHCLI_CONFIG_INITIALIZED=true
 
   if [ -f "${BASHCLI_CONFIG_DEFAULTS}" ] && [ ! -f "${BASHCLI_CONFIG_GLOBAL}" ]; then
-    mkdir -p "$(dirname "${BASHCLI_CONFIG_GLOBAL}")" \
-      && cp "${BASHCLI_CONFIG_DEFAULTS}" "${BASHCLI_CONFIG_GLOBAL}"
+    mkdir -p "$(dirname "${BASHCLI_CONFIG_GLOBAL}")"
+    cp "${BASHCLI_CONFIG_DEFAULTS}" "${BASHCLI_CONFIG_GLOBAL}"
   fi
 
   while IFS= read -r line || [ -n "${line}" ]; do
@@ -99,7 +103,7 @@ bashcli-config-initialize() {
 }
 
 bashcli-config-file() {
-  local propertyFile
+  local configFile
   local scope=${BASHCLI_CONFIG_SCOPE}
 
   if [ -z "${scope}" ]; then
@@ -111,14 +115,15 @@ bashcli-config-file() {
   fi
 
   case ${scope} in
-    global) propertyFile=${BASHCLI_CONFIG_GLOBAL} ;;
-    local) propertyFile=${BASHCLI_CONFIG_LOCAL} ;;
+    global) configFile=${BASHCLI_CONFIG_GLOBAL} ;;
+    local) configFile=${BASHCLI_CONFIG_LOCAL} ;;
     *) bashcli-fatal "internal error: invalid scope: ${scope}" ;;
   esac
-  if [ -z "${propertyFile}" ]; then
-    bashcli-fatal "internal error: property file unset"
+  if [ -z "${configFile}" ]; then
+    bashcli-error "property file unset"
+    return 1
   fi
-  printf "%s" "${propertyFile}"
+  printf "%s" "${configFile}"
 }
 
 -bashcli-config-set() {
@@ -141,40 +146,42 @@ bashcli-config-file() {
 
 -bashcli-config-read() {
   local IFS=,
-  local propertyFiles=()
-  local propertyFile
+  local configFiles=()
+  local configFile
 
   if [ -z "${BASHCLI_CONFIG_SCOPE}" ] || [ "${BASHCLI_CONFIG_SCOPE}" == global ]; then
-    propertyFiles+=("${BASHCLI_CONFIG_GLOBAL}")
+    configFiles+=("${BASHCLI_CONFIG_GLOBAL}")
   fi
 
   if [ -z "${BASHCLI_CONFIG_SCOPE}" ] || [ "${BASHCLI_CONFIG_SCOPE}" == local ]; then
-    propertyFiles+=("${BASHCLI_CONFIG_LOCAL}")
+    configFiles+=("${BASHCLI_CONFIG_LOCAL}")
   fi
 
   bashcli-debug "reading in scope ${BASHCLI_CONFIG_SCOPE:-"''"} with profiles [${BASHCLI_CONFIG_PROFILES[*]}]"
 
-  for propertyFile in "${propertyFiles[@]}"; do
-    if [ -f "${propertyFile}" ]; then
-      -bashcli-config-read-file "${propertyFile}"
+  for configFile in "${configFiles[@]}"; do
+    if [ -f "${configFile}" ]; then
+      -bashcli-config-read-file "${configFile}"
     fi
   done
 }
 
 -bashcli-config-read-file() {
-  local propertyFile=$1
+  local configFile=$1
   local -A profileOrder=()
   local lineNumber=0
   local index line profile property value propertyProfile
 
   for ((index = 0; index < ${#BASHCLI_CONFIG_PROFILES[@]}; ++index)); do
-    profileOrder[${BASHCLI_CONFIG_PROFILES[${index}]}]=${index}
+    if [ "${BASHCLI_CONFIG_PROFILES[${index}]}" ]; then
+      profileOrder[${BASHCLI_CONFIG_PROFILES[${index}]}]=${index}
+    fi
   done
 
-  bashcli-debug "reading ${propertyFile}"
+  bashcli-debug "reading ${configFile}"
 
   while IFS= read -r line || [ -n "${line}" ]; do
-    if -bashcli-config-read-line "${line}" "${propertyFile}" "${lineNumber}"; then
+    if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
       profile=${REPLY[0]}
       property=${REPLY[1]}
       value=${REPLY[2]}
@@ -195,12 +202,12 @@ bashcli-config-file() {
       fi
     fi
     ((++lineNumber))
-  done < "${propertyFile}"
+  done < "${configFile}"
 }
 
 -bashcli-config-read-line() {
   local line=$1
-  local propertyFile=$2
+  local configFile=$2
   local lineNumber=$3
   local profile property value
 
@@ -218,7 +225,7 @@ bashcli-config-file() {
   property=${REPLY[1]}
 
   if [ -z "${property}" ]; then
-    bashcli-warn "failed to read line ${lineNumber} of file ${propertyFile}"
+    bashcli-warn "failed to read line ${lineNumber} of file ${configFile}"
     return 1
   fi
 
@@ -246,21 +253,20 @@ bashcli-config-file() {
   local property=$3
   local value=$4
   local profilePrefix
-  local propertyFile
+  local configFile
   local tempFile=$(mktemp)
 
   trap 'rm -f -- "${tempFile}"' RETURN
 
-  bashcli-config-file
-  propertyFile=${REPLY}
+  configFile=$(bashcli-config-file)
 
   if [ "${profile}" ]; then
     profilePrefix="%${profile}."
   fi
 
-  if [ -f "${propertyFile}" ]; then
+  if [ -f "${configFile}" ]; then
     while IFS= read -r line || [ -n "${line}" ]; do
-      if -bashcli-config-read-line "${line}" "${propertyFile}" "${lineNumber}"; then
+      if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
         if [ "${profile}" == "${REPLY[0]}" ] && [ "${property}" == "${REPLY[1]}" ]; then
           if [ "${unset}" != true ]; then
             unset=true
@@ -271,13 +277,13 @@ bashcli-config-file() {
         fi
       fi
       ((++lineNumber))
-    done < "${propertyFile}" > "${tempFile}"
+    done < "${configFile}" > "${tempFile}"
     if [ "${unset}" != true ]; then
       printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" >> "${tempFile}"
     fi
-    mv "${tempFile}" "${propertyFile}"
+    mv "${tempFile}" "${configFile}"
   else
-    printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" > "${propertyFile}"
+    printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" > "${configFile}"
   fi
 }
 
