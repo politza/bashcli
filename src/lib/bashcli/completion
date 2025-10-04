@@ -80,12 +80,16 @@ bashcli-completion-complete() {
   done
 
   if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}" ]; then
+    bashcli-debug "completing value for option ${option}"
     readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]//,/$'\n'}"
   elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}" ]; then
+    bashcli-debug "completing parameter value"
     readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]//,/$'n'}"
   elif [ "${option}" ]; then
+    bashcli-debug "completing with file fallback"
     completionFns=('file')
   elif [[ "${cur}" == -* ]]; then
+    bashcli-debug "completing long options"
     for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
       if [ ${#option} -gt 1 ]; then
         local suffix
@@ -97,6 +101,7 @@ bashcli-completion-complete() {
       fi
     done
   else
+    bashcli-debug "completing subcommands"
     if bashcli-command-subcommands "${commandStack[@]}"; then
       for subcommand in "${REPLY[@]}"; do
         if bashcli-command-resolve "${commandStack[@]}" "${subcommand}"; then
@@ -106,11 +111,13 @@ bashcli-completion-complete() {
         fi
       done
     else
+      bashcli-debug "completing with file fallback (no subcommands)"
       completionFns=('file')
     fi
   fi
 
   completionFns=("${completionFns[@]//*/bashcli-complete-&}")
+  bashcli-debug "completionFns: ${completionFns[*]}"
   for completionFn in "${completionFns[@]}"; do
     if declare -pf "${completionFn}" &>/dev/null; then
       "${completionFn}" "${cur}"
