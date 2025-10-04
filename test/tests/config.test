@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+PATH=$PWD/fixtures/config:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+test-config-something() {
+  :
+}
+
+. ./lib/run-tests
