@@ -3,8 +3,12 @@
 declare -g -a BASHCLI_COMMAND_ROOTS=(
   "${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/commands"
   "${BASHCLI_CLI_DIR}/commands"
-  "${BASHCLI_DIR}/commands"
 )
+
+if ! [ "${BASHCLI_DIR}/commands" -ef "${BASHCLI_CLI_DIR}/commands" ]; then
+  BASHCLI_COMMAND_ROOTS+=("${BASHCLI_DIR}/commands")
+fi
+
 declare -g -a BASHCLI_COMMAND_STACK=()
 declare -g -a BASHCLI_COMMAND_NEXT=()
 declare -g BASHCLI_COMMAND_PATTERN='?(.|+([^.@]))'
@@ -61,11 +65,15 @@ bashcli-command-resolve() {
   done
 
   IFS=' '
-  bashcli-error "no such command: ${commandList[*]:1} (try ${BASHCLI_CLI_NAME:-bashcli} --help)"
+  bashcli-error "no such command: ${commandList[*]:1} (try the --help option)"
   return 1
 }
 
 bashcli-command-exec() {
+  if [ -z "$1" ]; then
+      bashcli-error "no command given (try the --help option)"
+  fi
+
   if [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; then
     bashcli-fatal "command already pending for execution, try bashcli-command-exec-now"
   fi
@@ -88,7 +96,7 @@ bashcli-command-exec-now() {
   shift
 
   if [ -z "${command}" ]; then
-    bashcli-error "no command given"
+    bashcli-error "no command given (try the --help option)"
     return 1
   fi
 
