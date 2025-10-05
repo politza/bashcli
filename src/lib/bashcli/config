@@ -3,8 +3,8 @@
 declare -g BASHCLI_CONFIG_GLOBAL=${BASHCLI_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/${BASHCLI_CLI_NAME}.conf}
 declare -g BASHCLI_CONFIG_LOCAL=${BASHCLI_CONFIG_LOCAL}
 
-declare -g BASHCLI_CONFIG_VALID_PROPERTY_NAME='+([a-zA-Z0-9.-])'
-declare -g BASHCLI_CONFIG_VALID_PROFILE_NAME='+([a-zA-Z0-9-])'
+declare -g BASHCLI_CONFIG_PROPERTY_PATTERN='+([a-zA-Z0-9.-])'
+declare -g BASHCLI_CONFIG_PROFILE_PATTERN='+([a-zA-Z0-9-])'
 
 declare -g BASHCLI_CONFIG_INITIALIZED=
 
@@ -369,8 +369,8 @@ bashcli-config-read-defaults() {
 
 bashcli-config-check-property() {
   local property=$1
-  if [[ ${property} != ${BASHCLI_CONFIG_VALID_PROPERTY_NAME} ]]; then
-    bashcli-error "invalid property name: ${property} (should match '${BASHCLI_CONFIG_VALID_PROPERTY_NAME}')"
+  if [[ ${property} != ${BASHCLI_CONFIG_PROPERTY_PATTERN} ]]; then
+    bashcli-error "invalid property name: ${property} (should match '${BASHCLI_CONFIG_PROPERTY_PATTERN}')"
     return 1
   fi
 }
@@ -387,8 +387,8 @@ bashcli-config-check-property() {
   for ((index = $((${#profiles[@]})); index >= 0; --index)); do
     profile=${profiles[index]}
     if [ "${profile}" ] && [ -z "${BASHCLI_CONFIG_PROFILE_INDEX[${profile}]}" ]; then
-      if [[ ${profile} != ${BASHCLI_CONFIG_VALID_PROFILE_NAME} ]]; then
-        bashcli-error "invalid profile name: ${profile} (should match '${BASHCLI_CONFIG_VALID_PROFILE_NAME}')"
+      if [[ ${profile} != ${BASHCLI_CONFIG_PROFILE_PATTERN} ]]; then
+        bashcli-error "invalid profile name: ${profile} (should match '${BASHCLI_CONFIG_PROFILE_PATTERN}')"
         return 1
       fi
       BASHCLI_CONFIG_PROFILE_INDEX[${profile}]=${index}
