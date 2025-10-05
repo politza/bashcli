@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 
 set -e
-export BASHCLI_DEBUG=
-cd "$(dirname "$0")"/../test
-prove -r --ext 'test' tests
+
+testFiles=(tests)
+testDirectory="$(dirname "$0")"/../test
+
+while getopts "s:d" option; do
+  case ${option} in
+    s) export BASHCLI_TEST_SELECTOR=${OPTARG} ;;
+    d) export BASHCLI_DEBUG=true ;;
+    *) exit 1
+  esac
+done
+shift "$((OPTIND - 1))"
+
+if [ $# -gt 0 ]; then
+  testFiles=("$@")
+fi
+
+for ((index = 0; index < ${#testFiles[@]}; ++index)); do
+  testFiles[index]=$(realpath "${testFiles[index]}")
+done
+
+cd "${testDirectory}"
+prove -j8 -r -v --ext 'test' "${testFiles[@]}"
