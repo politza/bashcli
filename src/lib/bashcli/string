@@ -2,11 +2,10 @@
 
 bashcli-string-trim() {
   local -n _string
-  local LC_ALL=C
 
   for _string; do
-    _string=${_string##+([[:space:]])}
-    _string=${_string%%+([[:space:]])}
+    _string=${_string##+([ $'\t'])}
+    _string=${_string%%+([ $'\t'])}
   done
 }
 
