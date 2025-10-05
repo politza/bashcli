@@ -3,8 +3,11 @@
 declare -g BASHCLI_CONFIG_GLOBAL=${BASHCLI_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/${BASHCLI_CLI_NAME}.conf}
 declare -g BASHCLI_CONFIG_LOCAL=${BASHCLI_CONFIG_LOCAL}
 
-declare -g BASHCLI_CONFIG_PROPERTY_PATTERN='+([a-zA-Z0-9.-])'
+declare -g BASHCLI_CONFIG_PROPERTY_PATTERN='+([a-zA-Z0-9._-])'
 declare -g BASHCLI_CONFIG_PROFILE_PATTERN='+([a-zA-Z0-9-])'
+
+declare -g BASHCLI_CONFIG_MAX_EVAL_DEPTH=${BASHCLI_CONFIG_MAX_EVAL_DEPTH:-16}
+declare -g BASHCLI_CONFIG_EVAL_STACK=()
 
 declare -g BASHCLI_CONFIG_INITIALIZED=
 
@@ -96,6 +99,7 @@ bashcli-config-initialize() {
   -bashcli-config-initialize-env
   -bashcli-config-read
   -bashcli-config-read-env
+  -bashcli-config-eval-properties
 
   bashcli-debug "read ${#BASHCLI_CONFIG_PROPERTIES[@]} properties"
 }
@@ -127,6 +131,90 @@ bashcli-config-file() {
     return 1
   fi
   printf "%s" "${configFile}"
+}
+
+-bashcli-config-eval-properties() {
+  local property
+
+  for property in "${!BASHCLI_CONFIG_PROPERTIES[@]}"; do
+    if -bashcli-config-eval "${BASHCLI_CONFIG_PROPERTIES[${property}]}"; then
+      bashcli-debug "${property}=${REPLY}"
+      BASHCLI_CONFIG_PROPERTIES[${property}]=$REPLY
+    else
+      bashcli-debug "${property}="
+      BASHCLI_CONFIG_PROPERTIES[${property}]=
+    fi
+  done
+}
+
+-bashcli-config-eval() {
+  local initialValue=$1
+  local value=${initialValue}
+  local result=
+  local prefix expr exprValue property default
+  # Using a nameref here avoids a bash quirks.
+  local -n evalStack=BASHCLI_CONFIG_EVAL_STACK
+  REPLY=
+
+  if [[ "${value}" != *[\$\\]* ]]; then
+    REPLY=${value}
+    return
+  fi
+
+  if [ ${#evalStack[@]} -gt "${BASHCLI_CONFIG_MAX_EVAL_DEPTH}" ]; then
+    bashcli-fatal "apparent cyclic property dependencies found during evaluation"
+  fi
+
+  evalStack+=("")
+  trap "unset 'evalStack[-1]'" RETURN
+
+
+  while [ "${value}" ]; do
+    prefix=${value%%[\$\\]*}
+    value=${value:${#prefix}}
+    result+=${prefix}
+
+    case ${value:0:1} in
+      \\) case ${value:1:1} in
+            n) result+=$'\n' ;;
+            r) result+=$'\r' ;;
+            t) result+=$'\t' ;;
+            s) result+=' ' ;;
+            *) result+=${value:1:1} ;;
+          esac
+          value=${value:2} ;;
+      \$) if [ "${value:1:1}" != '{' ]; then
+            result+='$'
+            value=${value:1}
+          else
+            value=${value:2}
+            expr=${value%%\}*}
+            value=${value:${#expr}}
+            value=${value:1}
+            property=${expr%%\:*}
+            default=${expr:$((${#property} + 1))}
+            if ! bashcli-config-check-property "${property}"; then
+              bashcli-error "failed to evaluate '${initialValue}'"
+              return 1
+            fi
+            if [ "${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}" ]; then
+              exprValue=${BASHCLI_CONFIG_PROPERTIES[${property}]}
+            elif [ "${BASHCLI_CONFIG_ENV[${property}]}" ]; then
+              exprValue=${!property}
+            fi
+            if [ -z "${exprValue}" ]; then
+              exprValue=${default}
+            fi
+            if [ "${exprValue}" ]; then
+              -bashcli-config-eval "${exprValue}"
+              result+=${REPLY}
+            fi
+          fi
+          ;;
+      esac
+  done
+
+  REPLY=${result}
 }
 
 -bashcli-config-set() {
@@ -198,7 +286,6 @@ bashcli-config-file() {
       BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
       update=
 
-      bashcli-debug "profile='${profile}' property='${property}' value='${value}'"
       if [ -z "${BASHCLI_CONFIG_PROFILE_INDEX[${profile}]}" ]; then
         # Profile not activated.
         continue
@@ -209,7 +296,6 @@ bashcli-config-file() {
         priority=${BASHCLI_CONFIG_PROFILE_INDEX[${profile}]}
         currentPriority=${BASHCLI_CONFIG_PROFILE_INDEX[${propertyProfile}]}
 
-        bashcli-debug "priority=$priority currentPriority=$currentPriority"
         if [ "${priority}" -gt "${currentPriority}" ]; then
           update=true
         elif [ "${priority}" -eq "${currentPriority}" ]; then
@@ -220,6 +306,7 @@ bashcli-config-file() {
       fi
 
       if [ "${update}" ]; then
+        bashcli-debug "${property}=${value}"
         BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
         BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]=${profile}
       fi
@@ -283,7 +370,7 @@ bashcli-config-file() {
 
   configFile=$(bashcli-config-file)
 
-  if [ "${profile}" ]; then
+  if [ "${profile}" != default ]; then
     profilePrefix="%${profile}."
   fi
 
