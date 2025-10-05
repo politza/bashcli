@@ -2,10 +2,88 @@
 
 PATH=$PWD/fixtures/config:${PATH}
 output=$(mktemp)
-trap "rm -r -- '${output}'" EXIT
+localConfig=$(mktemp)
+globalConfig=$(mktemp)
 
-test-config-something() {
-  :
+trap "rm -r -- '${output}' '${localConfig}' '${globalConfig}'" EXIT
+
+export BASHCLI_CONFIG_GLOBAL=${globalConfig}
+export BASHCLI_CONFIG_LOCAL=${localConfig}
+
+before-each() {
+  CLI_PROPERTY=
+  CLI__PROFILE_PROPERTY=
+
+  cat > "${localConfig}" <<EOF
+property=local-value
+%profile.property=local-profile-value
+EOF
+
+  cat > "${globalConfig}" <<EOF
+property=global-value
+%profile.property=global-profile-value
+EOF
+}
+
+test-config-get-global-value() {
+  cli config --global get property &> "${output}"
+  diff "${output}" - <<<global-value
+
+  BASHCLI_CONFIG_LOCAL=
+  cli config get property &> "${output}"
+  diff "${output}" - <<<global-value
+}
+
+test-config-get-local-value() {
+  cli config --local get property &> "${output}"
+  diff "${output}" - <<<local-value
+
+  cli config get property &> "${output}"
+  diff "${output}" - <<<local-value
+}
+
+test-config-get-env-value() {
+  export CLI_PROPERTY=env-value
+
+  cli config get --global property &> "${output}"
+  diff "${output}" - <<<env-value
+
+  cli config get --local property &> "${output}"
+  diff "${output}" - <<<env-value
+
+  cli config get property &> "${output}"
+  diff "${output}" - <<<env-value
+}
+
+test-config-get-global-profile-value() {
+  cli config --global --profile profile get property &> "${output}"
+  diff "${output}" - <<<global-profile-value
+
+  BASHCLI_CONFIG_LOCAL=
+  cli config --profile profile get property &> "${output}"
+  diff "${output}" - <<<global-profile-value
+}
+
+test-config-get-local-profile-value() {
+  cli config --local --profile profile get property &> "${output}"
+  diff "${output}" - <<<local-profile-value
+
+  cli config get --profile profile property &> "${output}"
+  diff "${output}" - <<<local-profile-value
+}
+
+test-config-get-env-profile-value() {
+  export CLI__PROFILE_PROPERTY=env-profile-value
+  export CLI_PROFILE=env-value
+
+  cli config get --global --profile profile property &> "${output}"
+  diff "${output}" - <<<env-profile-value
+
+  cli config get --local --profile profile property &> "${output}"
+  diff "${output}" - <<<env-profile-value
+
+  cli config get --profile profile property &> "${output}"
+  diff "${output}" - <<<env-profile-value
 }
 
 . ./lib/run-tests
