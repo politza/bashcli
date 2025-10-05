@@ -4,13 +4,14 @@ set -e
 
 testFiles=(test/tests)
 testDirectory="$(dirname "$0")"/../test
-proveArgs=(-j8 -r --ext test)
+proveArgs=(-r --ext test)
 
-while getopts "s:Dv" option; do
+while getopts "s:Dvj" option; do
   case ${option} in
     s) export BASHCLI_TEST_SELECTOR=${OPTARG} ;;
     D) unset BASHCLI_DEBUG ;;
     v) proveArgs+=(-v) ;;
+    j) proveArgs+=(-j8) ;;
     *) exit 1
   esac
 done
