@@ -101,7 +101,6 @@ bashcli-command-exec-now() {
   fi
 
   bashcli-debug "preparing ${commandList[*]}"
-  bashcli-config-read-defaults "${BASHCLI_COMMAND_STACK[@]}" "${command}"
   bashcli-command-resolve "${commandList[@]}"
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList

@@ -49,7 +49,7 @@ bashcli-config-set() {
        return 1 ;;
   esac
 
-  -bashcli-config-set false "$@"
+  -bashcli-config-set --unset "$@"
 }
 
 bashcli-config-unset() {
@@ -61,7 +61,7 @@ bashcli-config-unset() {
        return 1 ;;
   esac
 
-  -bashcli-config-set true "$@"
+  -bashcli-config-set --set "$@"
 }
 
 bashcli-config-list() {
@@ -96,7 +96,6 @@ bashcli-config-initialize() {
   -bashcli-config-initialize-env
   -bashcli-config-read
   -bashcli-config-read-env
-  bashcli-config-read-defaults "${BASHCLI_COMMAND_STACK[@]}"
 
   bashcli-debug "read ${#BASHCLI_CONFIG_PROPERTIES[@]} properties"
 }
@@ -130,28 +129,8 @@ bashcli-config-file() {
   printf "%s" "${configFile}"
 }
 
-bashcli-config-read-defaults() {
-  if [ -z "${BASHCLI_CONFIG_INITIALIZED}" ] || [ $# -eq 0 ]; then
-    return
-  fi
-
-  bashcli-command-resolve "$@"
-  local commandMain=${REPLY[1]}
-  local index commandRoot configDefaults
-
-  bashcli-debug "$*"
-  for ((index = 0; index < ${#BASHCLI_COMMAND_ROOTS[@]}; ++index)) do
-    commandRoot=${BASHCLI_COMMAND_ROOTS[index]}
-    configDefaults=${commandRoot}/${commandMain}.conf
-    if [ -f "${configDefaults}" ]; then
-      -bashcli-config-read-file -m keep "${configDefaults}"
-    fi
-  done
-  -bashcli-config-read-env
-}
-
 -bashcli-config-set() {
-  local unset=$1
+  local updateMode=$1
   local property=$2
   local value=$3
   local profile=
@@ -164,8 +143,8 @@ bashcli-config-read-defaults() {
   bashcli-string-trim value
 
   bashcli-config-check-property "${property}"
-  bashcli-debug "${profile:-"''"}" "${property}" "${value}"
-  -bashcli-config-write-value "${unset}" "${profile}" "${property}" "${value}"
+  bashcli-debug "${profile}" "${property}" "${value}"
+  -bashcli-config-write-value "${updateMode}" "${profile}" "${property}" "${value}"
 }
 
 -bashcli-config-read() {
@@ -181,7 +160,7 @@ bashcli-config-read-defaults() {
     configFiles+=("${BASHCLI_CONFIG_LOCAL}")
   fi
 
-  bashcli-debug "reading in scope ${BASHCLI_CONFIG_SCOPE:-"''"} with profiles [${BASHCLI_CONFIG_PROFILES[*]}]"
+  bashcli-debug "reading in scope ${BASHCLI_CONFIG_SCOPE:-'<none>'} with profiles [${BASHCLI_CONFIG_PROFILES[*]}]"
 
   for configFile in "${configFiles[@]}"; do
     if [ -f "${configFile}" ]; then
@@ -192,10 +171,9 @@ bashcli-config-read-defaults() {
 
 -bashcli-config-read-file() {
   local configFile
-  local -n profileIndex=BASHCLI_CONFIG_PROFILE_INDEX
   local lineNumber=0
   local index line property value
-  local profile priority currentProfile currentPriority
+  local profile priority currentProfile currentPriority update
   local mergeMode=update
 
   if [ "$1" == -m ]; then
@@ -216,26 +194,27 @@ bashcli-config-read-defaults() {
       profile=${REPLY[0]}
       property=${REPLY[1]}
       value=${REPLY[2]}
-      priority=-1
       currentProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
-      currentPriority=-1
+      BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
+      update=
 
-      if [ "${profile}" ]; then
-        BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
-        if [ "${profileIndex[${profile}]}" ]; then
-          priority="${profileIndex[${profile}]}"
+      if [ -z "${currentProfile}" ]; then
+        # Property is not defined yet.
+        update=true
+      else
+        priority=${BASHCLI_CONFIG_PROFILE_INDEX[${profile}]}
+        currentPriority=${BASHCLI_CONFIG_PROFILE_INDEX[${currentProfile}]}
+
+        if [ "${priority}" -gt "${currentPriority}" ]; then
+          update=true
+        elif [ "${priority}" -eq "${currentPriority}" ]; then
+          case ${mergeMode} in
+            update) update=true ;;
+          esac
         fi
       fi
 
-      if [ -z "${BASHCLI_CONFIG_PROPERTIES[${property}]}" ]; then
-        currentPriority=-2
-      elif [ "${currentProfile}" ] && [ "${profileIndex[${currentProfile}]}" ]; then
-        currentPriority=${profileIndex[${currentProfile}]}
-      fi
-
-      if [ "${mergeMode}" == keep ] && [ "${priority}" -le "${currentPriority}" ]; then
-        continue
-      elif [ "${priority}" -ge "${currentPriority}" ]; then
+      if [ "${update}" ]; then
         BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
         BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]=${profile}
       fi
@@ -260,7 +239,7 @@ bashcli-config-read-defaults() {
   bashcli-string-trim value
 
   -bashcli-config-split-profile "${property}"
-  profile=${REPLY[0]}
+  profile=${REPLY[0]:-default}
   property=${REPLY[1]}
 
   if [ -z "${property}" ]; then
@@ -270,7 +249,7 @@ bashcli-config-read-defaults() {
 
   bashcli-config-check-property "${property}"
 
-  bashcli-debug "${profile:-"''"} ${property} ${value}"
+  bashcli-debug "${profile} ${property} ${value}"
   REPLY=("${profile}" "${property}" "${value}")
 }
 
@@ -287,7 +266,7 @@ bashcli-config-read-defaults() {
 }
 
 -bashcli-config-write-value() {
-  local unset=$1
+  local unset=${1/--set/}
   local profile=$2
   local property=$3
   local value=$4
@@ -330,13 +309,9 @@ bashcli-config-read-defaults() {
   local index property profile profileIndex
 
   for property in "${!BASHCLI_CONFIG_PROPERTIES[@]}"; do
-    profileIndex=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]:--1}
-    for ((index = $((${#BASHCLI_CONFIG_PROFILES[@]} - 1)); index >= -1; --index)); do
-      if [ ${index} -ge 0 ]; then
-        profile=${BASHCLI_CONFIG_PROFILES[${index}]}
-      else
-        profile=
-      fi
+    profileIndex=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]:-0}
+    for ((index = $((${#BASHCLI_CONFIG_PROFILES[@]} - 1)); index >= ${profileIndex}; --index)); do
+      profile=${BASHCLI_CONFIG_PROFILES[${index}]}
       if -bashcli-config-env-get "${profile}" "${property}"; then
         BASHCLI_CONFIG_PROPERTIES[${property}]=${REPLY}
         BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]=${profile}
@@ -351,8 +326,8 @@ bashcli-config-read-defaults() {
   local property=$2
   local envVariable=${BASHCLI_CLI_NAME}_
 
-  if [ "${profile}" ]; then
-    envVariable+="_${profile}_"
+  if [ "${profile}" != default ]; then
+    property="%${profile}.${property}"
   fi
   envVariable+=${property}
   envVariable=${envVariable//[^a-zA-Z0-9]/_}
@@ -360,7 +335,7 @@ bashcli-config-read-defaults() {
 
   if [ "${BASHCLI_CONFIG_ENV[${envVariable}]}" ]; then
     REPLY=${!envVariable}
-    bashcli-debug "${1:+%}$1${1:+.}$2 -> ${REPLY}"
+    bashcli-debug "${property} -> ${envVariable} -> ${REPLY}"
     return 0
   fi
 
@@ -377,7 +352,7 @@ bashcli-config-check-property() {
 
 -bashcli-config-initialize-profiles() {
   local profile
-  local profiles=("${BASHCLI_CONFIG_PROFILES[@]}")
+  local profiles=(default "${BASHCLI_CONFIG_PROFILES[@]}")
   local index=0
 
   BASHCLI_CONFIG_PROFILES=()
