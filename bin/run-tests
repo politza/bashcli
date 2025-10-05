@@ -2,13 +2,15 @@
 
 set -e
 
-testFiles=(tests)
+testFiles=(test/tests)
 testDirectory="$(dirname "$0")"/../test
+proveArgs=(-j8 -r --ext test)
 
-while getopts "s:d" option; do
+while getopts "s:Dv" option; do
   case ${option} in
     s) export BASHCLI_TEST_SELECTOR=${OPTARG} ;;
-    d) export BASHCLI_DEBUG=true ;;
+    D) unset BASHCLI_DEBUG ;;
+    v) proveArgs+=(-v) ;;
     *) exit 1
   esac
 done
@@ -19,8 +21,8 @@ if [ $# -gt 0 ]; then
 fi
 
 for ((index = 0; index < ${#testFiles[@]}; ++index)); do
-  testFiles[index]=$(realpath "${testFiles[index]}")
+  testFiles[index]=$(realpath --relative-to="${testDirectory}" "${testFiles[index]}")
 done
 
 cd "${testDirectory}"
-prove -j8 -r -v --ext 'test' "${testFiles[@]}"
+prove "${proveArgs[@]}" "${testFiles[@]}"

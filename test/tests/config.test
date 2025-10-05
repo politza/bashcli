@@ -11,8 +11,8 @@ export BASHCLI_CONFIG_GLOBAL=${globalConfig}
 export BASHCLI_CONFIG_LOCAL=${localConfig}
 
 before-each() {
-  CLI_PROPERTY=
-  CLI__PROFILE_PROPERTY=
+  unset CLI_PROPERTY
+  unset CLI__PROFILE_PROPERTY
 
   cat > "${localConfig}" <<EOF
 property=local-value

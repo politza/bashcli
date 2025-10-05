@@ -5,7 +5,7 @@ SHELL = bash
 check: test lint
 
 test:
-	BASHCLI_DEBUG= ./bin/run-tests
+	./bin/run-tests -D
 
 lint:
 	./bin/run-linter

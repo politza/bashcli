@@ -58,6 +58,7 @@ test-complete-profiles() {
 EOF
   completion-exec 'cli --profile=|' &> "${output}"
   diff "${output}" - <<EOF
+default
 dev
 test
 EOF

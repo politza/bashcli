@@ -160,7 +160,7 @@ bashcli-config-file() {
     configFiles+=("${BASHCLI_CONFIG_LOCAL}")
   fi
 
-  bashcli-debug "reading in scope ${BASHCLI_CONFIG_SCOPE:-'<none>'} with profiles [${BASHCLI_CONFIG_PROFILES[*]}]"
+  bashcli-debug "reading in scope ${BASHCLI_CONFIG_SCOPE:-<none>} with profiles [${BASHCLI_CONFIG_PROFILES[*]}]"
 
   for configFile in "${configFiles[@]}"; do
     if [ -f "${configFile}" ]; then
@@ -173,7 +173,7 @@ bashcli-config-file() {
   local configFile
   local lineNumber=0
   local index line property value
-  local profile priority currentProfile currentPriority update
+  local profile priority propertyProfile currentPriority update
   local mergeMode=update
 
   if [ "$1" == -m ]; then
@@ -194,17 +194,22 @@ bashcli-config-file() {
       profile=${REPLY[0]}
       property=${REPLY[1]}
       value=${REPLY[2]}
-      currentProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
+      propertyProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
       BASHCLI_CONFIG_KNOWN_PROFILES[${profile}]=1
       update=
 
-      if [ -z "${currentProfile}" ]; then
-        # Property is not defined yet.
+      bashcli-debug "profile='${profile}' property='${property}' value='${value}'"
+      if [ -z "${BASHCLI_CONFIG_PROFILE_INDEX[${profile}]}" ]; then
+        # Profile not activated.
+        continue
+      elif [ -z "${propertyProfile}" ]; then
+        # Property is not yet defined.
         update=true
       else
         priority=${BASHCLI_CONFIG_PROFILE_INDEX[${profile}]}
-        currentPriority=${BASHCLI_CONFIG_PROFILE_INDEX[${currentProfile}]}
+        currentPriority=${BASHCLI_CONFIG_PROFILE_INDEX[${propertyProfile}]}
 
+        bashcli-debug "priority=$priority currentPriority=$currentPriority"
         if [ "${priority}" -gt "${currentPriority}" ]; then
           update=true
         elif [ "${priority}" -eq "${currentPriority}" ]; then
@@ -306,10 +311,11 @@ bashcli-config-file() {
 }
 
 -bashcli-config-read-env() {
-  local index property profile profileIndex
+  local index property profile propertyProfile profileIndex
 
   for property in "${!BASHCLI_CONFIG_PROPERTIES[@]}"; do
-    profileIndex=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]:-0}
+    propertyProfile=${BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
+    profileIndex=${BASHCLI_CONFIG_PROFILE_INDEX[${propertyProfile}]}
     for ((index = $((${#BASHCLI_CONFIG_PROFILES[@]} - 1)); index >= ${profileIndex}; --index)); do
       profile=${BASHCLI_CONFIG_PROFILES[${index}]}
       if -bashcli-config-env-get "${profile}" "${property}"; then

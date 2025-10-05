@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-echo "parent: property=$(bashcli-config-get property)"
-if [ $# -gt 0 ]; then
-  bashcli-command-exec "$@"
-fi
