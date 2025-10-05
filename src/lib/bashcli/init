@@ -15,6 +15,7 @@ if ! [ -t 2 ]; then
 fi
 
 bashcli-debug() {
+  local IFS=' '
   local context
   local fnName
   local minContextWidth=24
@@ -47,14 +48,17 @@ bashcli-debug() {
 }
 
 bashcli-info() {
+  local IFS=' '
   printf "[%s] %s\n" "${BASHCLI_COLORS[info]}info${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-warn() {
+  local IFS=' '
   printf "[%s] %s\n" "${BASHCLI_COLORS[warn]}warn${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-error() {
+  local IFS=' '
   printf "[%s] %s\n" "${BASHCLI_COLORS[error]}error${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 

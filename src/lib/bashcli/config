@@ -137,6 +137,37 @@ bashcli-config-file() {
   printf "%s" "${configFile}"
 }
 
+bashcli-config-merge-defaults() {
+  local assignments=()
+  local property option profile assignment
+  local IFS=.
+  local commandList=("$@")
+  local propertyBase="${commandList[*]:1}"
+  unset IFS
+
+  for option in "${!BASHCLI_CONTEXT_OPTION_DEFAULTS[@]}"; do
+    -bashcli-config-parse-property "${option}"
+    profile=${REPLY[0]}
+    property=${REPLY[1]}
+    assignment=
+    bashcli-config-check-property "${property}"
+
+    if [ "${profile}" ]; then
+      assignment="%${profile}."
+    fi
+    if [ "${propertyBase}" ]; then
+      assignment+=${propertyBase}.
+    fi
+    assignment+=${property}=${BASHCLI_CONTEXT_OPTION_DEFAULTS[${option}]}
+    assignments+=("${assignment}")
+  done
+
+  if [ ${#assignments[@]} -gt 0 ]; then
+    IFS=$'\n'
+    -bashcli-config-read-file -m keep - <<<"${assignments[*]}"
+  fi
+}
+
 -bashcli-config-eval-properties() {
   local property
 
@@ -286,6 +317,10 @@ bashcli-config-file() {
     shift 2
   fi
   configFile=$1
+  if [ "${configFile}" == - ]; then
+    configFile=/dev/stdin
+  fi
+
   case $mergeMode in
     keep|update) ;;
     *) bashcli-error "internal error: invalid merge-mode: ${mergeMode}"
@@ -347,7 +382,7 @@ bashcli-config-file() {
   bashcli-string-trim property
   bashcli-string-trim value
 
-  -bashcli-config-split-profile "${property}"
+  -bashcli-config-parse-property "${property}"
   profile=${REPLY[0]:-default}
   property=${REPLY[1]}
 
@@ -362,7 +397,7 @@ bashcli-config-file() {
   REPLY=("${profile}" "${property}" "${value}")
 }
 
--bashcli-config-split-profile() {
+-bashcli-config-parse-property() {
   local property=$1
   local profile=
   if [[ ${property} == %* ]]; then
