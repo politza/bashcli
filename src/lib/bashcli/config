@@ -71,6 +71,7 @@ bashcli-config-list() {
   local IFS=$'\n'
   local property
   local properties
+  local value
 
   if [ $# -gt 0 ]; then
     bashcli-error "too many arguments: $*"
@@ -81,7 +82,9 @@ bashcli-config-list() {
   properties=($(LC_ALL=C sort <<<"${!BASHCLI_CONFIG_PROPERTIES[@]}"))
 
   for property in "${properties[@]}"; do
-    printf "%s=%s\n" "${property}" "${BASHCLI_CONFIG_PROPERTIES[${property}]}"
+    value=${BASHCLI_CONFIG_PROPERTIES[${property}]}
+    -bashcli-config-escape value
+    printf "%s=%s\n" "${property}" "${value}"
   done
 }
 
@@ -215,6 +218,19 @@ bashcli-config-file() {
   done
 
   REPLY=${result}
+}
+
+-bashcli-config-escape() {
+  local -n _value=$1
+  local _spaces
+
+  _value=${_value//$'\n'/\\n}
+  _value=${_value//$'\r'/\\r}
+  _value=${_value//$'\t'/\\t}
+  _spaces=${_value%%[^ ]*}
+  _value=${_spaces//?/\\s}${_value:${#_spaces}}
+  _spaces=${_value##*[^ ]}
+  _value=${_value:0:$((${#_value} - ${#_spaces}))}${_spaces//?/\\s}
 }
 
 -bashcli-config-set() {
