@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+PATH=$PWD/fixtures/options-conf:${PATH}
+output=$(mktemp)
+trap "rm -r -- '${output}'" EXIT
+
+after-each() {
+  unset CLI_COMMAND_SINGLE
+}
+
+test-default-options() {
+  cli basic &> "${output}"
+  diff "${output}" - <<EOF
+boolean=true
+single=default-single-value
+enum=primary
+multi[0]=default-multi-value
+EOF
+}
+
+test-default-profile-options() {
+  cli basic --profile profile &> "${output}"
+  diff "${output}" - <<EOF
+boolean=false
+single=profile-single-value
+enum=secondary
+multi[0]=profile-multi-value
+EOF
+}
+
+test-cli-config-merging() {
+  cli basic --secondary --single=cli-value --multi=cli-value &> "${output}"
+  diff "${output}" - <<EOF
+boolean=true
+single=cli-value
+enum=secondary
+multi[0]=default-multi-value
+multi[1]=cli-value
+EOF
+}
+
+test-boolean-coercion() {
+  cli boolean-coercion &> "${output}"
+  diff "${output}" - <<<true
+
+  cli boolean-coercion --profile falsy &> "${output}"
+  diff "${output}" - <<<false
+
+  cli boolean-coercion --profile empty &> "${output}"
+  diff "${output}" - <<<false
+}
+
+test-multi-array() {
+  cli multi-array &> "${output}"
+  diff "${output}" - <<EOF
+0
+1
+2
+EOF
+
+  cli multi-array --profile whitespace &> "${output}"
+  diff "${output}" - <<EOF
+0
+1
+2
+EOF
+}
+
+. ./lib/run-tests

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+OPTIONS=(
+  profile    multi
+  boolean    boolean
+  single     single
+  multi      multi
+  enum       single
+  primary    enum:enum
+  secondary  enum:enum
+)

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+declare -A options=()
+
+bashcli-options-parse options -- "$@"
+
+printf "%s\n" "${options[option]}"

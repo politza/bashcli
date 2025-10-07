@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+declare multi=()
+declare value
+
+bashcli-options-parse '' '' multi -- "$@"
+
+for value in "${multi[@]}"; do
+  printf "%s\n" "${value}"
+done

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+declare -A options=()
+declare -a multi=()
+declare index
+
+bashcli-options-parse options '' multi=multi -- "$@"
+
+printf "%s\n" "boolean=${options[boolean]}"
+printf "%s\n" "single=${options[single]}"
+printf "%s\n" "enum=${options[enum]}"
+for ((index = 0; index < ${#multi[@]}; ++index)); do
+  printf "%s\n" "multi[${index}]=${multi[index]}"
+done
