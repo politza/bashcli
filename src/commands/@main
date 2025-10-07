@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 
+
+declare -A options=()
 declare parameters=()
 bashcli-debug-command "$@"
-bashcli-options-parse '' parameters BASHCLI_CONFIG_ACTIVE_PROFILES=profile -- "$@"
+bashcli-options-parse options parameters BASHCLI_CONFIG_ACTIVE_PROFILES=profile -- "$@"
+
+if [ "${options[version]}" ]; then
+  printf "%s %s (bashcli %s)\n" "${BASHCLI_CLI_NAME}" "${BASHCLI_CLI_VERSION:-unknown}" "${BASHCLI_VERSION}"
+  exit 0
+fi
+
 bashcli-config-initialize
 bashcli-command-exec "${parameters[@]}"

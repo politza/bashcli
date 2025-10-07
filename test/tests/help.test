@@ -30,9 +30,6 @@ Options:
   Single option first line.  Single option second line.  Single option
   third line.
 
---version
-  Prints the version of the program.
-
 --help
   Shows a help message.
 
@@ -51,9 +48,6 @@ cli command subcommand-0 [ OPTIONS ]
 Subcommand-0 description.
 
 Options:
---version
-  Prints the version of the program.
-
 --help
   Shows a help message.
 EOF

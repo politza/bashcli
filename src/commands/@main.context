@@ -2,15 +2,17 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="
-The entry command of the CLI.
+This is the entry command of the CLI.
 "
 
 OPTIONS=(
   profile  multi
+  version  boolean
 )
 
 OPTION_DESCRIPTIONS=(
   profile "Enables one or more configuration profiles."
+  version "Displays version information about the program."
 )
 
 OPTION_ALIASES=(

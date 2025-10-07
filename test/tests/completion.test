@@ -35,7 +35,7 @@ test-complete-long-options() {
 --profile=  Enables one or more configuration profiles.
 --second    second enum option
 --single=   single option
---version   Prints the version of the program.
+--version   Displays version information about the program.
 EOF
 }
 
