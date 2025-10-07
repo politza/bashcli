@@ -86,4 +86,56 @@ test-config-get-env-profile-value() {
   diff "${output}" - <<<env-profile-value
 }
 
+test-config-set-global-value() {
+  cli config --global set property set-value &> "${output}"
+  cli config --global get property &>> "${output}"
+  diff "${output}" - <<<set-value
+}
+
+test-config-set-local-value() {
+  cli config --local set property set-value &> "${output}"
+  cli config --local get property &>> "${output}"
+  diff "${output}" - <<<set-value
+}
+
+test-config-set-global-profile-value() {
+  cli config --global --profile profile set property set-profile-value &> "${output}"
+  cli config --global --profile profile get property &>> "${output}"
+  diff "${output}" - <<<set-profile-value
+}
+
+test-config-set-local-profile-value() {
+  cli config --local --profile profile set property set-profile-value &> "${output}"
+  cli config --local --profile profile get property &>> "${output}"
+  diff "${output}" - <<<set-profile-value
+}
+
+test-config-list-global() {
+  cli config --global list &> "${output}"
+  diff "${output}" - <<EOF
+property=global-value
+EOF
+}
+
+test-config-list-local() {
+  cli config --local list &> "${output}"
+  diff "${output}" - <<EOF
+property=local-value
+EOF
+}
+
+test-config-list-global-profile() {
+  cli config --global --profile profile list &> "${output}"
+  diff "${output}" - <<EOF
+property=global-profile-value
+EOF
+}
+
+test-config-list-local-profile() {
+  cli config --local --profile profile list &> "${output}"
+  diff "${output}" - <<EOF
+property=local-profile-value
+EOF
+}
+
 . ./lib/run-tests
