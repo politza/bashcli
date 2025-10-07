@@ -2,7 +2,10 @@
 
 PATH=$PWD/fixtures/options-conf:${PATH}
 output=$(mktemp)
-trap "rm -r -- '${output}'" EXIT
+configHome=$(mktemp -d)
+export XDG_CONFIG_HOME=${configHome}
+
+trap "rm -r -- '${output}' '${configHome}'" EXIT
 
 after-each() {
   unset CLI_COMMAND_SINGLE
@@ -21,7 +24,7 @@ EOF
 test-default-profile-options() {
   cli basic --profile profile &> "${output}"
   diff "${output}" - <<EOF
-boolean=false
+boolean=
 single=profile-single-value
 enum=secondary
 multi[0]=profile-multi-value
@@ -50,15 +53,15 @@ test-boolean-coercion() {
   diff "${output}" - <<<false
 }
 
-test-multi-array() {
-  cli multi-array &> "${output}"
+test-multi-list() {
+  cli multi-list &> "${output}"
   diff "${output}" - <<EOF
 0
 1
 2
 EOF
 
-  cli multi-array --profile whitespace &> "${output}"
+  cli multi-list --profile whitespace &> "${output}"
   diff "${output}" - <<EOF
 0
 1

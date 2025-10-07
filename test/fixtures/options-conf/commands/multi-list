@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+declare list=()
+declare value
+
+bashcli-options-parse '' '' list=option -- "$@"
+
+for value in "${list[@]}"; do
+  printf "%s\n" "${value}"
+done

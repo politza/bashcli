@@ -4,4 +4,4 @@ declare -A options=()
 
 bashcli-options-parse options -- "$@"
 
-printf "%s\n" "${options[option]}"
+printf "%s\n" "${options[option]:-false}"

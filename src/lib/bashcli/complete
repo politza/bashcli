@@ -29,7 +29,7 @@ bashcli-complete-config-profile() {
 
   bashcli-config-initialize
 
-  for profile in "${!BASHCLI_CONFIG_KNOWN_PROFILES[@]}"; do
+  for profile in "${!BASHCLI_CONFIG_PROFILES[@]}"; do
     # shellcheck disable=SC2034
     BASHCLI_COMPLETIONS[${profile}]=''
   done

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 declare parameters=()
-
-bashcli-options-parse '' parameters BASHCLI_CONFIG_PROFILES=profile -- "$@"
+bashcli-debug-command "$@"
+bashcli-options-parse '' parameters BASHCLI_CONFIG_ACTIVE_PROFILES=profile -- "$@"
 bashcli-config-initialize
 bashcli-command-exec "${parameters[@]}"

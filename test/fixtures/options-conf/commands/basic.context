@@ -2,7 +2,6 @@
 # shellcheck disable=SC2034
 
 OPTIONS=(
-  profile    multi
   boolean    boolean
   single     single
   multi      multi

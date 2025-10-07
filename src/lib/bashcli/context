@@ -6,7 +6,6 @@ declare -g -A BASHCLI_CONTEXT_OPTIONS=()
 declare -g -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
 declare -g -A BASHCLI_CONTEXT_OPTION_ALIASES=()
 declare -g -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
-declare -g -A BASHCLI_CONTEXT_OPTION_DEFAULTS=()
 declare -g -A BASHCLI_CONTEXT_CONFIG=()
 declare -g -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
 declare -g -A BASHCLI_CONTEXT_READ_CACHE=()
@@ -20,7 +19,6 @@ bashcli-context-clear() {
   BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
   BASHCLI_CONTEXT_OPTION_ALIASES=()
   BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
-  BASHCLI_CONTEXT_OPTION_DEFAULTS=()
   BASHCLI_CONTEXT_CONFIG=()
   BASHCLI_CONTEXT_OPTIONS_SOURCE=()
   BASHCLI_CONTEXT_READ_CACHE=()
@@ -28,7 +26,7 @@ bashcli-context-clear() {
 }
 
 bashcli-context-read() {
-  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS OPTION_DEFAULTS CONFIG
+  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
   local DESCRIPTION index commandRoot commandMain commandContext
 
   bashcli-command-resolve "$@"
@@ -48,7 +46,6 @@ bashcli-context-read() {
       OPTION_DESCRIPTIONS=()
       OPTION_ALIASES=()
       OPTION_COMPLETIONS=()
-      OPTION_DEFAULTS=()
       CONFIG=()
       . "${commandContext}"
       bashcli-context-validate
@@ -81,10 +78,6 @@ bashcli-context-merge() {
 
   for key in "${!OPTION_ALIASES[@]}"; do
     BASHCLI_CONTEXT_OPTION_ALIASES[${key}]=${OPTION_ALIASES[${key}]}
-  done
-
-  for key in "${!OPTION_DEFAULTS[@]}"; do
-    BASHCLI_CONTEXT_OPTION_DEFAULTS[${key}]=${OPTION_DEFAULTS[${key}]}
   done
 }
 

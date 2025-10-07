@@ -4,3 +4,4 @@ declare parameters=()
 
 bashcli-options-parse '' parameters -- "$@"
 bashcli-config-get "${parameters[@]}"
+printf "%s\n" "${REPLY}"
