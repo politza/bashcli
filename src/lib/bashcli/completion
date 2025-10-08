@@ -163,7 +163,7 @@ _${cliName}_complete() {
     IFS=$'\n'
 
     "${BASHCLI_CLI_SCRIPT}" \\
-      complete \\
+      cli complete \\
       --comp-cword "\${COMP_CWORD}"    \\
       --comp-line  "\${COMP_LINE}"     \\
       --comp-point "\${COMP_POINT}"    \\
