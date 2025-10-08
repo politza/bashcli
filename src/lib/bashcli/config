@@ -112,7 +112,7 @@ bashcli-config-unset() {
        return 1 ;;
   esac
 
-  -bashcli-config-set --set "$@"
+  -bashcli-config-set --unset "$@"
 }
 
 bashcli-config-list() {
@@ -409,6 +409,7 @@ bashcli-config-file() {
   trap 'rm -f -- "${tempFile}"' RETURN
 
   configFile=$(bashcli-config-file)
+  -bashcli-config-escape value
 
   if [ "${profile}" != default ]; then
     profilePrefix="%${profile}."
@@ -418,21 +419,19 @@ bashcli-config-file() {
     while IFS= read -r line || [ -n "${line}" ]; do
       if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
         if [ "${profile}" == "${REPLY[0]}" ] && [ "${property}" == "${REPLY[1]}" ]; then
-          if [ "${unset}" != true ]; then
-            unset=true
+          if [ -z "${unset}" ]; then
             printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}"
           fi
         else
           printf "%s\n" "${line}"
         fi
+      else
+        printf "%s\n" "${line}"
       fi
       ((++lineNumber))
     done < "${configFile}" > "${tempFile}"
-    if [ "${unset}" != true ]; then
-      printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" >> "${tempFile}"
-    fi
     mv "${tempFile}" "${configFile}"
-  else
+  elif [ -z "${unset}" ]; then
     printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" > "${configFile}"
   fi
 }

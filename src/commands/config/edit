@@ -11,5 +11,5 @@ if [ ${#parameters} -ne 0 ]; then
 fi
 
 configFile=$(bashcli-config-file)
-
+mkdir --parents "$(dirname "${configFile}")"
 exec ${EDITOR:-vi} "${configFile}"
