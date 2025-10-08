@@ -7,10 +7,9 @@ globalConfig=$(mktemp)
 
 trap "rm -r -- '${output}' '${localConfig}' '${globalConfig}'" EXIT
 
-export BASHCLI_CONFIG_GLOBAL=${globalConfig}
-export BASHCLI_CONFIG_LOCAL=${localConfig}
-
 before-each() {
+  export BASHCLI_CONFIG_GLOBAL=${globalConfig}
+  export BASHCLI_CONFIG_LOCAL=${localConfig}
   unset CLI_PROPERTY
   unset CLI__PROFILE_PROPERTY
 
@@ -135,6 +134,71 @@ test-config-list-local-profile() {
   cli config --local --profile profile list &> "${output}"
   diff "${output}" - <<EOF
 property=local-profile-value
+EOF
+}
+
+test-config-unset-global() {
+  cli config --global unset property &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+  diff "${globalConfig}" - <<EOF
+%profile.property=global-profile-value
+EOF
+}
+
+test-config-unset-local() {
+  cli config --local unset property &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+  diff "${localConfig}" - <<EOF
+%profile.property=local-profile-value
+EOF
+}
+
+test-config-unset-global-profile() {
+  cli config --global --profile profile unset property &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+  diff "${globalConfig}" - <<EOF
+property=global-value
+EOF
+}
+
+test-config-unset-local-profile() {
+  cli config --local --profile profile unset property &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+  diff "${localConfig}" - <<EOF
+property=local-value
+EOF
+}
+
+test-config-property-expression() {
+  cat > "${globalConfig}" <<'EOF'
+a=${b}
+b=${c}
+c=result
+EOF
+  cli config get a &> "${output}"
+  diff "${output}" - <<<result
+}
+
+test-config-env-expression() {
+  export TEST_CONFIG_ENV_EXPRESSION=result
+  cat > "${globalConfig}" <<'EOF'
+a=${b}
+b=${c}
+c=${TEST_CONFIG_ENV_EXPRESSION}
+EOF
+  cli config get a &> "${output}"
+  diff "${output}" - <<<result
+}
+
+test-config-circular-expression() {
+  cat > "${globalConfig}" <<'EOF'
+a=${b}
+b=${c}
+c=${a}
+EOF
+  cli config get a &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] apparent cyclic property dependencies found during evaluation
 EOF
 }
 

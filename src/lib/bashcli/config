@@ -100,7 +100,7 @@ bashcli-config-set() {
        return 1 ;;
   esac
 
-  -bashcli-config-set --unset "$@"
+  -bashcli-config-set --set "$@"
 }
 
 bashcli-config-unset() {
