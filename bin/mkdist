@@ -6,7 +6,7 @@ usage() {
   cat <<EOF
 usage:$(basename "$0") CLI [DIRECTORY]
 
-Create a single-file distribution of a CLI in DIRECTORY defaulting to the current directory.
+Creates a single-file script of a CLI in DIRECTORY, which defaults to the current one.
 EOF
 }
 
@@ -67,7 +67,7 @@ CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
 export BASHCLI_DIR="\${CACHE_DIR}/bashcli"
 
 if ! [ -f "\${CLI_SCRIPT}" ]; then
-   if [ "${BASHCLI_DEBUG}" == true ]; then
+   if [ "\${BASHCLI_DEBUG}" == true ]; then
       echo "[debug](${cliName}) extracting to \${CACHE_DIR}" >&2
    fi
    mkdir --parents "\${CACHE_DIR}"
@@ -75,7 +75,7 @@ if ! [ -f "\${CLI_SCRIPT}" ]; then
    tail -n+\${ARCHIVE_LINE} "\${0}" | tar -xJ -C \${CACHE_DIR}
 fi
 
-if [ "${BASHCLI_DEBUG}" == true ]; then
+if [ "\${BASHCLI_DEBUG}" == true ]; then
    echo "[debug](${cliName}) executing \${CLI_SCRIPT}" >&2
 fi
 exec "\${CLI_SCRIPT}" "\$@"
@@ -84,4 +84,4 @@ __ARCHIVE__
 EOF
 
 cat "${archiveName}" >> "${outputDir}/${cliName}"
-chmod u+x "${outputDir}/${cliName}"
+chmod +x "${outputDir}/${cliName}"

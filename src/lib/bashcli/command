@@ -75,7 +75,7 @@ bashcli-command-exec() {
   fi
 
   if [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; then
-    bashcli-fatal "command already pending for execution, try bashcli-command-exec-now"
+    bashcli-fatal "command already pending execution, try bashcli-command-exec-now"
   fi
   BASHCLI_COMMAND_NEXT=("$@")
 }
@@ -83,7 +83,7 @@ bashcli-command-exec() {
 bashcli-command-exec-next() {
   set -- "${BASHCLI_COMMAND_NEXT[@]}"
   if [ $# -eq 0 ]; then
-    bashcli-error "no command pending for execution"
+    bashcli-error "no command pending execution"
     return 1
   fi
   BASHCLI_COMMAND_NEXT=()
