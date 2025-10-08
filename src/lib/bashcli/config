@@ -346,7 +346,6 @@ bashcli-config-file() {
       fi
 
       if [ "${update}" ]; then
-        bashcli-debug "${property}=${value}"
         BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
         BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]=${profile}
       fi
@@ -359,7 +358,8 @@ bashcli-config-file() {
   local line=$1
   local configFile=$2
   local lineNumber=$3
-  local profile property value
+  local profile=default
+  local property value
 
   if [[ ${line} == *([[:space:]])?(\#*) ]]; then
     return 1
@@ -367,34 +367,31 @@ bashcli-config-file() {
 
   property=${line%%=*}
   value=${line#*=}
-  bashcli-string-trim property
-  bashcli-string-trim value
+  # inlined bashcli-string-trim for performance
+  property=${property##+([ $'\t\r\n'])}
+  property=${property%%+([ $'\t\r\n'])}
+  value=${value##+([ $'\t\r\n'])}
+  value=${value%%+([ $'\t\r\n'])}
 
-  -bashcli-config-parse-property "${property}"
-  profile=${REPLY[0]:-default}
-  property=${REPLY[1]}
-
-  if [ -z "${property}" ]; then
-    bashcli-warn "failed to read line ${lineNumber} of file ${configFile}"
-    return 1
-  fi
-
-  -bashcli-config-check-property "${property}"
-
-  bashcli-debug "${profile} ${property} ${value}"
-  REPLY=("${profile}" "${property}" "${value}")
-}
-
--bashcli-config-parse-property() {
-  local property=$1
-  local profile=
   if [[ ${property} == %* ]]; then
     profile=${property%%.*}
     property=${property:${#profile}}
     property=${property:1}
     profile=${profile#\%}
   fi
-  REPLY=("${profile}" "${property}")
+
+  if [ -z "${property}" ]; then
+    bashcli-warn "failed to read line ${lineNumber} of file ${configFile}"
+    return 1
+  fi
+
+  # inlined -bashcli-config-check-property for performance
+  if [[ ${property} != ${BASHCLI_CONFIG_PROPERTY_PATTERN} ]]; then
+    bashcli-error "invalid property name: ${property} (should match '${BASHCLI_CONFIG_PROPERTY_PATTERN}')"
+    return 1
+  fi
+
+  REPLY=("${profile}" "${property}" "${value}")
 }
 
 -bashcli-config-write-value() {
