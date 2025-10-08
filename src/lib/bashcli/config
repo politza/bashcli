@@ -405,6 +405,7 @@ bashcli-config-file() {
   local profilePrefix
   local configFile
   local tempFile=$(mktemp)
+  local updated=
 
   trap 'rm -f -- "${tempFile}"' RETURN
 
@@ -420,6 +421,7 @@ bashcli-config-file() {
       if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
         if [ "${profile}" == "${REPLY[0]}" ] && [ "${property}" == "${REPLY[1]}" ]; then
           if [ -z "${unset}" ]; then
+            updated=true
             printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}"
           fi
         else
@@ -430,6 +432,9 @@ bashcli-config-file() {
       fi
       ((++lineNumber))
     done < "${configFile}" > "${tempFile}"
+    if [ -z "${unset}" ] && [ -z "${updated}" ]; then
+      printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" >> "${tempFile}"
+    fi
     mv "${tempFile}" "${configFile}"
   elif [ -z "${unset}" ]; then
     printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" > "${configFile}"

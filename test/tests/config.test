@@ -109,6 +109,12 @@ test-config-set-local-profile-value() {
   diff "${output}" - <<<set-profile-value
 }
 
+test-config-set-new-property() {
+  cli config --global set new-property set-value &> "${output}"
+  cli config --global get new-property &>> "${output}"
+  diff "${output}" - <<<set-value
+}
+
 test-config-list-global() {
   cli config --global list &> "${output}"
   diff "${output}" - <<EOF
