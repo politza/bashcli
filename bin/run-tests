@@ -6,10 +6,11 @@ testFiles=(test/tests)
 testDirectory="$(dirname "$0")"/../test
 proveArgs=(-r --ext test)
 
-while getopts "s:Dvj" option; do
+while getopts "s:Ddvj" option; do
   case ${option} in
     s) export BASHCLI_TEST_SELECTOR=${OPTARG} ;;
     D) unset BASHCLI_DEBUG ;;
+    d) export BASHCLI_DEBUG=true ;;
     v) proveArgs+=(-v) ;;
     j) proveArgs+=(-j8) ;;
     *) exit 1
