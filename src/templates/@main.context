@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+# Describes this command. The first line is used as a short description of the command. A leading
+# and trailing newline is removed from the string.
+DESCRIPTION="
+Not documented.
+"
+
+# Defines the options supported by this command. The associative array maps options to an
+# option-type, which must either boolean, single, multi or enum:${NAME}.
+OPTIONS=(
+)
+
+# Describes the options defined above. This is an associative array, mapping options to a
+# description thereof. A leading and trailing newline is removed from each value.
+OPTION_DESCRIPTIONS=(
+)
+
+# Defines aliases for the options defined above. This associative array maps aliases to their
+# corresponding options.
+OPTION_ALIASES=(
+)
+
+# Defines the value-types of options and parameters (non-option arguments). The associative array
+# maps value-accepting options and non-option types to a corresponding value-type.
+OPTION_TYPES=(
+)

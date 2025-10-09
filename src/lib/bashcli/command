@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-declare -g -a BASHCLI_COMMAND_ROOTS=(
-  "${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/commands"
+declare -g -a BASHCLI_COMMAND_DIRS=(
+  "${BASHCLI_USER_DIR}/commands"
   "${BASHCLI_CLI_DIR}/commands"
 )
 
 if ! [ "${BASHCLI_DIR}/commands" -ef "${BASHCLI_CLI_DIR}/commands" ]; then
-  BASHCLI_COMMAND_ROOTS+=("${BASHCLI_DIR}/commands")
+  BASHCLI_COMMAND_DIRS+=("${BASHCLI_DIR}/commands")
 fi
 
 declare -g -a BASHCLI_COMMAND_STACK=()
 declare -g -a BASHCLI_COMMAND_NEXT=()
-declare -g BASHCLI_COMMAND_PATTERN='?(.|+([^.@]))'
+declare -g BASHCLI_COMMAND_PATTERN='?(.|+([a-zA-Z0-9_-]))'
 declare -g BASHCLI_COMMAND_MAIN=@main
 declare -g -A BASHCLI_COMMAND_RESOLVE_CACHE=()
 
@@ -19,7 +19,7 @@ bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
   local commandPath="${commandList[*]}"
-  local round commandName commandRoot commandFile commandMain
+  local round commandName commandDir commandFile commandMain
   REPLY=()
 
   if [ ${#commandList[@]} -eq 0 ]; then
@@ -35,18 +35,15 @@ bashcli-command-resolve() {
   bashcli-debug "resolving ${commandPath}"
 
   for commandName in "${commandList[@]}"; do
-    if [[ "${commandName}" != ${BASHCLI_COMMAND_PATTERN} ]]; then
-      bashcli-error "invalid command name: ${commandName}"
-      return 1
-    fi
+    bashcli-command-check-name "${commandName}"
   done
 
   commandName=${BASHCLI_COMMAND_MAIN}
 
   for ((round = 0; round < 2; ++round)); do
-    for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
+    for commandDir in "${BASHCLI_COMMAND_DIRS[@]}"; do
       commandMain=${commandPath}/${commandName}
-      commandFile=${commandRoot}/${commandMain}
+      commandFile=${commandDir}/${commandMain}
       if [ -f "${commandFile}" ]; then
         bashcli-debug "${commandList[*]} -> ${commandFile}"
         REPLY=("${commandFile}" "${commandMain}")
@@ -114,7 +111,7 @@ bashcli-command-subcommands() {
   local commandPath=${REPLY[1]%/*}
   local commandMain=${REPLY[1]##*/}
   local -A subcommands=()
-  local commandRoot subcommandMain subcommandName commandDir
+  local commandRootDir subcommandMain subcommandName commandDir
   local IFS
   REPLY=()
 
@@ -122,8 +119,8 @@ bashcli-command-subcommands() {
     return 1
   fi
 
-  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
-    commandDir=${commandRoot}/${commandPath}
+  for commandRootDir in "${BASHCLI_COMMAND_DIRS[@]}"; do
+    commandDir=${commandRootDir}/${commandPath}
     if [ -d "${commandDir}" ]; then
       for subcommandMain in "${commandDir}"/*; do
         if [ -f "${subcommandMain}" ] || [ -f "${subcommandMain}/${BASHCLI_COMMAND_MAIN}" ]; then
@@ -144,4 +141,11 @@ bashcli-command-subcommands() {
 
 -bashcli-command-local-unset() {
   unset "$@"
+}
+
+bashcli-command-check-name() {
+  if [[ "$1" != ${BASHCLI_COMMAND_PATTERN} ]]; then
+    bashcli-error "invalid command name: $1"
+    return 1
+  fi
 }

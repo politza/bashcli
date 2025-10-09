@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+DESCRIPTION="
+Edit a command.
+"
+
+OPTION_VALUE_TYPES=(
+  %parameter command-to-edit
+)

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+DESCRIPTION="
+Creates new commands.
+"
+
+OPTIONS=(
+  force     boolean
+  user boolean
+  directory single
+)
+
+OPTION_DESCRIPTIONS=(
+  force     "Overwrite already existing files."
+  user      "Force operating on user commands."
+  directory "The root directory on which to operate."
+)
+
+OPTION_ALIASES=(
+  f force
+  d directory
+)
+
+OPTION_VALUE_TYPES=(
+  directory directory
+)

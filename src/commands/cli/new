@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+declare -A options=()
+declare -a parameters=()
+declare IFS
+declare templateDir
+declare cliCommandDir
+
+bashcli-options-parse options parameters -- "$@"
+
+# Initialize directories and templates.
+if [ -d "${BASHCLI_USER_DIR}/templates" ]; then
+  templateDir="${BASHCLI_USER_DIR}/templates"
+elif [ -d "${BASHCLI_CLI_DIR}/templates" ]; then
+  templateDir="${BASHCLI_CLI_DIR}/templates"
+else
+  # shellcheck disable=SC2153
+  templateDir="${BASHCLI_DIR}/templates"
+fi
+
+if [ "${options[directory]}" ]; then
+  cliCommandDir=${options[directory]}
+elif [ "${options[user]}" ] || [ "${BASHCLI_DIST}" ] ; then
+  cliCommandDir=${BASHCLI_USER_DIR}/commands
+else
+  cliCommandDir=${BASHCLI_CLI_DIR}/commands
+fi
+
+declare -A templates=(
+  @main            "${templateDir}"/@main
+  @main.context    "${templateDir}"/@main.context
+  @main.complete   "${templateDir}"/@main.complete
+  command          "${templateDir}"/command
+  command.context  "${templateDir}"/command.context
+  command.complete "${templateDir}"/command.complete
+)
+
+# Normalize paths and transform them to commands.
+bashcli-array-sort parameters -r
+for parameter in "${parameters[@]}"; do
+  path=$(realpath -ms --relative-to=. "./${parameter}")
+  
+  if [ -z "${path}" ]; then
+    bashcli-fatal "command is empty: ${parameter}"
+  fi
+
+  path=${path//\//$'\n'}
+  IFS=$'\n'
+  readarray -t components <<<"${path}"
+
+  for component in "${components[@]}"; do
+    bashcli-command-check-name "${component}"
+  done
+
+  IFS=' '
+  command="${components[*]}"
+  # Check if command is a prefix of an already existing one.
+  for ((index = 0; index < ${#commands[@]}; ++index)); do
+    if [[ "${commands[index]}" == "${command}"?( *) ]]; then
+      command=
+      break
+    fi
+  done
+
+  if [ "${command}" ]; then
+    bashcli-debug "${command}"
+    commands+=("${command}")
+  fi
+done
+
+# Check if the operation would succeed.
+IFS=' '
+for command in "${commands[@]}"; do
+  # shellcheck disable=SC2206
+  components=(${command})
+  commandPath=${cliCommandDir}
+  for ((index = 0; index < ${#components[@]}; ++index)); do
+    commandPath+="/${components[index]}"
+    if [ ! -e "${commandPath}" ]; then
+      continue
+    fi
+    if [ ${index} -eq $((${#components[@]} - 1)) ]; then
+      if [ -f "${commandPath}" ]; then
+        if [ -z "${options[force]}" ]; then
+          bashcli-fatal "command already exists: ${commandPath} (use --force to overwrite)"
+        fi
+      elif [ -d "${commandPath}" ]; then
+        bashcli-fatal "command already exists as a non-terminal: ${commandPath}"
+      else
+        bashcli-fatal "file already exists: ${commandPath}"
+      fi
+    elif [ -f "${commandPath}" ]; then
+      bashcli-fatal "command already exists as a terminal: ${commandPath}"
+    elif [ ! -d "${commandPath}" ]; then
+      bashcli-fatal "file already exists: ${commandPath}"
+    fi
+  done
+done
+
+# Finally create the new commands.
+for command in "${commands[@]}"; do
+  # shellcheck disable=SC2206
+  components=(${command})
+  commandPath=${cliCommandDir}
+  for ((index = 0; index < ${#components[@]}; ++index)); do
+    commandPath+="/${components[index]}"
+    bashcli-debug commandPath=${commandPath}
+    if [ ${index} -lt $((${#components[@]} - 1)) ]; then
+      if [ ! -d "${commandPath}" ]; then
+        mkdir --parents "${commandPath}"
+        for template in "${!templates[@]}"; do
+          if [[ "${template}" == @main?(|.*) && -e "${templates[${template}]}" ]]; then
+            cp -- "${templates[${template}]}" "${commandPath}"
+          fi
+        done
+      fi
+    else
+      for template in "${!templates[@]}"; do
+        if [[ "${template}" == command?(|.*) && -e "${templates[${template}]}" ]]; then
+          templateBase=$(basename "${templates[${template}]}")
+          templateExtension=
+          if [[ "${templateBase}" == *.* ]]; then
+            templateExtension=${templateBase##*.}
+            templateBase=${templateBase%.*}
+          fi
+          templateDest=${commandPath}${templateExtension:+.}${templateExtension}
+          cp -- "${templates[${template}]}" "${templateDest}"
+        fi
+      done
+    fi
+  done
+done

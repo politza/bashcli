@@ -14,6 +14,10 @@ if ! [ -t 2 ]; then
   BASHCLI_COLORS=()
 fi
 
+declare -g BASHCLI_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}"
+declare -g BASHCLI_DIST
+declare -g BASHCLI_VERBOSE=
+
 bashcli-debug() {
   local IFS=' '
   local context
@@ -101,6 +105,7 @@ bashcli-load-library() {
   return 1
 }
 
+bashcli-load-library bashcli/array
 bashcli-load-library bashcli/cache
 bashcli-load-library bashcli/command
 bashcli-load-library bashcli/config

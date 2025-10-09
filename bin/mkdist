@@ -65,6 +65,7 @@ set -e
 CACHE_DIR=\${XDG_CACHE_HOME:-\${HOME}/.cache}/bashcli/dist/${cliName}/${hashSum}
 CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
 export BASHCLI_DIR="\${CACHE_DIR}/bashcli"
+export BASHCLI_DIST=${hashSum}
 
 if ! [ -f "\${CLI_SCRIPT}" ]; then
    if [ "\${BASHCLI_DEBUG}" == true ]; then
