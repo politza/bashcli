@@ -6,7 +6,6 @@ declare -g -A BASHCLI_CONTEXT_OPTIONS=()
 declare -g -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
 declare -g -A BASHCLI_CONTEXT_OPTION_ALIASES=()
 declare -g -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
-declare -g -A BASHCLI_CONTEXT_CONFIG=()
 declare -g -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
 declare -g -A BASHCLI_CONTEXT_READ_CACHE=()
 
@@ -19,14 +18,13 @@ bashcli-context-clear() {
   BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
   BASHCLI_CONTEXT_OPTION_ALIASES=()
   BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
-  BASHCLI_CONTEXT_CONFIG=()
   BASHCLI_CONTEXT_OPTIONS_SOURCE=()
   BASHCLI_CONTEXT_READ_CACHE=()
   bashcli-debug "context cleared"
 }
 
 bashcli-context-read() {
-  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS CONFIG
+  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS
   local DESCRIPTION index commandRoot commandMain commandContext
 
   bashcli-command-resolve "$@"
@@ -46,7 +44,6 @@ bashcli-context-read() {
       OPTION_DESCRIPTIONS=()
       OPTION_ALIASES=()
       OPTION_COMPLETIONS=()
-      CONFIG=()
       . "${commandContext}"
       bashcli-context-validate
       bashcli-context-defaults

@@ -17,6 +17,3 @@ OPTION_ALIASES=(
 OPTION_COMPLETIONS=(
   %parameter command
 )
-
-CONFIG=(
-)
