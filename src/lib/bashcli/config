@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 declare -g BASHCLI_CONFIG_GLOBAL=${BASHCLI_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/${BASHCLI_CLI_NAME}.conf}
-declare -g BASHCLI_CONFIG_LOCAL=${BASHCLI_CONFIG_LOCAL}
+declare -g BASHCLI_CLI_CONFIG_LOCAL=${BASHCLI_CLI_CONFIG_LOCAL}
 declare -g BASHCLI_CONFIG_DEFAULT=${BASHCLI_CLI_DIR}/conf/default.conf
 
 declare -g BASHCLI_CONFIG_PROPERTY_PATTERN='+([a-zA-Z0-9._-])'
@@ -172,7 +172,7 @@ bashcli-config-file() {
   local scope=${BASHCLI_CONFIG_SCOPE}
 
   if [ -z "${scope}" ]; then
-    if [ "${BASHCLI_CONFIG_LOCAL}" ]; then
+    if [ "${BASHCLI_CLI_CONFIG_LOCAL}" ]; then
       scope=local
     else
       scope=global
@@ -181,7 +181,7 @@ bashcli-config-file() {
 
   case ${scope} in
     global) configFile=${BASHCLI_CONFIG_GLOBAL} ;;
-    local) configFile=${BASHCLI_CONFIG_LOCAL} ;;
+    local) configFile=${BASHCLI_CLI_CONFIG_LOCAL} ;;
     *) bashcli-fatal "internal error: invalid scope: ${scope}" ;;
   esac
   if [ -z "${configFile}" ]; then
@@ -299,7 +299,7 @@ bashcli-config-file() {
   fi
 
   if [ -z "${BASHCLI_CONFIG_SCOPE}" ] || [ "${BASHCLI_CONFIG_SCOPE}" == local ]; then
-    configFiles+=("${BASHCLI_CONFIG_LOCAL}")
+    configFiles+=("${BASHCLI_CLI_CONFIG_LOCAL}")
   fi
 
   bashcli-debug "reading in scope ${BASHCLI_CONFIG_SCOPE:-<none>} with profiles [${BASHCLI_CONFIG_ACTIVE_PROFILES[*]}]"
@@ -526,7 +526,7 @@ bashcli-config-file() {
        return 1;;
   esac
 
-  if [ "${BASHCLI_CONFIG_SCOPE}" == local ] && [ -z "${BASHCLI_CONFIG_LOCAL}" ]; then
+  if [ "${BASHCLI_CONFIG_SCOPE}" == local ] && [ -z "${BASHCLI_CLI_CONFIG_LOCAL}" ]; then
     bashcli-error "local scope not supported"
     return 1
   fi

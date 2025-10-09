@@ -51,7 +51,7 @@ test-complete-profiles() {
   local configFile=$(mktemp)
   trap "rm -f -- '${configFile}'" RETURN EXIT
 
-  export BASHCLI_CONFIG_LOCAL=${configFile}
+  export BASHCLI_CLI_CONFIG_LOCAL=${configFile}
   cat > "${configFile}" <<EOF
 %test.property=0
 %dev.property=1

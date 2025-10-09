@@ -9,7 +9,7 @@ trap "rm -r -- '${output}' '${localConfig}' '${globalConfig}'" EXIT
 
 before-each() {
   export BASHCLI_CONFIG_GLOBAL=${globalConfig}
-  export BASHCLI_CONFIG_LOCAL=${localConfig}
+  export BASHCLI_CLI_CONFIG_LOCAL=${localConfig}
   unset CLI_PROPERTY
   unset CLI__PROFILE_PROPERTY
 
@@ -28,7 +28,7 @@ test-config-get-global-value() {
   cli config --global get property &> "${output}"
   diff "${output}" - <<<global-value
 
-  BASHCLI_CONFIG_LOCAL=
+  BASHCLI_CLI_CONFIG_LOCAL=
   cli config get property &> "${output}"
   diff "${output}" - <<<global-value
 }
@@ -58,7 +58,7 @@ test-config-get-global-profile-value() {
   cli config --global --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 
-  BASHCLI_CONFIG_LOCAL=
+  BASHCLI_CLI_CONFIG_LOCAL=
   cli config --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 }
