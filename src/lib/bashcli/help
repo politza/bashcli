@@ -155,7 +155,7 @@ bashcli-help-show() {
       fi
       description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
       bashcli-string-trim description
-      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description}"
+      printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'*}"
     done
   fi
 }
