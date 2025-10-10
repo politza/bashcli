@@ -39,7 +39,7 @@ Multi option description."
   primary "Primary option description."
 )
 
-OPTION_COMPLETIONS=(
+OPTION_VALUE_TYPES=(
   boolean boolean-value
   single single-value
   multi multi-value

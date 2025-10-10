@@ -6,6 +6,6 @@ DESCRIPTION="
 Updates the value of a given property.
 "
 
-OPTION_COMPLETIONS=(
+OPTION_VALUE_TYPES=(
   %parameter config-property
 )

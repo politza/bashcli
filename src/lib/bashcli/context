@@ -5,7 +5,7 @@ declare -g -A BASHCLI_CONTEXT_DESCRIPTIONS=()
 declare -g -A BASHCLI_CONTEXT_OPTIONS=()
 declare -g -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
 declare -g -A BASHCLI_CONTEXT_OPTION_ALIASES=()
-declare -g -A BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
+declare -g -A BASHCLI_CONTEXT_OPTION_VALUE_TYPES=()
 declare -g -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
 declare -g -A BASHCLI_CONTEXT_READ_CACHE=()
 
@@ -17,14 +17,14 @@ bashcli-context-clear() {
   BASHCLI_CONTEXT_OPTIONS=()
   BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
   BASHCLI_CONTEXT_OPTION_ALIASES=()
-  BASHCLI_CONTEXT_OPTION_COMPLETIONS=()
+  BASHCLI_CONTEXT_OPTION_VALUE_TYPES=()
   BASHCLI_CONTEXT_OPTIONS_SOURCE=()
   BASHCLI_CONTEXT_READ_CACHE=()
   bashcli-debug "context cleared"
 }
 
 bashcli-context-read() {
-  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_COMPLETIONS
+  local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_VALUE_TYPES
   local DESCRIPTION index commandRoot commandMain commandContext
 
   bashcli-command-resolve "$@"
@@ -43,7 +43,7 @@ bashcli-context-read() {
       OPTIONS=()
       OPTION_DESCRIPTIONS=()
       OPTION_ALIASES=()
-      OPTION_COMPLETIONS=()
+      OPTION_VALUE_TYPES=()
       . "${commandContext}"
       bashcli-context-validate
       bashcli-context-defaults
@@ -69,8 +69,8 @@ bashcli-context-merge() {
     BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${key}]=${OPTION_DESCRIPTIONS[${key}]}
   done
 
-  for key in "${!OPTION_COMPLETIONS[@]}"; do
-    BASHCLI_CONTEXT_OPTION_COMPLETIONS[${key}]=${OPTION_COMPLETIONS[${key}]}
+  for key in "${!OPTION_VALUE_TYPES[@]}"; do
+    BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${key}]=${OPTION_VALUE_TYPES[${key}]}
   done
 
   for key in "${!OPTION_ALIASES[@]}"; do
@@ -128,13 +128,13 @@ bashcli-context-validate() {
     fi
   done
 
-  for option in "${!OPTION_COMPLETIONS[@]}"; do
+  for option in "${!OPTION_VALUE_TYPES[@]}"; do
     if [ "${option}" == %parameter ]; then
       continue
     fi
     if [ -z "${OPTIONS[${option}]}" ]; then
       bashcli-warn "Completions for non-existing option provided: ${option}"
-      unset "OPTION_COMPLETIONS[${option}]"
+      unset "OPTION_VALUE_TYPES[${option}]"
     fi
   done
 }

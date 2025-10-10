@@ -5,7 +5,7 @@ bashcli-completion-complete() {
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=(.)
-  local index option word subcommand completion completionFn
+  local index option word subcommand completion completionFn valueType
 
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -79,15 +79,15 @@ bashcli-completion-complete() {
     esac
   done
 
-  if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}" ]; then
+  if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}" ]; then
     bashcli-debug "completing value for option ${option}"
-    completionFn=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}
-  elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}" ]; then
+    valueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}
+  elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
     bashcli-debug "completing parameter value"
-    completionFn=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}
+    valueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}
   elif [ "${option}" ]; then
     bashcli-debug "completing with file fallback"
-    completionFn=file
+    valueType=file
   elif [[ "${cur}" == -* ]]; then
     bashcli-debug "completing long options"
     for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
@@ -112,12 +112,12 @@ bashcli-completion-complete() {
       done
     else
       bashcli-debug "completing with file fallback (no subcommands)"
-      completionFn=file
+      valueType=file
     fi
   fi
 
-  if [ "${completionFn}" ]; then
-    completionFn=${completionFn//*/bashcli-complete-&}
+  if [ "${valueType}" ]; then
+    completionFn=${valueType//*/bashcli-complete-&}
     bashcli-debug "completionFn: ${completionFn}"
     if declare -pf "${completionFn}" &>/dev/null; then
       "${completionFn}" "${cur}"

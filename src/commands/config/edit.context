@@ -6,6 +6,6 @@ DESCRIPTION="
 Edits the configuration file using an editor.
 "
 
-OPTION_COMPLETIONS=(
+OPTION_VALUE_TYPES=(
   %parameter config-property
 )

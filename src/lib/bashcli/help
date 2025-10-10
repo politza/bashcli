@@ -41,7 +41,7 @@ bashcli-help-show() {
   if [ ${#BASHCLI_CONTEXT_OPTIONS[@]} -gt 0 ]; then
     optionsInfo=" [ OPTIONS ]"
   fi
-  parameterTypes="${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}"
+  parameterTypes="${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}"
   if [ -n "${parameterTypes}" ]; then
     parameterTypes=${parameterTypes//,/ | }
     parameterInfo=" ${parameterTypes^^} ..."
@@ -87,7 +87,7 @@ bashcli-help-show() {
     optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
     case ${optionType} in
       single|multi)
-        optionValueType=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]:-OPTION}
+        optionValueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]:-OPTION}
         optionValueType=${optionValueType//,/ | }
         optionLabel+=" ${optionValueType^^}"
     esac

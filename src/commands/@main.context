@@ -19,6 +19,6 @@ OPTION_ALIASES=(
   P profile
 )
 
-OPTION_COMPLETIONS=(
+OPTION_VALUE_TYPES=(
   profile config-profile
 )
