@@ -5,7 +5,7 @@ bashcli-completion-complete() {
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=(.)
-  local index option word subcommand completion completionFn completionFns
+  local index option word subcommand completion completionFn
 
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -81,13 +81,13 @@ bashcli-completion-complete() {
 
   if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}" ]; then
     bashcli-debug "completing value for option ${option}"
-    readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]//,/$'\n'}"
+    completionFn=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[${option}]}
   elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}" ]; then
     bashcli-debug "completing parameter value"
-    readarray -t completionFns <<<"${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]//,/$'n'}"
+    completionFn=${BASHCLI_CONTEXT_OPTION_COMPLETIONS[%parameter]}
   elif [ "${option}" ]; then
     bashcli-debug "completing with file fallback"
-    completionFns=('file')
+    completionFn=file
   elif [[ "${cur}" == -* ]]; then
     bashcli-debug "completing long options"
     for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
@@ -112,19 +112,19 @@ bashcli-completion-complete() {
       done
     else
       bashcli-debug "completing with file fallback (no subcommands)"
-      completionFns=('file')
+      completionFn=file
     fi
   fi
 
-  completionFns=("${completionFns[@]//*/bashcli-complete-&}")
-  bashcli-debug "completionFns: ${completionFns[*]}"
-  for completionFn in "${completionFns[@]}"; do
+  if [ "${completionFn}" ]; then
+    completionFn=${completionFn//*/bashcli-complete-&}
+    bashcli-debug "completionFn: ${completionFn}"
     if declare -pf "${completionFn}" &>/dev/null; then
       "${completionFn}" "${cur}"
     else
       bashcli-warn "Completion function ${completionFn} not defined"
     fi
-  done
+  fi
 
   COMPREPLY=()
   _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"'

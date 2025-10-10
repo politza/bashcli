@@ -27,8 +27,8 @@ OPTION_ALIASES=(
 )
 
 OPTION_COMPLETIONS=(
-  boolean none
-  single     single-0,single-1
+  boolean    none
+  single     single
   multi      multi
   %parameter parameter
 )

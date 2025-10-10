@@ -13,6 +13,7 @@ disable=SC2178
 disable=SC2181
 disable=SC2190
 disable=SC2207
+disable=SC2209
 disable=SC2215
 disable=SC2295
 disable=SC2317

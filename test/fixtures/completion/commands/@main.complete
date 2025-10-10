@@ -2,17 +2,15 @@
 
 
 bashcli-test-completions() {
-  local prefix=$1
-  # shellcheck disable=SC2034
-  BASHCLI_COMPLETIONS["${prefix}-completion"]="${prefix}-completion description"
+  local prefix
+  for prefix; do
+    # shellcheck disable=SC2034
+    BASHCLI_COMPLETIONS["${prefix}-completion"]="${prefix}-completion description"
+  done
 }
 
-bashcli-complete-single-0() {
-  bashcli-test-completions single-0
-}
-
-bashcli-complete-single-1() {
-  bashcli-test-completions single-1
+bashcli-complete-single() {
+  bashcli-test-completions single-0 single-1
 }
 
 bashcli-complete-multi() {
