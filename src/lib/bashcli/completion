@@ -7,6 +7,7 @@ bashcli-completion-complete() {
   local commandStack=(.)
   local index option word subcommand completion completionFn valueType
   local parameterIndex=-1
+  local IFS
 
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -103,11 +104,26 @@ bashcli-completion-complete() {
     bashcli-debug "completing long options"
     for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
       if [ ${#option} -gt 1 ]; then
-        local suffix=
+        local alias aliases=() suffix=
         case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
           single|multi) suffix='=' ;;
         esac
-        BASHCLI_COMPLETIONS[--${option}${suffix}]=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
+        completion=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
+        bashcli-string-trim completion
+        completion=${completion%%$'\n'}
+        for alias in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
+          if [ "${option}" == "${BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}" ]; then
+            aliases+=("-${alias}")
+          fi
+        done
+        if [ "${aliases}" ]; then
+          IFS=$'\n'
+          readarray -t aliases <<<"$(LC_ALL=C sort <<<"${aliases[*]}")"
+          IFS=,
+          completion+=" (${aliases[*]})"
+          unset IFS
+        fi
+        BASHCLI_COMPLETIONS[--${option}${suffix}]=${completion}
       fi
     done
   else

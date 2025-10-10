@@ -20,10 +20,11 @@ OPTION_DESCRIPTIONS=(
 
 OPTION_ALIASES=(
   b boolean
+  a boolean
+  c boolean
   s single
   m multi
   f first
-  s second
 )
 
 OPTION_VALUE_TYPES=(

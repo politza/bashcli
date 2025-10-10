@@ -32,13 +32,13 @@ completion-exec() {
 test-complete-long-options() {
   completion-exec 'cli command --|' &> "${output}"
   diff "${output}" - <<EOF
---boolean   boolean option
---first     first enum option
+--boolean   boolean option (-a,-b,-c)
+--first     first enum option (-f)
 --help      Shows a help message.
---multi=    multi option
---profile=  Enables one or more configuration profiles.
+--multi=    multi option (-m)
+--profile=  Enables one or more configuration profiles. (-P)
 --second    second enum option
---single=   single option
+--single=   single option (-s)
 --version   Displays version information about the program.
 EOF
 }
