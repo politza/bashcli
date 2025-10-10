@@ -21,7 +21,7 @@ bashcli-help-show() {
 
   bashcli-debug "${commandList[*]}"
   bashcli-command-resolve "${commandList[@]}"
-  commandMain=${REPLY[1]}
+  commandMain=${REPLY}
   bashcli-context-clear
   bashcli-context-read "${commandList[@]}"
 
@@ -149,7 +149,7 @@ bashcli-help-show() {
     ((maxSubcommandLength += padding))
     for subcommand in "${REPLY[@]}"; do
       bashcli-command-resolve "${commandList[@]}" "${subcommand}"
-      commandMain=${REPLY[1]}
+      commandMain=${REPLY}
       if [ -n "${commandMain}" ]; then
         bashcli-context-read "${commandList[@]}" "${subcommand}"
       fi

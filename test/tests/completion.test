@@ -4,6 +4,10 @@ PATH=$PWD/fixtures/completion:${PATH}
 output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 
+before-each() {
+  unset BASHCLI_CLI_CONFIG_LOCAL
+}
+
 # shellcheck disable=SC2206
 completion-exec() {
   local IFS=$' '
@@ -26,7 +30,7 @@ completion-exec() {
 }
 
 test-complete-long-options() {
-  completion-exec 'cli --|' &> "${output}"
+  completion-exec 'cli command --|' &> "${output}"
   diff "${output}" - <<EOF
 --boolean   boolean option
 --first     first enum option
@@ -40,7 +44,7 @@ EOF
 }
 
 test-complete-option-argument() {
-  completion-exec 'cli --single=|' &> "${output}"
+  completion-exec 'cli command --single=|' &> "${output}"
   diff "${output}" - <<EOF
 single-0-completion  single-0-completion description
 single-1-completion  single-1-completion description
@@ -56,7 +60,7 @@ test-complete-profiles() {
 %test.property=0
 %dev.property=1
 EOF
-  completion-exec 'cli --profile=|' &> "${output}"
+  completion-exec 'cli command --profile=|' &> "${output}"
   diff "${output}" - <<EOF
 default
 dev

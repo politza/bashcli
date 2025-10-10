@@ -28,29 +28,26 @@ bashcli-context-read() {
   local DESCRIPTION index commandRoot commandMain commandContext
 
   bashcli-command-resolve "$@"
-  commandMain=${REPLY[1]}
+  commandMain=${REPLY}
+  commandContext=${commandMain}.context
 
-  if [ "${BASHCLI_CONTEXT_READ_CACHE[${commandMain}]}" ]; then
+  if [ "${BASHCLI_CONTEXT_READ_CACHE[${commandContext}]}" ]; then
     return
   fi
 
-  for ((index = $((${#BASHCLI_COMMAND_ROOTS[@]} - 1)); index >= 0; --index)) do
-    commandRoot=${BASHCLI_COMMAND_ROOTS[index]}
-    commandContext=${commandRoot}/${commandMain}.context
-    if [ -f "${commandContext}" ]; then
-      bashcli-debug "${commandMain} -> ${commandContext}"
-      DESCRIPTION=
-      OPTIONS=()
-      OPTION_DESCRIPTIONS=()
-      OPTION_ALIASES=()
-      OPTION_VALUE_TYPES=()
-      . "${commandContext}"
-      bashcli-context-validate
-      bashcli-context-defaults
-      bashcli-context-merge "${commandMain}"
-      BASHCLI_CONTEXT_READ_CACHE[${commandMain}]=1
-    fi
-  done
+  if [ -f "${commandContext}" ]; then
+    bashcli-debug "${commandContext}"
+    DESCRIPTION=
+    OPTIONS=()
+    OPTION_DESCRIPTIONS=()
+    OPTION_ALIASES=()
+    OPTION_VALUE_TYPES=()
+    . "${commandContext}"
+    bashcli-context-validate
+    bashcli-context-defaults
+    bashcli-context-merge "${commandMain}"
+    BASHCLI_CONTEXT_READ_CACHE[${commandMain}]=1
+  fi
 }
 
 bashcli-context-merge() {

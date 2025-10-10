@@ -49,7 +49,7 @@ bashcli-options-parse() {
   # Read command's context.
   bashcli-context-clear
   if bashcli-command-resolve "${_commandStack[@]}"; then
-    _commandMain=${REPLY[1]}
+    _commandMain=${REPLY}
     bashcli-context-read "${_commandStack[@]}"
   fi
 

@@ -27,7 +27,7 @@ bashcli-completion-complete() {
   bashcli-context-read .
   bashcli-completion-read .
 
-  for ((index = 0; index <= cword; ++index)); do
+  for ((index = 1; index <= cword; ++index)); do
     word=${words[index]}
     option=
     case ${word} in
@@ -177,16 +177,14 @@ EOF
 }
 
 bashcli-completion-read() {
-  local commandRoot commandMain commandComplete
+  local commandMain commandComplete
 
   bashcli-command-resolve "$@" || return 1
-  commandMain=${REPLY[1]}
+  commandMain=${REPLY}
+  commandComplete=${commandMain}.complete
 
-  for commandRoot in "${BASHCLI_COMMAND_ROOTS[@]}"; do
-    commandComplete=${commandRoot}/${commandMain}.complete
-    if [ -f "${commandComplete}" ]; then
-      bashcli-debug "${commandMain} -> ${commandComplete}"
-      . "${commandComplete}"
-    fi
-  done
+  if [ -f "${commandComplete}" ]; then
+    bashcli-debug "${commandMain} -> ${commandComplete}"
+    . "${commandComplete}"
+  fi
 }

@@ -105,7 +105,7 @@ bashcli-command-exec-now() {
   BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
   bashcli-debug "executing ${REPLY[0]}"
-  . "${REPLY[0]}" "$@"
+  . "${REPLY}" "$@"
 }
 
 bashcli-command-subcommands() {
