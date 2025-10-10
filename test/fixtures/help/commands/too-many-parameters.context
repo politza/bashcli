@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+OPTION_VALUE_TYPES=(
+  %parameter-0 value-type
+  %parameter-1 value-type
+  %parameter-2 value-type
+  %parameter-3 value-type
+  %parameter-4 value-type
+  %parameter-5 value-type
+  %parameter-6 value-type
+  %parameter-7 value-type
+  %parameter-8 value-type
+  %parameter   value-type
+)

@@ -7,5 +7,6 @@ Updates the value of a given property.
 "
 
 OPTION_VALUE_TYPES=(
-  %parameter config-property
+  %parameter-0 config-property
+  %parameter-1 config-property-value
 )

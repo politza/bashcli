@@ -5,10 +5,10 @@ output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 
 test-command-help() {
-  cli command --help &> "${output}"
+  cli basic --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli command [ OPTIONS ]
+cli basic [ OPTIONS ]
 
 Command description first line.  Command description second line.  Command
 description third line with trailing newlines.
@@ -40,12 +40,61 @@ EOF
 }
 
 test-subcommand-help() {
-  cli command subcommand-0 --help &> "${output}"
+  cli basic subcommand-0 --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli command subcommand-0 [ OPTIONS ]
+cli basic subcommand-0 [ OPTIONS ]
 
 Subcommand-0 description.
+
+Options:
+--help
+  Shows a help message.
+EOF
+}
+
+test-one-parameter-help() {
+  cli one-parameter --help &> "${output}"
+  diff "${output}" - <<EOF
+Usage:
+cli one-parameter [ OPTIONS ] PARAMETER-0-TYPE
+
+Options:
+--help
+  Shows a help message.
+EOF
+}
+
+test-two-parameters-help() {
+  cli two-parameters --help &> "${output}"
+  diff "${output}" - <<EOF
+Usage:
+cli two-parameters [ OPTIONS ] PARAMETER-0-TYPE PARAMETER-1-TYPE
+
+Options:
+--help
+  Shows a help message.
+EOF
+}
+
+test-unlimited-parameters-help() {
+  cli unlimited-parameters --help &> "${output}"
+  diff "${output}" - <<EOF
+Usage:
+cli unlimited-parameters [ OPTIONS ] PARAMETER-0-TYPE PARAMETER-1-TYPE PARAMETER-N-TYPE ...
+
+Options:
+--help
+  Shows a help message.
+EOF
+}
+
+test-too-many-parameters-help() {
+  cli too-many-parameters --help &> "${output}"
+  diff "${output}" - <<EOF
+[warn] max parameter count exceeded: 8
+Usage:
+cli too-many-parameters [ OPTIONS ] VALUE-TYPE ...
 
 Options:
 --help

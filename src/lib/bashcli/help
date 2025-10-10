@@ -4,6 +4,7 @@ declare -g -A BASHCLI_HELP_FACES=(
   bold $'\033[1m'
   regular $'\033[0m'
 )
+declare -g BASHCLI_HELP_MAX_PARAMETERS=8
 
 if ! [ -t 1 ]; then
   BASHCLI_HELP_FACES=()
@@ -34,17 +35,41 @@ bashcli-help-show() {
   shift
   local commandList=("$@")
   local description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
-  local optionsInfo parameterInfo parameterTypes
+  local optionsInfo parameter parameterInfo parameterIndex parameterCount
 
   bashcli-string-trim description
 
   if [ ${#BASHCLI_CONTEXT_OPTIONS[@]} -gt 0 ]; then
     optionsInfo=" [ OPTIONS ]"
   fi
-  parameterTypes="${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}"
-  if [ -n "${parameterTypes}" ]; then
-    parameterTypes=${parameterTypes//,/ | }
-    parameterInfo=" ${parameterTypes^^} ..."
+
+  # Determine the maximum n of parameter-n value-types.
+  for parameter in "${!BASHCLI_CONTEXT_OPTION_VALUE_TYPES[@]}"; do
+    if [[ ${parameter} == %parameter-+([0-9]) ]]; then
+      parameterIndex=${parameter##%parameter?}
+      if [ "${parameterIndex}" -ge ${BASHCLI_HELP_MAX_PARAMETERS} ]; then
+        bashcli-warn "max parameter count exceeded: ${BASHCLI_HELP_MAX_PARAMETERS}"
+        parameterCount=0
+        break
+      fi
+      ((parameterCount = parameterIndex + 1 > parameterCount ? parameterIndex + 1 : parameterCount))
+    fi
+  done
+
+  if [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
+      ((++parameterCount))
+  fi
+
+  for ((parameterIndex = 0; parameterIndex < parameterCount; ++parameterIndex)); do
+    parameterType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter-${parameterIndex}]}
+    if [ -z "${parameterType}" ]; then
+      parameterType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]:-parameter}
+    fi
+    parameterInfo+=" ${parameterType^^}"
+  done
+
+  if [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
+    parameterInfo+=' ...'
   fi
 
   commandList[0]=${BASHCLI_CLI_NAME}

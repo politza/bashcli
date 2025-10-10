@@ -5,7 +5,3 @@
 DESCRIPTION="
 Edits the configuration file using an editor.
 "
-
-OPTION_VALUE_TYPES=(
-  %parameter config-property
-)

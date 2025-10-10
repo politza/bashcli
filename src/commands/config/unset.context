@@ -7,5 +7,5 @@ Removes a given property.
 "
 
 OPTION_VALUE_TYPES=(
-  %parameter config-property
+  %parameter-0 config-property
 )
