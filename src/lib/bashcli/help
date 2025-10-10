@@ -35,13 +35,9 @@ bashcli-help-show() {
   shift
   local commandList=("$@")
   local description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
-  local optionsInfo parameter parameterInfo parameterIndex parameterCount
+  local parameter parameterInfo parameterIndex parameterCount
 
   bashcli-string-trim description
-
-  if [ ${#BASHCLI_CONTEXT_OPTIONS[@]} -gt 0 ]; then
-    optionsInfo=" [ OPTIONS ]"
-  fi
 
   # Determine the maximum n of parameter-n value-types.
   for parameter in "${!BASHCLI_CONTEXT_OPTION_VALUE_TYPES[@]}"; do
@@ -73,8 +69,8 @@ bashcli-help-show() {
   fi
 
   commandList[0]=${BASHCLI_CLI_NAME}
-  printf "%sUsage:%s\n%s%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
-         "${commandList[*]}" "${optionsInfo}" "${parameterInfo}"
+  printf "%sUsage:%s\n%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
+         "${commandList[*]}" "${parameterInfo}"
   if [ -n "${description}" ]; then
     fmt --width "${BASHCLI_HELP_WIDTH}" <<<$'\n'"${description%%*($'\n')}"
   fi

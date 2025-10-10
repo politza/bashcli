@@ -8,7 +8,7 @@ test-command-help() {
   cli basic --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli basic [ OPTIONS ]
+cli basic
 
 Command description first line.  Command description second line.  Command
 description third line with trailing newlines.
@@ -43,7 +43,7 @@ test-subcommand-help() {
   cli basic subcommand-0 --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli basic subcommand-0 [ OPTIONS ]
+cli basic subcommand-0
 
 Subcommand-0 description.
 
@@ -57,7 +57,7 @@ test-one-parameter-help() {
   cli one-parameter --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli one-parameter [ OPTIONS ] PARAMETER-0-TYPE
+cli one-parameter PARAMETER-0-TYPE
 
 Options:
 --help
@@ -69,7 +69,7 @@ test-two-parameters-help() {
   cli two-parameters --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli two-parameters [ OPTIONS ] PARAMETER-0-TYPE PARAMETER-1-TYPE
+cli two-parameters PARAMETER-0-TYPE PARAMETER-1-TYPE
 
 Options:
 --help
@@ -81,7 +81,7 @@ test-unlimited-parameters-help() {
   cli unlimited-parameters --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli unlimited-parameters [ OPTIONS ] PARAMETER-0-TYPE PARAMETER-1-TYPE PARAMETER-N-TYPE ...
+cli unlimited-parameters PARAMETER-0-TYPE PARAMETER-1-TYPE PARAMETER-N-TYPE ...
 
 Options:
 --help
@@ -94,7 +94,7 @@ test-too-many-parameters-help() {
   diff "${output}" - <<EOF
 [warn] max parameter count exceeded: 8
 Usage:
-cli too-many-parameters [ OPTIONS ] VALUE-TYPE ...
+cli too-many-parameters VALUE-TYPE ...
 
 Options:
 --help
