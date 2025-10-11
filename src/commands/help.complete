@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034
+bashcli-complete-help-command() {
+  local commandIndex=$1
+  local commandMain commandList subcommand completion
+  local BASHCLI_COMMAND_STACK=(.)
+
+  # shellcheck disable=SC2154
+  if bashcli-options-parse '' commandList -- "${words[@]:1}"; then
+    commandList=(. "${commandList[@]:1:${commandIndex}}")
+    bashcli-complete-subcommands "${commandList[@]}"
+  fi
+}

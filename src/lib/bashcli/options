@@ -83,7 +83,8 @@ bashcli-options-parse() {
         fi
         case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
           single|multi) ;;
-          *) bashcli-error "option does not accept arguments: ${_arguments[0]}" >&2
+          *)
+            bashcli-error "option does not accept arguments: ${_arguments[0]}" >&2
              return 1;;
         esac
         shift

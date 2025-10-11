@@ -15,5 +15,5 @@ OPTION_ALIASES=(
 )
 
 OPTION_VALUE_TYPES=(
-  %parameter command
+  %parameter help-command
 )

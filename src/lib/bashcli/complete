@@ -45,3 +45,23 @@ bashcli-complete-config-property() {
     BASHCLI_COMPLETIONS[${property}]=''
   done
 }
+
+bashcli-complete-subcommands() {
+  local commandList=("$@")
+  local completion subcommand commandMain
+
+  if bashcli-command-subcommands "${commandList[@]}"; then
+    for subcommand in "${REPLY[@]}"; do
+      if bashcli-command-resolve "${commandList[@]}" "${subcommand}"; then
+        local commandMain=${REPLY}
+        bashcli-context-read "${commandList[@]}" "${subcommand}" || continue
+        completion=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
+        bashcli-string-trim completion
+        # shellcheck disable=SC2034
+        BASHCLI_COMPLETIONS["${subcommand}"]=${completion%%$'\n'*}
+      fi
+    done
+    return 0
+  fi
+  return 1
+}
