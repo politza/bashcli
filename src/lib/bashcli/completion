@@ -148,8 +148,13 @@ bashcli-completion-complete() {
     done
   fi
 
-  COMPREPLY=()
-  _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"'
+  if declare -pf _comp_compgen &>/dev/null; then
+    COMPREPLY=()
+    _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"'
+  else
+    COMPREPLY=($(compgen -W '"${!BASHCLI_COMPLETIONS[@]}"' -- "${cur}"))
+  fi
+
   case ${COMP_TYPE} in
     9|37) ;;
     *)
