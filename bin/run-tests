@@ -5,18 +5,24 @@ set -e
 testFiles=(test/tests)
 testDirectory="$(dirname "$0")"/../test
 proveArgs=(-r --ext test)
+options=$(getopt -o s:Ddvj -n "$(basename "$0")" -- "$@") || {
+  exit 1
+}
+eval set -- "$options"
 
-while getopts "s:Ddvj" option; do
-  case ${option} in
-    s) export BASHCLI_TEST_SELECTOR=${OPTARG} ;;
-    D) unset BASHCLI_DEBUG ;;
-    d) export BASHCLI_DEBUG=true ;;
-    v) proveArgs+=(-v) ;;
-    j) proveArgs+=(-j8) ;;
-    *) exit 1
+while [ $# -gt 0 ]; do
+  case $1 in
+    -s) shift
+        export BASHCLI_TEST_SELECTOR=$1 ;;
+    -D) unset BASHCLI_DEBUG ;;
+    -d) export BASHCLI_DEBUG=true ;;
+    -v) proveArgs+=(-v) ;;
+    -j) proveArgs+=(-j8) ;;
+    --) shift
+        break;
   esac
+  shift
 done
-shift "$((OPTIND - 1))"
 
 if [ $# -gt 0 ]; then
   testFiles=("$@")
