@@ -62,7 +62,7 @@ cat > "${outputDir}/${cliName}" <<EOF
 
 set -e
 
-CACHE_DIR=\${XDG_CACHE_HOME:-\${HOME}/.cache}/bashcli/dist/${cliName}/${hashSum}
+CACHE_DIR=\${TMPDIR:-/tmp}/${cliName}.${hashSum}
 CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
 export BASHCLI_DIR="\${CACHE_DIR}/bashcli"
 export BASHCLI_DIST=${hashSum}
