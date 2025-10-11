@@ -127,7 +127,7 @@ bashcli-completion-complete() {
       fi
     done
   else
-    if bashcli-complete-subcommands "${commandStack[@]}"; then
+    if bashcli-complete-subcommand "${commandStack[@]}"; then
       bashcli-debug "completing subcommands"
     else
       bashcli-debug "completing with file fallback"

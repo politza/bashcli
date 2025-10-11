@@ -46,7 +46,7 @@ bashcli-complete-config-property() {
   done
 }
 
-bashcli-complete-subcommands() {
+bashcli-complete-subcommand() {
   local commandList=("$@")
   local completion subcommand commandMain
 

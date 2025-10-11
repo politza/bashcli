@@ -9,6 +9,6 @@ bashcli-complete-help-command() {
   # shellcheck disable=SC2154
   if bashcli-options-parse '' commandList -- "${words[@]:1}"; then
     commandList=(. "${commandList[@]:1:${commandIndex}}")
-    bashcli-complete-subcommands "${commandList[@]}"
+    bashcli-complete-subcommand "${commandList[@]}"
   fi
 }
