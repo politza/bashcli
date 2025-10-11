@@ -14,8 +14,11 @@ if ! [ -t 2 ]; then
   BASHCLI_COLORS=()
 fi
 
+# shellcheck disable=SC2034
 declare -g BASHCLI_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}"
+# shellcheck disable=SC2034
 declare -g BASHCLI_DIST
+# shellcheck disable=SC2034
 declare -g BASHCLI_VERBOSE=
 
 bashcli-debug() {
