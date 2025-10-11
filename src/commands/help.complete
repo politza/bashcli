@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2034
-bashcli-complete-help-command() {
+bashcli-complete-help-for-command() {
   local commandIndex=$1
   local commandMain commandList subcommand completion
   local BASHCLI_COMMAND_STACK=(.)
