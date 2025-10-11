@@ -2,11 +2,12 @@
 
 declare -A options=()
 declare -a parameters=()
-declare IFS
-declare templateDir
-declare cliCommandDir
 
 bashcli-options-parse options parameters -- "$@"
+
+case ${#parameters[@]} in
+  0) bashcli-fatal "missing an argument" ;;
+esac
 
 # Initialize directories and templates.
 if [ -d "${BASHCLI_USER_DIR}/templates" ]; then
@@ -18,9 +19,13 @@ else
   templateDir="${BASHCLI_DIR}/templates"
 fi
 
+if [ ! -d "${templateDir}" ]; then
+  bashcli-warn "template-directory does not exist: ${templateDir}"
+fi
+
 if [ "${options[directory]}" ]; then
   cliCommandDir=${options[directory]}
-elif [ "${options[user]}" ] || [ "${BASHCLI_DIST}" ] ; then
+elif [ "${BASHCLI_DIST}" ] ; then
   cliCommandDir=${BASHCLI_USER_DIR}/commands
 else
   cliCommandDir=${BASHCLI_CLI_DIR}/commands
@@ -35,12 +40,14 @@ declare -A templates=(
   command.complete "${templateDir}"/command.complete
 )
 
-# Normalize paths and transform them to commands.
+bashcli-debug "using template-directory ${templateDir}"
+bashcli-debug "using command-directory ${cliCommandDir}"
+bashcli-debug "normalizing commands"
 bashcli-array-sort parameters -r
 for parameter in "${parameters[@]}"; do
   path=$(realpath -ms --relative-to=. "./${parameter}")
-  
-  if [ -z "${path}" ]; then
+
+  if [ "${path}" == . ]; then
     bashcli-fatal "command is empty: ${parameter}"
   fi
 
@@ -64,39 +71,42 @@ for parameter in "${parameters[@]}"; do
 
   if [ "${command}" ]; then
     commands+=("${command}")
+    bashcli-debug "added command '${command}'"
   fi
 done
 
-# Check if the operation would succeed.
+bashcli-debug "verifing commands"
 IFS=' '
 for command in "${commands[@]}"; do
   # shellcheck disable=SC2206
   components=(${command})
   commandPath=${cliCommandDir}
+  commandList=()
   for ((index = 0; index < ${#components[@]}; ++index)); do
     commandPath+="/${components[index]}"
+    commandList+=("${components[index]}")
     if [ ! -e "${commandPath}" ]; then
       continue
     fi
     if [ ${index} -eq $((${#components[@]} - 1)) ]; then
       if [ -f "${commandPath}" ]; then
         if [ -z "${options[force]}" ]; then
-          bashcli-fatal "command already exists: ${commandPath} (use --force to overwrite)"
+          bashcli-fatal "command already exists: ${commandList[*]} (use --force to overwrite)"
         fi
       elif [ -d "${commandPath}" ]; then
-        bashcli-fatal "command already exists as a non-terminal: ${commandPath}"
+        bashcli-fatal "command already exists as a non-terminal: ${commandList[*]}"
       else
         bashcli-fatal "file already exists: ${commandPath}"
       fi
     elif [ -f "${commandPath}" ]; then
-      bashcli-fatal "command already exists as a terminal: ${commandPath}"
+      bashcli-fatal "command already exists as a terminal: ${commandList[*]}"
     elif [ ! -d "${commandPath}" ]; then
       bashcli-fatal "file already exists: ${commandPath}"
     fi
   done
 done
 
-# Finally create the new commands.
+bashcli-debug "creating commands"
 for command in "${commands[@]}"; do
   # shellcheck disable=SC2206
   components=(${command})
@@ -105,9 +115,11 @@ for command in "${commands[@]}"; do
     commandPath+="/${components[index]}"
     if [ ${index} -lt $((${#components[@]} - 1)) ]; then
       if [ ! -d "${commandPath}" ]; then
+        bashcli-debug "mkdir ${commandPath}"
         mkdir --parents "${commandPath}"
         for template in "${!templates[@]}"; do
           if [[ "${template}" == @main?(|.*) && -e "${templates[${template}]}" ]]; then
+            bashcli-debug "cp ${templates[${template}]} -> ${commandPath}"
             cp -- "${templates[${template}]}" "${commandPath}"
           fi
         done
@@ -115,13 +127,13 @@ for command in "${commands[@]}"; do
     else
       for template in "${!templates[@]}"; do
         if [[ "${template}" == command?(|.*) && -e "${templates[${template}]}" ]]; then
-          templateBase=$(basename "${templates[${template}]}")
-          templateExtension=
-          if [[ "${templateBase}" == *.* ]]; then
-            templateExtension=${templateBase##*.}
-            templateBase=${templateBase%.*}
+          templateDest=${commandPath}
+          templateBasename=$(basename "${templates[${template}]}")
+          if [[ "${templateBasename}" == *.* ]]; then
+            templateExtension=${templateBasename##*.}
+            templateDest+=.${templateExtension}
           fi
-          templateDest=${commandPath}${templateExtension:+.}${templateExtension}
+          bashcli-debug "cp ${templates[${template}]} -> ${templateDest}"
           cp -- "${templates[${template}]}" "${templateDest}"
         fi
       done

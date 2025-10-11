@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+PATH=$PWD/fixtures/cli-new:${PATH}
+export XDG_CONFIG_HOME=/dev/null
+TEMPLATE_DIR=$PWD/../src/templates
+output=$(mktemp)
+directory=$(mktemp -d)
+trap "rm -r -- '${output}' '${directory}'" EXIT
+
+before-each() {
+  rm -rf -- "${directory}"
+  mkdir "${directory}"
+}
+
+exec-cli-new() {
+  test-cli cli new -d "${directory}" "$@"
+}
+
+test-cli-new-basic-command() {
+  exec-cli-new basic # &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+  diff "${directory}"/basic "${TEMPLATE_DIR}"/command
+  diff "${directory}"/basic.context "${TEMPLATE_DIR}"/command.context
+}
+
+test-cli-new-nested-command() {
+  exec-cli-new parent/child &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+  diff "${directory}"/parent/@main "${TEMPLATE_DIR}"/@main
+  diff "${directory}"/parent/@main.context "${TEMPLATE_DIR}"/@main.context
+  diff "${directory}"/parent/child "${TEMPLATE_DIR}"/command
+  diff "${directory}"/parent/child.context "${TEMPLATE_DIR}"/command.context
+}
+
+test-cli-new-empty-command() {
+  exec-cli-new '//' &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] command is empty: //
+EOF
+}
+
+test-cli-new-invalid-command() {
+  exec-cli-new %command &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] invalid command name: %command
+EOF
+}
+
+test-cli-new-command-already-exists() {
+  touch "${directory}"/command
+  exec-cli-new command &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] command already exists: command (use --force to overwrite)
+EOF
+
+  exec-cli-new command --force &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+  diff "${directory}"/command "${TEMPLATE_DIR}"/command
+  diff "${directory}"/command.context "${TEMPLATE_DIR}"/command.context
+}
+
+test-cli-new-command-already-exists-as-non-terminal() {
+  mkdir "${directory}"/command
+  exec-cli-new command &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] command already exists as a non-terminal: command
+EOF
+}
+
+test-cli-new-command-already-exists-as-terminal() {
+  touch "${directory}"/parent
+  exec-cli-new parent/child &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] command already exists as a terminal: parent
+EOF
+}
+
+. ./lib/run-tests

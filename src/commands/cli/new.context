@@ -7,14 +7,12 @@ Creates new commands.
 
 OPTIONS=(
   force     boolean
-  user boolean
   directory single
 )
 
 OPTION_DESCRIPTIONS=(
   force     "Overwrite already existing files."
-  user      "Force operating on user commands."
-  directory "The root directory on which to operate."
+  directory "The directory in which to create the command files."
 )
 
 OPTION_ALIASES=(
@@ -24,4 +22,5 @@ OPTION_ALIASES=(
 
 OPTION_VALUE_TYPES=(
   directory directory
+  %parameter command-paths
 )

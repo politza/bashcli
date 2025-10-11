@@ -10,11 +10,11 @@ shopt -s extglob nullglob
 set -eo pipefail
 
 # shellcheck disable=SC2034
-BASHCLI_VERSION=0.0.1
-BASHCLI_CLI_SCRIPT=${BASHCLI_CLI_SCRIPT:-$(realpath -s "$0")}
-BASHCLI_CLI_DIR=$(dirname "${BASHCLI_CLI_SCRIPT}")
-BASHCLI_CLI_NAME=$(basename "${BASHCLI_CLI_SCRIPT}")
-BASHCLI_DIR=$(dirname "$(realpath "$0")")
+export BASHCLI_VERSION=0.0.1
+export BASHCLI_CLI_SCRIPT=${BASHCLI_CLI_SCRIPT:-$(realpath -s "$0")}
+export BASHCLI_CLI_DIR=$(dirname "${BASHCLI_CLI_SCRIPT}")
+export BASHCLI_CLI_NAME=$(basename "${BASHCLI_CLI_SCRIPT}")
+export BASHCLI_DIR=$(dirname "$(realpath "$0")")
 
 . "${BASHCLI_DIR}"/lib/bashcli/init
 if [ "${BASHCLI_CLI_NAME}" != bashcli ]; then
