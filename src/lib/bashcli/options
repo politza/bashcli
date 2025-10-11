@@ -218,6 +218,7 @@ bashcli-options-parse() {
 
 bashcli-option-aliases() {
   local option=$1 alias aliasedOption
+  local IFS=$'\n'
 
   REPLY=()
   for alias in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
@@ -226,6 +227,9 @@ bashcli-option-aliases() {
       REPLY+=("${alias}")
     fi
   done
+  if [ ${#REPLY[@]} -gt 0 ]; then
+    readarray -t REPLY <<<"$(LC_ALL=C sort <<<"${REPLY[*]}")"
+  fi
 }
 
 bashcli-option-from-config() {

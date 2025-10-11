@@ -19,6 +19,8 @@ OPTIONS=(
 )
 
 OPTION_ALIASES=(
+  a boolean
+  c boolean
   b boolean
   s single
   m multi

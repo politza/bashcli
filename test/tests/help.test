@@ -14,7 +14,7 @@ Command description first line.  Command description second line.  Command
 description third line with trailing newlines.
 
 Options:
---boolean, -b
+--boolean, -a, -b, -c
   Boolean option description.
 
 --enum, -e ENUM-VALUE
