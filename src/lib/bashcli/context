@@ -124,14 +124,4 @@ bashcli-context-validate() {
       bashcli-fatal "Alias name must not start with a dash: ${alias}"
     fi
   done
-
-  for option in "${!OPTION_VALUE_TYPES[@]}"; do
-    if [[ "${option}" == %parameter?(-+([0-9])) ]]; then
-      continue
-    fi
-    if [ -z "${OPTIONS[${option}]}" ]; then
-      bashcli-warn "Completions for non-existing option provided: ${option}"
-      unset "OPTION_VALUE_TYPES[${option}]"
-    fi
-  done
 }
