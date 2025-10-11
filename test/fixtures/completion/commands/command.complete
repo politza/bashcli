@@ -17,6 +17,6 @@ bashcli-complete-multi() {
   bashcli-test-completions multi
 }
 
-bashcli-complete-parameter() {
-  bashcli-test-completions parameter
+test-cli-complete-parameter() {
+  bashcli-test-completions parameter-0 parameter-1
 }

@@ -20,7 +20,7 @@ completion-exec() {
   local current=${prefixWords[-1]}
   IFS=$'\n'
 
-  cli cli complete \
+  test-cli cli complete \
       --comp-cword "$((${#prefixWords[@]} - 1))" \
       --comp-line "${line}" \
       --comp-point "${#prefix}" \
@@ -30,7 +30,7 @@ completion-exec() {
 }
 
 test-complete-long-options() {
-  completion-exec 'cli command --|' &> "${output}"
+  completion-exec 'test-cli command --|' &> "${output}"
   diff "${output}" - <<EOF
 --boolean   boolean option (-a,-b,-c)
 --first     first enum option (-f)
@@ -44,10 +44,18 @@ EOF
 }
 
 test-complete-option-argument() {
-  completion-exec 'cli command --single=|' &> "${output}"
+  completion-exec 'test-cli command --single=|' &> "${output}"
   diff "${output}" - <<EOF
 single-0-completion  single-0-completion description
 single-1-completion  single-1-completion description
+EOF
+}
+
+test-complete-parameter-argument() {
+  completion-exec 'test-cli command p|' &> "${output}"
+  diff "${output}" - <<EOF
+parameter-0-completion  parameter-0-completion description
+parameter-1-completion  parameter-1-completion description
 EOF
 }
 
@@ -60,7 +68,7 @@ test-complete-profiles() {
 %test.property=0
 %dev.property=1
 EOF
-  completion-exec 'cli command --profile=|' &> "${output}"
+  completion-exec 'test-cli command --profile=|' &> "${output}"
   diff "${output}" - <<EOF
 default
 dev

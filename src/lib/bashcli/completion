@@ -5,7 +5,7 @@ bashcli-completion-complete() {
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=(.)
-  local index option word completion completionFn valueType
+  local index option word completion completionFn valueType cliPrefix
   local parameterIndex=-1
   local IFS
 
@@ -136,13 +136,16 @@ bashcli-completion-complete() {
   fi
 
   if [ "${valueType}" ]; then
-    completionFn=${valueType//*/bashcli-complete-&}
-    bashcli-debug "fn -> ${completionFn}"
-    if declare -pf "${completionFn}" &>/dev/null; then
-      "${completionFn}" "${parameterIndex}" >/dev/null
-    else
-      bashcli-warn "Completion function ${completionFn} not defined"
-    fi
+    for cliPrefix in "${BASHCLI_CLI_NAME}" bashcli; do
+      completionFn=${valueType//*/${cliPrefix}-complete-&}
+      if declare -pf "${completionFn}" &>/dev/null; then
+        bashcli-debug "fn -> ${completionFn}"
+        "${completionFn}" "${parameterIndex}" >/dev/null
+        break
+      elif [ "${cliPrefix}" == bashcli ]; then
+        bashcli-warn "Completion function ${completionFn} not defined"
+      fi
+    done
   fi
 
   COMPREPLY=()
