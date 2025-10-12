@@ -2,7 +2,7 @@
 
 declare -g BASHCLI_CONFIG_GLOBAL=${BASHCLI_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/${BASHCLI_CLI_NAME}.conf}
 declare -g BASHCLI_CLI_CONFIG_LOCAL=${BASHCLI_CLI_CONFIG_LOCAL}
-declare -g BASHCLI_CONFIG_DEFAULT=${BASHCLI_CLI_DIR}/conf/default.conf
+declare -g BASHCLI_CONFIG_DEFAULT=${BASHCLI_CONFIG_DEFAULT:-${BASHCLI_CLI_DIR}/conf/default.conf}
 
 declare -g BASHCLI_CONFIG_PROPERTY_PATTERN='+([a-zA-Z0-9._-])'
 declare -g BASHCLI_CONFIG_PROFILE_PATTERN='+([a-zA-Z0-9-])'
@@ -148,12 +148,6 @@ bashcli-config-initialize() {
 
   bashcli-debug "initializing"
 
-  if [ ! -f "${BASHCLI_CONFIG_GLOBAL}" ] && [ -f "${BASHCLI_CONFIG_DEFAULT}" ]; then
-    mkdir -p "$(dirname "${BASHCLI_CONFIG_GLOBAL}")" && \
-      cp "${BASHCLI_CONFIG_DEFAULT}" "${BASHCLI_CONFIG_GLOBAL}" && \
-      bashcli-debug "${BASHCLI_CONFIG_DEFAULT} -> ${BASHCLI_CONFIG_GLOBAL}"
-  fi
-
   -bashcli-config-initialize-profiles
   -bashcli-config-initialize-scope
   -bashcli-config-initialize-env
@@ -293,6 +287,10 @@ bashcli-config-file() {
   local IFS=,
   local configFiles=()
   local configFile
+
+  if [ -f "${BASHCLI_CONFIG_DEFAULT}" ]; then
+    configFiles+=("${BASHCLI_CONFIG_DEFAULT}")
+  fi
 
   if [ -z "${BASHCLI_CONFIG_SCOPE}" ] || [ "${BASHCLI_CONFIG_SCOPE}" == global ]; then
     configFiles+=("${BASHCLI_CONFIG_GLOBAL}")
