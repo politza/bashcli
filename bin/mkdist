@@ -4,11 +4,26 @@ set -e
 
 usage() {
   cat <<EOF
-usage:$(basename "$0") CLI [DIRECTORY]
+usage:$(basename "$0") [--force|-f] CLI [DIRECTORY]
 
 Creates a single-file script of a CLI in DIRECTORY, which defaults to the current one.
 EOF
 }
+
+options=$(getopt -o f -l force -n "$(basename "$0")" -- "$@") || {
+  exit 1
+}
+eval set -- "$options"
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -f|--force)
+      force=true ;;
+    --) shift
+        break;
+  esac
+  shift
+done
 
 [ $# -eq 1 ] || [ $# -eq 2 ] || {
   usage
@@ -36,10 +51,10 @@ outputDir=${2:-$PWD}
 
 cliName=$(basename "${cli}")
 
-[ -e "${outputDir}/${cliName}" ] && {
+if [ -e "${outputDir}/${cliName}" ] && [ -z "${force}" ]; then
   echo "file exists: ${outputDir}/${cliName}"
   exit 1
-}
+fi
 
 mkdir --parents "${outputDir}"
 
