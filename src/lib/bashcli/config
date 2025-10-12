@@ -182,6 +182,11 @@ bashcli-config-file() {
     bashcli-error "property file unset"
     return 1
   fi
+
+  if [ ! -f "${configFile}" ]; then
+    mkdir --parents "$(dirname "${configFile}")"
+  fi
+
   printf "%s" "${configFile}"
 }
 
