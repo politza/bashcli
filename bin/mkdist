@@ -77,18 +77,18 @@ cat > "${outputDir}/${cliName}" <<EOF
 
 set -e
 
-CACHE_DIR=\${TMPDIR:-/tmp}/${cliName}.${hashSum}
-CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
-export BASHCLI_DIR="\${CACHE_DIR}/bashcli"
 export BASHCLI_DIST=${hashSum}
+CACHE_DIR=\${TMPDIR:-/tmp}/${cliName}.\${BASHCLI_DIST}
+CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
+export BASHCLI_DIR=\${CACHE_DIR}/bashcli
 
 if ! [ -f "\${CLI_SCRIPT}" ]; then
    if [ "\${BASHCLI_DEBUG}" == true ]; then
       echo "[debug](${cliName}) extracting to \${CACHE_DIR}" >&2
    fi
    mkdir --parents "\${CACHE_DIR}"
-   ARCHIVE_LINE=\$(awk '/^__ARCHIVE__/ {print NR + 1; exit 0; }' "\${0}")
-   tail -n+\${ARCHIVE_LINE} "\${0}" | tar -xJ -C \${CACHE_DIR}
+   ARCHIVE_LINE=\$(awk '/^__ARCHIVE__/ {print NR + 1; exit 0; }' "\$0")
+   tail -n+\${ARCHIVE_LINE} "\$0" | tar -xJ -C "\${CACHE_DIR}"
 fi
 
 if [ "\${BASHCLI_DEBUG}" == true ]; then
