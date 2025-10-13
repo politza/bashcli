@@ -186,10 +186,7 @@ bashcli-completion-script() {
   cat <<EOF
 _${cliName}_complete() {
   readarray -t COMPREPLY < <(
-    BASHCLI_DIR="${BASHCLI_DIR}"
-    BASHCLI_CLI_SCRIPT="${BASHCLI_CLI_SCRIPT}"
-    BASHCLI_CLI_DIR="${BASHCLI_CLI_DIR}"
-    BASHCLI_CLI_NAME="${BASHCLI_CLI_NAME}"
+    export BASHCLI_DIR="${BASHCLI_DIR}"
     IFS=$'\n'
 
     "${BASHCLI_CLI_SCRIPT}" \\
