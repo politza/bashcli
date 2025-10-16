@@ -82,10 +82,10 @@ bashcli-options-parse() {
           _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
         fi
         case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
-          single|multi) ;;
+          (single|multi?(:csv)) ;;
           *)
             bashcli-error "option does not accept arguments: ${_arguments[0]}" >&2
-             return 1;;
+            return 1;;
         esac
         shift
         set --  "${_arguments[@]}" "$@"
@@ -109,7 +109,7 @@ bashcli-options-parse() {
             _arguments+=("-${_option}")
           fi
           case ${_optionType} in
-            single|multi)
+            (single|multi?(:csv))
               if [ $((_index + 1)) -lt ${#1} ]; then
                 _arguments+=("${1:_index + 1}")
               fi
@@ -131,7 +131,7 @@ bashcli-options-parse() {
           # Let subcommand options shadow their parent command's options.
           _parsedParameters+=("$1")
           case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
-            single|multi)
+            (single|multi?(:csv))
               if [ $# -gt 1 ]; then
                 shift
                 _parsedParameters+=("$1")
@@ -140,7 +140,7 @@ bashcli-options-parse() {
         elif [ -n "${BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
           _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
           case ${_optionType} in
-            single|multi)
+            (single|multi?(:csv))
               if [ $# -lt 2 ]; then
                 bashcli-error "option requires an argument: $1" >&2
                 return 1
@@ -150,21 +150,32 @@ bashcli-options-parse() {
             single)
               _parsedOptions[${_option}]=$2
               shift ;;
-            multi)
+            multi?(:csv))
               if [ -n "${_parsedOptions[${_option}]}" ]; then
                 _parsedOptions[${_option}]+=$'\n'
               fi
-              _parsedOptions[${_option}]+=$2
-              if [ -R "${_multiOptionRefs[${_option}]}" ]; then
-                eval "${_multiOptionRefs[${_option}]}+=(\"$2\")"
+              if [ "${_optionType}" == multi:csv ]; then
+                IFS=,
+                # shellcheck disable=SC2206
+                _arguments=($2)
+              else
+                  _arguments=("$2")
               fi
+              unset IFS
+              for _argument in "${_arguments[@]}"; do
+                _parsedOptions[${_option}]+=${_argument}
+                if [ -R "${_multiOptionRefs[${_option}]}" ]; then
+                  eval "${_multiOptionRefs[${_option}]}+=(\"${_argument}\")"
+                fi
+              done
               shift ;;
             boolean)
               _parsedOptions[${_option}]=true ;;
             enum:?*)
               _parsedOptions[${_optionType#enum:}]=${_option} ;;
             *)
-              bashcli-fatal "Internal error" ;;
+              bashcli-error "invalid option type: ${_optionType}"
+              return 1;;
           esac
         else
           bashcli-error "unrecognized option: $1" >&2
@@ -204,7 +215,7 @@ bashcli-options-parse() {
 
   REPLY=
   case ${optionType} in
-    multi)
+    (multi?(:csv))
       REPLY="${option}" ;;
     *)
       if [ -n "${optionType}" ]; then
@@ -257,7 +268,7 @@ bashcli-options-from-config() {
         if bashcli-config-get "${property}"; then
           __options[${option}]=${REPLY}
         fi;;
-      multi)
+      (multi?(:csv))
         if bashcli-config-get-list "${property}"; then
           IFS=$'\n'
           __options[${option}]=${REPLY[*]}

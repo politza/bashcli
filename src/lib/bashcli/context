@@ -91,10 +91,10 @@ bashcli-context-validate() {
     fi
     optionType=${OPTIONS[${option}]}
     case ${optionType} in
-      boolean|single|multi) ;;
+      boolean|single|multi?(:csv)) ;;
       enum:?*)
         case ${OPTIONS[${optionType#enum:}]} in
-          multi|boolean|enum:*)
+          (multi?(:csv)|boolean|enum:*)
             bashcli-fatal "Enum option-value must be a single option: ${optionType:#enum:}" ;;
         esac ;;
       *) bashcli-fatal "Option-type must be one of boolean, single, multi or enum:\${name}: ${optionType}" ;;

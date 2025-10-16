@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+
+OPTIONS=(
+  multi-csv multi:csv
+)
+
+OPTION_ALIASES=(
+  m multi-csv
+)
