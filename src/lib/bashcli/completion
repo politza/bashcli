@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2034
 bashcli-completion-complete() {
-  # shellcheck disable=SC2034
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=(.)
@@ -99,7 +99,7 @@ bashcli-completion-complete() {
     valueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}
   elif [ "${option}" ]; then
     bashcli-debug "completing with file fallback"
-    valueType=file
+    valueType='file'
   elif [[ "${cur}" == -* ]]; then
     bashcli-debug "completing long options"
     for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
@@ -139,8 +139,19 @@ bashcli-completion-complete() {
     for cliPrefix in "${BASHCLI_CLI_NAME}" bashcli; do
       completionFn=${valueType//*/${cliPrefix}-complete-&}
       if declare -pf "${completionFn}" &>/dev/null; then
+        COMPREPLY=()
+        local BASHCLI_COMPLETION_OPTION=${option}
+        local BASHCLI_COMPLETION_OPTION_TYPE=${option:+${BASHCLI_CONTEXT_OPTIONS[${option}]}}
+        local BASHCLI_COMPLETION_VALUE_TYPE=${valueType}
+        local BASHCLI_COMPLETION_PARAMETER_INDEX=${parameterIndex}
         bashcli-debug "fn -> ${completionFn}"
         "${completionFn}" "${parameterIndex}" >/dev/null
+        bashcli-debug "$(declare -p COMPREPLY)"
+        if ((${#COMPREPLY[@]})); then
+          for completion in "${COMPREPLY[@]}"; do
+            BASHCLI_COMPLETIONS[${completion}]=''
+          done
+        fi
         break
       elif [ "${cliPrefix}" == bashcli ]; then
         bashcli-warn "Completion function ${completionFn} not defined"

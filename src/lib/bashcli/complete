@@ -1,49 +1,29 @@
 #!/usr/bin/env bash
 
 bashcli-complete-directory() {
-  local completion
-
   _comp_compgen_filedir -d
-
-  for completion in "${COMPREPLY[@]}"; do
-    BASHCLI_COMPLETIONS[${completion}]=''
-  done
-
-  COMPREPLY=()
 }
 
 bashcli-complete-file() {
-  local completion
-
   _comp_compgen_filedir
-
-  for completion in "${COMPREPLY[@]}"; do
-    BASHCLI_COMPLETIONS[${completion}]=''
-  done
-
-  COMPREPLY=()
 }
 
 bashcli-complete-config-profile() {
-  local profile
-
   bashcli-config-initialize
 
-  for profile in "${!BASHCLI_CONFIG_PROFILES[@]}"; do
-    # shellcheck disable=SC2034
-    BASHCLI_COMPLETIONS[${profile}]=''
-  done
+  if bashcli-shell-is-function _comp_delimited && [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi:csv ]; then
+    ! _comp_delimited , -W '"${!BASHCLI_CONFIG_PROFILES[@]}"'
+  else
+    COMPREPLY=("${!BASHCLI_CONFIG_PROFILES[@]}")
+  fi
+
+  return 0
 }
 
 bashcli-complete-config-property() {
-  local property
-
   bashcli-config-initialize
 
-  for property in "${!BASHCLI_CONFIG_PROPERTIES[@]}"; do
-    # shellcheck disable=SC2034
-    BASHCLI_COMPLETIONS[${property}]=''
-  done
+  COMPREPLY=("${!BASHCLI_CONFIG_PROPERTIES[@]}")
 }
 
 bashcli-complete-subcommand() {

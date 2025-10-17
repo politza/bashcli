@@ -6,7 +6,7 @@ This is the entry command of the CLI.
 "
 
 OPTIONS=(
-  profile  multi
+  profile  multi:csv
   version  boolean
 )
 
