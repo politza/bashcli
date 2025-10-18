@@ -1,24 +1,18 @@
 #!/usr/bin/env bash
 
 
-bashcli-test-completions() {
-  local prefix
-  for prefix; do
-    # shellcheck disable=SC2034
-    BASHCLI_COMPLETIONS["${prefix}-completion"]="${prefix}-completion description"
-  done
-}
+#!/usr/bin/env bash
 
 bashcli-complete-single() {
   COMPREPLY=(single-0 single-1)
 }
 
 bashcli-complete-multi-raw() {
-  COMPREPLY=(multi-raw-0 multi-raw-1)
+  COMPREPLY=(multi-raw,0 multi-raw,1)
 }
 
 bashcli-complete-multi() {
-  _comp_delimited , -W "multi-0 multi-1"
+  COMPREPLY=(multi-0 multi-1 multi-2)
 }
 
 test-cli-complete-parameter() {

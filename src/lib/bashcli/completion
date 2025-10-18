@@ -5,7 +5,7 @@ bashcli-completion-complete() {
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=(.)
-  local index option word completion completionFn valueType cliPrefix
+  local index option word completion description completionFn valueType cliPrefix
   local parameterIndex=-1
   local IFS
 
@@ -29,6 +29,7 @@ bashcli-completion-complete() {
   bashcli-context-read .
   bashcli-completion-read .
 
+  # Parse the command line.
   for ((index = 1; index <= cword; ++index)); do
     word=${words[index]}
     option=
@@ -88,6 +89,7 @@ bashcli-completion-complete() {
     esac
   done
 
+  # Determine the type of completion.
   if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}" ]; then
     bashcli-debug "completing value for option ${option}"
     valueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}
@@ -108,11 +110,11 @@ bashcli-completion-complete() {
         case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
           single|multi|multi-raw) suffix='=' ;;
         esac
-        completion=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
-        bashcli-string-trim completion
-        completion=${completion%%$'\n'}
+        description=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
+        bashcli-string-trim description
+        description=${description%%$'\n'}
         for alias in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
-          if [ "${option}" == "${BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}" ]; then
+          if [ ${#alias} == 1 ] && [ "${option}" == "${BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}" ]; then
             aliases+=("-${alias}")
           fi
         done
@@ -120,21 +122,22 @@ bashcli-completion-complete() {
           IFS=$'\n'
           readarray -t aliases <<<"$(LC_ALL=C sort <<<"${aliases[*]}")"
           IFS=,
-          completion+=" (${aliases[*]})"
+          description+=" (${aliases[*]})"
           unset IFS
         fi
-        BASHCLI_COMPLETIONS[--${option}${suffix}]=${completion}
+        BASHCLI_COMPLETIONS[--${option}${suffix}]=${description}
       fi
     done
   else
     if bashcli-complete-subcommand "${commandStack[@]}"; then
       bashcli-debug "completing subcommands"
     else
-      bashcli-debug "completing with file fallback"
+      bashcli-debug "completing file fallback"
       valueType=file
     fi
   fi
 
+  # Find a completion function and invoke it.
   if [ "${valueType}" ]; then
     for cliPrefix in "${BASHCLI_CLI_NAME}" bashcli; do
       completionFn=${valueType//*/${cliPrefix}-complete-&}
@@ -145,8 +148,7 @@ bashcli-completion-complete() {
         local BASHCLI_COMPLETION_VALUE_TYPE=${valueType}
         local BASHCLI_COMPLETION_PARAMETER_INDEX=${parameterIndex}
         bashcli-debug "fn -> ${completionFn}"
-        "${completionFn}" "${parameterIndex}" >/dev/null
-        bashcli-debug "$(declare -p COMPREPLY)"
+        "${completionFn}" >/dev/null
         if ((${#COMPREPLY[@]})); then
           for completion in "${COMPREPLY[@]}"; do
             BASHCLI_COMPLETIONS[${completion}]=''
@@ -159,33 +161,51 @@ bashcli-completion-complete() {
     done
   fi
 
-  if declare -pf _comp_compgen &>/dev/null; then
-    COMPREPLY=()
-    _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"'
+  # Create the array with bare completions.
+  COMPREPLY=()
+  if declare -pf _comp_delimited &>/dev/null && [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi ]; then
+    _comp_delimited , -W '"${!BASHCLI_COMPLETIONS[@]}"' || true
+  elif declare -pf _comp_compgen &>/dev/null; then
+    _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"' || true
   else
     COMPREPLY=($(compgen -W '"${!BASHCLI_COMPLETIONS[@]}"' -- "${cur}"))
   fi
 
-  case ${COMP_TYPE} in
-    9|37) ;;
+  # Postprocess the completions.
+  case ${#COMPREPLY[@]} in
+    0) ;;
+    1) local multiOptions=${cur//[^,]/},
+       if [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi ] && [ ${#multiOptions} -lt ${#BASHCLI_COMPLETIONS[@]} ]; then
+         if [ "${cur}" == "${COMPREPLY[0]}" ]; then
+           COMPREPLY=("${cur},")
+         fi
+       elif [[ "${COMPREPLY[0]}" != *= ]]; then
+         COMPREPLY[0]+=' '
+       fi
+       ;;
     *)
-      if [ ${#COMPREPLY[@]} -gt 1 ]; then
-        local padding=0
-        for completion in "${COMPREPLY[@]}"; do
-          if [[ ${#completion} -gt ${padding} ]]; then
-            padding=${#completion}
-          fi
-        done
-        for index in "${!COMPREPLY[@]}"; do
-          completion=${COMPREPLY[index]}
-          printf -v completion "%-${padding}s  %s    " "${completion}" "${BASHCLI_COMPLETIONS[${completion}]}"
-          COMPREPLY[index]="${completion}"
-        done
-      elif [[ "${COMPREPLY[0]}" != *= ]]; then
-        COMPREPLY[0]+=' '
-      fi ;;
+      case ${COMP_TYPE} in
+        9|37)
+        # Special completion-modes which are not compatible with listing descriptions.
+        ;;
+        *)
+          # List completions with their descriptions.
+          local padding=0
+          for completion in "${COMPREPLY[@]}"; do
+            if [[ ${#completion} -gt ${padding} ]]; then
+              padding=${#completion}
+            fi
+          done
+          for index in "${!COMPREPLY[@]}"; do
+            completion=${COMPREPLY[index]}
+            printf -v completion "%-${padding}s  %s    " "${completion}" "${BASHCLI_COMPLETIONS[${completion}]}"
+            COMPREPLY[index]="${completion}"
+          done
+          ;;
+      esac
   esac
 
+  # Print the completions for the bashcli-completion-script function to pickup.
   for  completion in "${COMPREPLY[@]}"; do
     printf "%s\n" "${completion%%$'\n'*}"
   done

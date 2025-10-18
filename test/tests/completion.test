@@ -65,6 +65,7 @@ test-complete-multi() {
   diff "${output}" - <<EOF
 multi-0
 multi-1
+multi-2
 EOF
 }
 
@@ -73,18 +74,49 @@ test-complete-multi-assignment() {
   diff "${output}" - <<EOF
 multi-0
 multi-1
+multi-2
 EOF
 }
 
-disabled-test-complete-multi-split() {
+test-complete-multi-split() {
   completion-exec 'test-cli command --multi=multi-0' &> "${output}"
   diff "${output}" - <<EOF
-,
+multi-0,
 EOF
 
   completion-exec 'test-cli command --multi=multi-0,' &> "${output}"
   diff "${output}" - <<EOF
 multi-0,multi-1
+multi-0,multi-2
+EOF
+
+  completion-exec 'test-cli command --multi=multi-0,multi-2,' &> "${output}"
+  diff "${output}" - <<EOF
+multi-0,multi-2,multi-1
+EOF
+
+  completion-exec 'test-cli command --multi=multi-0,multi-2,multi-1' &> "${output}"
+  diff "${output}" - <<EOF
+multi-0,multi-2,multi-1
+EOF
+}
+
+test-complete-multi-raw() {
+  completion-exec 'test-cli command --multi-raw multi-raw' &> "${output}"
+  diff "${output}" - <<EOF
+multi-raw,0
+multi-raw,1
+EOF
+}
+
+test-complete-multi-raw-with-comma() {
+  completion-exec 'test-cli command --multi-raw multi-raw,0' &> "${output}"
+  diff "${output}" - <<EOF
+multi-raw,0
+EOF
+
+  completion-exec 'test-cli command --multi-raw multi-raw,0,' &> "${output}"
+  diff "${output}" - <<EOF
 EOF
 }
 

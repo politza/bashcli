@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2034
 bashcli-complete-help-for-command() {
-  local commandIndex=$1
+  local commandIndex=${BASHCLI_COMPLETION_PARAMETER_INDEX}
   local commandMain commandList subcommand completion
   local BASHCLI_COMMAND_STACK=(.)
 
