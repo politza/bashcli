@@ -7,9 +7,6 @@ trap "rm -r -- '${output}'" EXIT
 test-no-options() {
   cli &> "${output}"
   diff "${output}" - <<EOF
-boolean=
-single=
-enum=
 EOF
 }
 
@@ -17,47 +14,86 @@ test-boolean-option() {
   cli --boolean &> "${output}"
   diff "${output}" - <<EOF
 boolean=true
-single=
-enum=
 EOF
 }
 
 test-single-option() {
   cli --single 0 &> "${output}"
   diff "${output}" - <<EOF
-boolean=
 single=0
-enum=
 EOF
 }
 
 test-multi-option() {
   cli --multi a --multi b &> "${output}"
   diff "${output}" - <<EOF
-boolean=
-single=
 multi[0]=a
 multi[1]=b
-enum=
+EOF
+}
+
+test-multi-split-options() {
+  cli --multi=a,b,c &> "${output}"
+  diff "${output}" - <<EOF
+multi[0]=a
+multi[1]=b
+multi[2]=c
+EOF
+}
+
+test-multi-split-options-multiple-times() {
+  cli --multi a,b,c --multi=d,e,f &> "${output}"
+  diff "${output}" - <<EOF
+multi[0]=a
+multi[1]=b
+multi[2]=c
+multi[3]=d
+multi[4]=e
+multi[5]=f
+EOF
+}
+
+test-multi-split-options-aliased() {
+  cli -ma,b,c &> "${output}"
+  diff "${output}" - <<EOF
+multi[0]=a
+multi[1]=b
+multi[2]=c
+EOF
+}
+
+test-multi-split-options-whitespace() {
+  cli --multi=' a,  b,   c' &> "${output}"
+  diff "${output}" - <<EOF
+multi[0]= a
+multi[1]=  b
+multi[2]=   c
+EOF
+}
+
+test-multi-raw-option() {
+  cli --multi-raw a,b,c --multi-raw d,e,f &> "${output}"
+  diff "${output}" - <<EOF
+multi-raw[0]=a,b,c
+multi-raw[1]=d,e,f
 EOF
 }
 
 test-enum-option() {
   cli --primary &> "${output}"
   diff "${output}" - <<EOF
-boolean=
-single=
 enum=primary
 EOF
 }
 
 test-alias-options() {
-  cli -b -s a -m a -m b -e primary &> "${output}"
+  cli -b -s a -m a,b -M c -e primary &> "${output}"
   diff -u "${output}" - <<EOF
 boolean=true
 single=a
 multi[0]=a
 multi[1]=b
+multi-raw[0]=c
 enum=primary
 EOF
 }
@@ -68,16 +104,12 @@ test-concatenated-options() {
 boolean=true
 single=a
 multi[0]=a
-enum=
 EOF
 }
 
 test-parameter-option() {
   cli a b &> "${output}"
   diff "${output}" - <<EOF
-boolean=
-single=
-enum=
 parameter[0]=a
 parameter[1]=b
 EOF
@@ -101,6 +133,13 @@ test-multi-requires-argument() {
   cli --multi &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] option requires an argument: --multi
+EOF
+}
+
+test-multi-raw-requires-argument() {
+  cli --multi-raw &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] option requires an argument: --multi-raw
 EOF
 }
 

@@ -44,7 +44,7 @@ bashcli-completion-complete() {
             option=
           else
             case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
-              (single|multi?(:csv)) ((++index)) ;;
+              single|multi|multi-raw) ((++index)) ;;
               *) option=
             esac
           fi
@@ -61,7 +61,7 @@ bashcli-completion-complete() {
             option=${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
           fi
           case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
-            (single|multi?(:csv))
+            single|multi|multi-raw)
               if [[ ${optionsIndex} -eq $((${#options} - 1)) ]]; then
                 ((++index))
               else
@@ -106,7 +106,7 @@ bashcli-completion-complete() {
       if [ ${#option} -gt 1 ]; then
         local alias aliases=() suffix=
         case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
-          (single|multi?(:csv)) suffix='=' ;;
+          single|multi|multi-raw) suffix='=' ;;
         esac
         completion=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
         bashcli-string-trim completion

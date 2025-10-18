@@ -1,20 +1,27 @@
 #!/usr/bin/env bash
 
 bashcli-string-trim() {
-  local -n _string
+  local -n __string
 
-  for _string; do
-    _string=${_string##+([ $'\t\r\n'])}
-    _string=${_string%%+([ $'\t\r\n'])}
+  for __string; do
+    __string=${__string##+([ $'\t\r\n'])}
+    __string=${__string%%+([ $'\t\r\n'])}
   done
 }
 
 bashcli-string-quote() {
-  local -n _string
+  local -n __string
 
-  for _string; do
-    if [[ ${_string} != *([a-zA-Z0-9,._+:@%/-]) ]]; then
-      _string=${_string@Q}
+  for __string; do
+    if [[ ${__string} != *([a-zA-Z0-9,._+:@%/-]) ]]; then
+      __string=${__string@Q}
     fi
   done
+}
+
+bashcli-string-split() {
+  local -n __array=${3:-REPLY}
+
+  __array=()
+  readarray -d "$2" -t __array < <(printf "%s" "$1")
 }

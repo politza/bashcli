@@ -107,7 +107,7 @@ bashcli-help-show() {
 
     optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
     case ${optionType} in
-      (single|multi?(:csv))
+      single|multi|multi-raw)
         optionValueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]:-OPTION}
         optionValueType=${optionValueType//,/ | }
         optionLabel+=" ${optionValueType^^}"

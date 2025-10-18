@@ -6,6 +6,7 @@ OPTIONS=(
   boolean    boolean
   single     single
   multi      multi
+  multi-raw  multi-raw
   enum       single
   primary    enum:enum
   secondary  enum:enum
@@ -15,5 +16,6 @@ OPTION_ALIASES=(
   b boolean
   s single
   m multi
+  M multi-raw
   e enum
 )

@@ -11,7 +11,7 @@ bashcli-complete-file() {
 bashcli-complete-config-profile() {
   bashcli-config-initialize
 
-  if bashcli-shell-is-function _comp_delimited && [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi:csv ]; then
+  if bashcli-shell-is-function _comp_delimited && [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi ]; then
     ! _comp_delimited , -W '"${!BASHCLI_CONFIG_PROFILES[@]}"'
   else
     COMPREPLY=("${!BASHCLI_CONFIG_PROFILES[@]}")

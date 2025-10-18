@@ -10,13 +10,17 @@ bashcli-test-completions() {
 }
 
 bashcli-complete-single() {
-  bashcli-test-completions single-0 single-1
+  COMPREPLY=(single-0 single-1)
+}
+
+bashcli-complete-multi-raw() {
+  COMPREPLY=(multi-raw-0 multi-raw-1)
 }
 
 bashcli-complete-multi() {
-  bashcli-test-completions multi
+  _comp_delimited , -W "multi-0 multi-1"
 }
 
 test-cli-complete-parameter() {
-  bashcli-test-completions parameter-0 parameter-1
+  COMPREPLY=(parameter-0 parameter-1)
 }

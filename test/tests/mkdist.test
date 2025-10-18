@@ -9,11 +9,9 @@ export XDG_CACHE_HOME=${dist}/.cache
 test-dist-with-symlink() {
   local distDir=${dist}/symlink
   mkdist ./fixtures/options/cli "${distDir}"
-  "${distDir}"/cli &> "${output}"
+  "${distDir}"/cli --primary &> "${output}"
   diff "${output}" - <<EOF
-boolean=
-single=
-enum=
+enum=primary
 EOF
 }
 

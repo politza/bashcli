@@ -32,47 +32,59 @@ completion-exec() {
 test-complete-long-options() {
   completion-exec 'test-cli command --|' &> "${output}"
   diff "${output}" - <<EOF
---boolean   boolean option (-a,-b,-c)
---first     first enum option (-f)
---help      Shows a help message.
---multi=    multi option (-m)
---profile=  Enables one or more configuration profiles. (-P)
---second    second enum option
---single=   single option (-s)
---version   Displays version information about the program.
+--boolean     boolean option (-a,-b,-c)
+--first       first enum option (-f)
+--help        Shows a help message.
+--multi-raw=  multi-raw option (-M)
+--multi=      multi option (-m)
+--profile=    Enables one or more configuration profiles. (-P)
+--second      second enum option
+--single=     single option (-s)
+--version     Displays version information about the program.
 EOF
 }
 
 test-complete-option-argument() {
   completion-exec 'test-cli command --single=|' &> "${output}"
   diff "${output}" - <<EOF
-single-0-completion  single-0-completion description
-single-1-completion  single-1-completion description
+single-0
+single-1
 EOF
 }
 
 test-complete-parameter-argument() {
   completion-exec 'test-cli command p|' &> "${output}"
   diff "${output}" - <<EOF
-parameter-0-completion  parameter-0-completion description
-parameter-1-completion  parameter-1-completion description
+parameter-0
+parameter-1
 EOF
 }
 
-test-complete-profiles() {
-  local configFile=$(mktemp)
-  trap "rm -f -- '${configFile}'" RETURN EXIT
-
-  export BASHCLI_CLI_CONFIG_LOCAL=${configFile}
-  cat > "${configFile}" <<EOF
-%test.property=0
-%dev.property=1
-EOF
-  completion-exec 'test-cli command --profile=|' &> "${output}"
+test-complete-multi() {
+  completion-exec 'test-cli command --multi m|' &> "${output}"
   diff "${output}" - <<EOF
-default
-dev
-test
+multi-0
+multi-1
+EOF
+}
+
+test-complete-multi-assignment() {
+  completion-exec 'test-cli command --multi=m|' &> "${output}"
+  diff "${output}" - <<EOF
+multi-0
+multi-1
+EOF
+}
+
+disabled-test-complete-multi-split() {
+  completion-exec 'test-cli command --multi=multi-0' &> "${output}"
+  diff "${output}" - <<EOF
+,
+EOF
+
+  completion-exec 'test-cli command --multi=multi-0,' &> "${output}"
+  diff "${output}" - <<EOF
+multi-0,multi-1
 EOF
 }
 

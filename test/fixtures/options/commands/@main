@@ -3,15 +3,33 @@
 declare -A options=()
 declare parameters=()
 declare multiOptions=()
+declare multiRawOptions=()
 
-bashcli-options-parse options parameters multiOptions=multi -- "$@"
+bashcli-options-parse \
+  options parameters \
+  multiOptions=multi multiRawOptions=multi-raw \
+  -- "$@"
 
-echo "boolean=${options[boolean]}"
-echo "single=${options[single]}"
+if [ "${options[boolean]}" ]; then
+  echo "boolean=${options[boolean]}"
+fi
+
+if [ "${options[single]}" ]; then
+  echo "single=${options[single]}"
+fi
+
 for ((index = 0; index < ${#multiOptions[@]}; ++index)); do
   echo "multi[${index}]=${multiOptions[index]}"
 done
-echo "enum=${options[enum]}"
+
+for ((index = 0; index < ${#multiRawOptions[@]}; ++index)); do
+  echo "multi-raw[${index}]=${multiRawOptions[index]}"
+done
+
+if [ "${options[enum]}" ]; then
+  echo "enum=${options[enum]}"
+fi
+
 for ((index = 0; index < ${#parameters[@]}; ++index)); do
   echo "parameter[${index}]=${parameters[index]}"
 done
