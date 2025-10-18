@@ -85,7 +85,7 @@ bashcli-help-show() {
 
   for option in "${options[@]}"; do
     # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
-    bashcli-options-aliases "${option}"
+    -bashcli-options-aliases "${option}"
     optionAliases=("${REPLY[@]}")
     optionVariants=("${option}" "${optionAliases[@]}")
     for ((index = 0; index < ${#optionVariants[@]}; ++index)); do

@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
+## Sorts an array in place.
+##
+## usage: ARRAY-VARIABLE
 bashcli-array-sort() {
   local -n __array=$1
   shift
-  local sortArgs=("$@")
+  local __sortArgs=("$@")
   local IFS=$'\n'
 
   if [ ${#__array[@]} -gt 0 ]; then
-    readarray -t __array <<<"$(LC_ALL=C sort "${sortArgs[@]}" <<<"${__array[*]}")"
+    readarray -t __array <<<"$(LC_ALL=C sort "${__sortArgs[@]}" <<<"${__array[*]}")"
   fi
 }

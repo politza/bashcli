@@ -65,7 +65,7 @@ bashcli-options-parse() {
 
   # Read configured options.
   if [ ${#BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
-    bashcli-options-from-config _parsedOptions _multiOptionRefs
+    -bashcli-options-from-config _parsedOptions _multiOptionRefs
   fi
 
   # Parse the options into the provided variables.
@@ -224,7 +224,7 @@ bashcli-options-parse() {
   esac
 }
 
-bashcli-options-aliases() {
+-bashcli-options-aliases() {
   local option=$1 alias aliasedOption
   local IFS=$'\n'
 
@@ -240,7 +240,7 @@ bashcli-options-aliases() {
   fi
 }
 
-bashcli-options-from-config() {
+-bashcli-options-from-config() {
   local -n __options=$1
   local -n __multiOptionRefs=$2
   local IFS=.
