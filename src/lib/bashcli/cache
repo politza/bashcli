@@ -26,7 +26,7 @@ bashcli-cache-get() {
   keyFile=${baseName}.key
   valueFile=${baseName}.value
 
-  bashcli-debug "keyFile=${keyFile} valueValue=${valueFile}"
+  bashcli-debug "keyFile=${keyFile} valueFile=${valueFile}"
 
   if [ -f "${keyFile}" ] && [ -f "${valueFile}" ]; then
     if [ -z "${validator}" ] || "${validator}" "${name}" "${keyFile}"; then
@@ -57,7 +57,7 @@ bashcli-cache-put() {
   local keyFn=$3
   local baseName keyFile valueFile
 
-  bashcli-debug "name=${name} value=${value}"
+  bashcli-debug "name=${name} value=${value:0:16}..."
   -bashcli-cache-check-name "${name}"
   -bashcli-cache-check-function "${keyFn}"
 
@@ -65,7 +65,7 @@ bashcli-cache-put() {
   keyFile=${baseName}.key
   valueFile=${baseName}.value
 
-  mkdir -p "${BASHCLI_CACHE_DIR}"
+  mkdir -p "$(dirname "${keyFile}")"
 
   if [ "${keyFn}" ]; then
     "${keyFn}" "${name}" "${keyFile}"
