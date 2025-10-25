@@ -80,11 +80,13 @@ bashcli-help-show() {
   local -A optionLabels=()
   local index optionDashes option optionAliases optionVariants optionVariant
   local optionValueType optionType optionLabel description
-  local options=($(-bashcli-help-sorted-options))
+  local options
 
+  -bashcli-help-sorted-options
+  options=("${REPLY[@]}")
 
   for option in "${options[@]}"; do
-    # Accumulate options and their aliases as variants, add dash-prefixes and then sort them.
+    # Accumulate options and their aliases as variants and add dash-prefixes.
     -bashcli-options-aliases "${option}"
     optionAliases=("${REPLY[@]}")
     optionVariants=("${option}" "${optionAliases[@]}")
@@ -94,7 +96,6 @@ bashcli-help-show() {
       optionDashes=${optionDashes//?/-}
       optionVariants[${index}]=${optionDashes}${optionVariant}
     done
-    optionVariants=($(LC_ALL=C sort <<<"${optionVariants[*]}"))
 
     # Build the label starting with variants, then add their value type and store the result.
     optionLabel=
@@ -164,6 +165,8 @@ bashcli-help-show() {
   local index option default
   local IFS=$'\n'
   local options=($(LC_ALL=C sort <<<"${!BASHCLI_CONTEXT_OPTIONS[@]}"))
+  REPLY=()
+
   for ((index = 0; index < ${#options[@]}; ++index)); do
     option=${options[index]}
     for default in "${BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
@@ -173,12 +176,12 @@ bashcli-help-show() {
       default=
     done
     if [ -z "${default}" ]; then
-      printf "%s\n" "${option}"
+      REPLY+=("${option}")
     fi
   done
   for option in "${BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
     if [ "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
-      printf "%s\n" "${option}"
+      REPLY+=("${option}")
     fi
   done
 }
