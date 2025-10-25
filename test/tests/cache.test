@@ -11,7 +11,7 @@ after-each() {
 }
 
 test-empty-cache() {
-  cli get --name name  &> "${output}" && return 1
+  cli get --name name &> "${output}" && return 1
   [ "$(stat -c%s "${output}")" -eq 0 ]
 }
 

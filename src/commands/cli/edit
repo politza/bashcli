@@ -4,6 +4,6 @@ declare -a parameters=()
 
 bashcli-options-parse '' parameters -- "$@"
 
-if bashcli-command-resolve . "${parameters[@]}"; then
+if -bashcli-command-resolve . "${parameters[@]}"; then
   exec ${EDITOR:-vi} "${REPLY}"
 fi

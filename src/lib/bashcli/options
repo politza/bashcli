@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-
+# Parses command options
+#
+# usage: COMMAND-NAME ... COMMAND-ARGS ...
 bashcli-options-parse() {
   local _options _option _optionType _index _argument _arguments
   local _multiOptionRefPattern='__%s_ref' _multiOptionRef _multiOptionVar
@@ -7,12 +9,12 @@ bashcli-options-parse() {
   local _parsedParameters=()
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
-  local _commandMain _commandStack=("${BASHCLI_COMMAND_STACK[@]}")
+  local _commandMain _commandStack=("${_BASHCLI_COMMAND_STACK[@]}")
   local _definesSubcommands
 
   bashcli-debug "${_commandStack[*]}"
 
-  if bashcli-command-subcommands "${_commandStack[@]}"; then
+  if -bashcli-command-subcommands "${_commandStack[@]}"; then
     _definesSubcommands=true
   fi
 
@@ -47,10 +49,10 @@ bashcli-options-parse() {
   done
 
   # Read command's context.
-  bashcli-context-clear
-  if bashcli-command-resolve "${_commandStack[@]}"; then
+  -bashcli-context-clear
+  if -bashcli-command-resolve "${_commandStack[@]}"; then
     _commandMain=${REPLY}
-    bashcli-context-read "${_commandStack[@]}"
+    -bashcli-context-read "${_commandStack[@]}"
   fi
 
   # Initialize the multi-option namerefs.
@@ -64,7 +66,7 @@ bashcli-options-parse() {
   done
 
   # Read configured options.
-  if [ ${#BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
+  if [ ${#_BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
     -bashcli-options-from-config _parsedOptions _multiOptionRefs
   fi
 
@@ -72,16 +74,16 @@ bashcli-options-parse() {
   while [ $# -gt 0 ]; do
     case $1 in
       --help)
-        bashcli-help-show "${_commandStack[@]}"
+        -bashcli-help-show "${_commandStack[@]}"
         exit 0 ;;
       --*=*)
         # Split long options with a value: --option=value .
         _arguments=("${1%%=*}" "${1#*=}")
         _option=${_arguments[0]#--}
-        if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
-          _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
+        if [ "${_BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
+          _option=${_BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
         fi
-        case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
+        case ${_BASHCLI_CONTEXT_OPTIONS[${_option}]} in
           single|multi|multi-raw) ;;
           *)
             bashcli-error "option does not accept arguments: ${_arguments[0]}" >&2
@@ -95,10 +97,10 @@ bashcli-options-parse() {
         _arguments=()
         for ((_index = 1; _index < ${#1}; ++_index)); do
           _option=${1:_index:1}
-          if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
-            _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
+          if [ "${_BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
+            _option=${_BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
           fi
-          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
+          _optionType=${_BASHCLI_CONTEXT_OPTIONS[${_option}]}
           if [ -z "${_optionType}" ]; then
             bashcli-error "unrecognized option: -${_option}" >&2
             return 1
@@ -123,22 +125,22 @@ bashcli-options-parse() {
       --?*|-[^-])
         _option=${1#-}
         _option=${_option#-}
-        if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
-          _option=${BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
+        if [ "${_BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}" ]; then
+          _option=${_BASHCLI_CONTEXT_OPTION_ALIASES[${_option}]}
         fi
-        if [[ "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" &&
-                "${BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" != "${_commandMain}" ]]; then
+        if [[ "${_BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" &&
+                "${_BASHCLI_CONTEXT_OPTIONS_SOURCE[${_option}]}" != "${_commandMain}" ]]; then
           # Let subcommand options shadow their parent command's options.
           _parsedParameters+=("$1")
-          case ${BASHCLI_CONTEXT_OPTIONS[${_option}]} in
+          case ${_BASHCLI_CONTEXT_OPTIONS[${_option}]} in
             single|multi|multi-raw)
               if [ $# -gt 1 ]; then
                 shift
                 _parsedParameters+=("$1")
               fi ;;
           esac
-        elif [ -n "${BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
-          _optionType=${BASHCLI_CONTEXT_OPTIONS[${_option}]}
+        elif [ -n "${_BASHCLI_CONTEXT_OPTIONS[${_option}]}" ]; then
+          _optionType=${_BASHCLI_CONTEXT_OPTIONS[${_option}]}
           case ${_optionType} in
             single|multi|multi-raw)
               if [ $# -lt 2 ]; then
@@ -188,9 +190,9 @@ bashcli-options-parse() {
         # Assume the non-option argument is a possible subcommand.
         if [ "${_definesSubcommands}" == true ] &&
              [ "$1" ] &&
-             bashcli-command-resolve "${_commandStack[@]}" "$1" &>/dev/null; then
+             -bashcli-command-resolve "${_commandStack[@]}" "$1" &>/dev/null; then
           _commandStack+=("$1")
-          bashcli-context-read "${_commandStack[@]}"
+          -bashcli-context-read "${_commandStack[@]}"
         fi
         _parsedParameters+=("$1")
     esac
@@ -205,7 +207,7 @@ bashcli-options-parse() {
 
   if [[ $1 == *=* ]]; then
     option=${1#*=}
-    optionType="${BASHCLI_CONTEXT_OPTIONS[${option}]}"
+    optionType="${_BASHCLI_CONTEXT_OPTIONS[${option}]}"
   else
     return 1
   fi
@@ -229,8 +231,8 @@ bashcli-options-parse() {
   local IFS=$'\n'
 
   REPLY=()
-  for alias in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
-    aliasedOption=${BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}
+  for alias in "${!_BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
+    aliasedOption=${_BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}
     if [ "${option}" == "${aliasedOption}" ]; then
       REPLY+=("${alias}")
     fi
@@ -244,13 +246,13 @@ bashcli-options-parse() {
   local -n __options=$1
   local -n __multiOptionRefs=$2
   local IFS=.
-  local propertyBase="${BASHCLI_COMMAND_STACK[*]:1}"
+  local propertyBase="${_BASHCLI_COMMAND_STACK[*]:1}"
   unset IFS
   local option property optionType
 
-  for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+  for option in "${!_BASHCLI_CONTEXT_OPTIONS[@]}"; do
     property=${option}
-    optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
+    optionType=${_BASHCLI_CONTEXT_OPTIONS[${option}]}
 
     if [ "${propertyBase}" ]; then
       property=${propertyBase}.${property}

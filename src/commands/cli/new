@@ -10,8 +10,8 @@ case ${#parameters[@]} in
 esac
 
 # Initialize directories and templates.
-if [ -d "${BASHCLI_USER_DIR}/templates" ]; then
-  templateDir="${BASHCLI_USER_DIR}/templates"
+if [ -d "${_BASHCLI_USER_DIR}/templates" ]; then
+  templateDir="${_BASHCLI_USER_DIR}/templates"
 elif [ -d "${BASHCLI_CLI_DIR}/templates" ]; then
   templateDir="${BASHCLI_CLI_DIR}/templates"
 else
@@ -26,7 +26,7 @@ fi
 if [ "${options[directory]}" ]; then
   cliCommandDir=${options[directory]}
 elif [ "${BASHCLI_DIST}" ] ; then
-  cliCommandDir=${BASHCLI_USER_DIR}/commands
+  cliCommandDir=${_BASHCLI_USER_DIR}/commands
 else
   cliCommandDir=${BASHCLI_CLI_DIR}/commands
 fi
@@ -56,7 +56,7 @@ for parameter in "${parameters[@]}"; do
   readarray -t components <<<"${path}"
 
   for component in "${components[@]}"; do
-    bashcli-command-check-name "${component}"
+    -bashcli-command-check-name "${component}"
   done
 
   IFS=' '

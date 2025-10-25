@@ -8,7 +8,7 @@ globalConfig=$(mktemp)
 trap "rm -r -- '${output}' '${localConfig}' '${globalConfig}'" EXIT
 
 before-each() {
-  export BASHCLI_CONFIG_GLOBAL=${globalConfig}
+  export _BASHCLI_CONFIG_GLOBAL=${globalConfig}
   export BASHCLI_CLI_CONFIG_LOCAL=${localConfig}
   unset CLI_PROPERTY
   unset CLI__PROFILE_PROPERTY

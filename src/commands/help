@@ -4,4 +4,4 @@ declare parameters=()
 
 bashcli-debug "Showing help for command $*"
 bashcli-options-parse '' parameters -- "$@"
-bashcli-help-show . "${parameters[@]}"
+-bashcli-help-show . "${parameters[@]}"

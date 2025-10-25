@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
 
-## The directory for caching data.
-declare -g BASHCLI_CACHE_DIR=${BASHCLI_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/${BASHCLI_CLI_NAME}/cache}
+declare -g _BASHCLI_CACHE_DIR=${_BASHCLI_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/${BASHCLI_CLI_NAME}/cache}
 
-## Get a value from the cache.
-##
-## usage: NAME [VALIDATOR]
-##
-## NAME is the name of the cache entry.
-##
-## VALIDATOR is an optional function for determining if the cache entry is still valid or not. It is
-## called with NAME and the filename of the entry's key as arguments and should return 0, if the entry
-## is still valid.
-##
-## Print the entry to stdout and return 0, if it exists and is valid. Otherwise just return 1.
+# Gets a value from the cache.
+#
+# usage: NAME [VALIDATOR]
+#
+# NAME is the name of the cache entry.
+#
+# VALIDATOR is an optional function for determining if the validity of the cache entry. It is called
+# with NAME and the filename of the entry's key as arguments and should return 0, if the entry is
+# still valid.
+#
+# FIXME: Change return style and document it.
 bashcli-cache-get() {
   local name=$1
   local validator=$2
@@ -22,7 +21,7 @@ bashcli-cache-get() {
   -bashcli-cache-check-name "${name}"
   -bashcli-cache-check-function "${validator}"
 
-  baseName=${BASHCLI_CACHE_DIR}/${name}
+  baseName=${_BASHCLI_CACHE_DIR}/${name}
   keyFile=${baseName}.key
   valueFile=${baseName}.value
 
@@ -39,18 +38,16 @@ bashcli-cache-get() {
   return 1
 }
 
-## Put a value into the cache.
-##
-## usage: NAME VALUE [KEY-FN]
-##
-## NAME is the name of the cache entry.
-##
-## VALUE is the value to be cached.
-##
-## KEY-FN is an optional function for creating a cache-key for VALUE. It is called with NAME and a
-## filename as arguments and should write the key into that file and return 0.
-##
-## Returns 0 on success and produces no output.
+# Puts a value into the cache.
+#
+# usage: NAME VALUE [KEY-FN]
+#
+# NAME is the name of the cache entry.
+#
+# VALUE is the value that should be cached.
+
+# KEY-FN is an optional function for creating a cache-key for VALUE. It is called with NAME and the
+# filename of the entry's key as arguments to which it may write the key-value and return 0.
 bashcli-cache-put() {
   local name=$1
   local value=$2
@@ -61,7 +58,7 @@ bashcli-cache-put() {
   -bashcli-cache-check-name "${name}"
   -bashcli-cache-check-function "${keyFn}"
 
-  baseName=${BASHCLI_CACHE_DIR}/${name}
+  baseName=${_BASHCLI_CACHE_DIR}/${name}
   keyFile=${baseName}.key
   valueFile=${baseName}.value
 
@@ -78,20 +75,20 @@ bashcli-cache-put() {
   printf "%s" "${value}" > "${valueFile}"
 }
 
-## Removes a value from the cache.
-##
-## usage: NAME
-##
-## NAME is the name of the cache entry to be removed.
-##
-## Returns 0 if the value was removed (or did not exist to begin with).
+# Removes a value from the cache.
+#
+# usage: NAME
+#
+# NAME is the name of the cache entry to be removed.
+#
+# Returns 0, if the value was removed (or did not exist to begin with).
 bashcli-cache-remove() {
   local name=$1
   local baseName keyFile valueFile
 
   -bashcli-cache-check-name "${name}"
 
-  baseName=${BASHCLI_CACHE_DIR}/${name}
+  baseName=${_BASHCLI_CACHE_DIR}/${name}
   keyFile=${baseName}.key
   valueFile=${baseName}.value
 

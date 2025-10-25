@@ -26,11 +26,4 @@ if [ "${BASHCLI_CLI_NAME}" != bashcli ]; then
     . "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/init"
 fi
 
-bashcli-command-exec-now . "$@"
-while [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; do
-  bashcli-command-exec-next
-  REPLY=$?
-  if [ ${REPLY} -ne 0 ]; then
-    exit ${REPLY}
-  fi
-done
+-bashcli-command-loop . "$@"

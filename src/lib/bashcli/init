@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-
-declare -g -A BASHCLI_LIBRARIES_LOADED=()
-declare -g -A BASHCLI_COLORS=(
+declare -g -A _BASHCLI_LIBRARIES_LOADED=()
+declare -g -A _BASHCLI_COLORS=(
   error  $'\033[91m'
   warn   $'\033[93m'
   debug  $'\033[96m'
@@ -11,15 +10,8 @@ declare -g -A BASHCLI_COLORS=(
 )
 
 if ! [ -t 2 ]; then
-  BASHCLI_COLORS=()
+  _BASHCLI_COLORS=()
 fi
-
-# shellcheck disable=SC2034
-declare -g BASHCLI_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}"
-# shellcheck disable=SC2034
-declare -g BASHCLI_DIST
-# shellcheck disable=SC2034
-declare -g BASHCLI_VERBOSE=
 
 bashcli-debug() {
   local IFS=' '
@@ -41,32 +33,32 @@ bashcli-debug() {
       fnName=${fnName#${cliName}-}
     fi
     context+="${fnName}"
-  elif [ ${#BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
-    context="${BASHCLI_COMMAND_STACK[*]:1}"
+  elif [ ${#_BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
+    context="${_BASHCLI_COMMAND_STACK[*]:1}"
   else
-    context="${BASHCLI_COMMAND_STACK[*]}"
+    context="${_BASHCLI_COMMAND_STACK[*]}"
   fi
 
   if [ "${BASHCLI_DEBUG}" != true ] && ! [[ "${context}" =~ ${BASHCLI_DEBUG} ]]; then
     return 0
   fi
 
-  printf "[%s]%-${minContextWidth}s %s\n" "${BASHCLI_COLORS[debug]}debug${BASHCLI_COLORS[none]}" "(${context})" "${*//$'\n'/\\n}" >&2
+  printf "[%s]%-${minContextWidth}s %s\n" "${_BASHCLI_COLORS[debug]}debug${_BASHCLI_COLORS[none]}" "(${context})" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-info() {
   local IFS=' '
-  printf "[%s] %s\n" "${BASHCLI_COLORS[info]}info${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
+  printf "[%s] %s\n" "${_BASHCLI_COLORS[info]}info${_BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-warn() {
   local IFS=' '
-  printf "[%s] %s\n" "${BASHCLI_COLORS[warn]}warn${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
+  printf "[%s] %s\n" "${_BASHCLI_COLORS[warn]}warn${_BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-error() {
   local IFS=' '
-  printf "[%s] %s\n" "${BASHCLI_COLORS[error]}error${BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
+  printf "[%s] %s\n" "${_BASHCLI_COLORS[error]}error${_BASHCLI_COLORS[none]}" "${*//$'\n'/\\n}" >&2
 }
 
 bashcli-fatal() {
@@ -93,12 +85,12 @@ bashcli-load-library() {
   local libraryDirectories=("${BASHCLI_CLI_DIR}/lib" "${BASHCLI_DIR}/lib")
   local directory=
 
-  if [[ "${BASHCLI_LIBRARIES_LOADED[${library}]}" == true && "${BASHCLI_DEBUG}" != true ]]; then
+  if [[ "${_BASHCLI_LIBRARIES_LOADED[${library}]}" == true && "${BASHCLI_DEBUG}" != true ]]; then
     return 0
   else
     for directory in "${libraryDirectories[@]}"; do
       if [ -f "${directory}/${library}" ]; then
-        BASHCLI_LIBRARIES_LOADED[${library}]=true
+        _BASHCLI_LIBRARIES_LOADED[${library}]=true
         . "${directory}/${library}"
         return 0
       fi
@@ -108,6 +100,10 @@ bashcli-load-library() {
   return 1
 }
 
+bashcli-exec() {
+  "${BASHCLI_CLI_SCRIPT}" "$@"
+}
+
 bashcli-load-library bashcli/array
 bashcli-load-library bashcli/cache
 bashcli-load-library bashcli/command
@@ -115,6 +111,4 @@ bashcli-load-library bashcli/config
 bashcli-load-library bashcli/context
 bashcli-load-library bashcli/help
 bashcli-load-library bashcli/options
-bashcli-load-library bashcli/progress
 bashcli-load-library bashcli/string
-bashcli-load-library bashcli/shell

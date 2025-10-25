@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-bashcli-shell-is-function() {
-  declare -fp "$1" &>/dev/null
-}

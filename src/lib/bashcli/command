@@ -1,21 +1,47 @@
 #!/usr/bin/env bash
 
-declare -g -a BASHCLI_COMMAND_DIRS=(
-  "${BASHCLI_USER_DIR}/commands"
+declare -g _BASHCLI_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}"
+declare -g -a _BASHCLI_COMMAND_DIRS=(
+  "${_BASHCLI_USER_DIR}/commands"
   "${BASHCLI_CLI_DIR}/commands"
 )
 
 if ! [ "${BASHCLI_DIR}/commands" -ef "${BASHCLI_CLI_DIR}/commands" ]; then
-  BASHCLI_COMMAND_DIRS+=("${BASHCLI_DIR}/commands")
+  _BASHCLI_COMMAND_DIRS+=("${BASHCLI_DIR}/commands")
 fi
 
-declare -g -a BASHCLI_COMMAND_STACK=()
-declare -g -a BASHCLI_COMMAND_NEXT=()
-declare -g BASHCLI_COMMAND_PATTERN='?(.|+([a-zA-Z0-9_-]))'
-declare -g BASHCLI_COMMAND_MAIN=@main
-declare -g -A BASHCLI_COMMAND_RESOLVE_CACHE=()
+declare -g -a _BASHCLI_COMMAND_STACK=()
+declare -g -a _BASHCLI_COMMAND_NEXT=()
+declare -g _BASHCLI_COMMAND_PATTERN='?(.|+([a-zA-Z0-9_-]))'
+declare -g _BASHCLI_COMMAND_MAIN=@main
+declare -g -A _BASHCLI_COMMAND_RESOLVE_CACHE=()
 
-bashcli-command-resolve() {
+# Executes a subcommand of the current one.
+#
+# This function is typically used as the last statment in a non-terminal bashcli command with the
+# remaining arguments of the initial command-line.
+#
+# Note, that command is not executed immediately, but in a different context. The reason for this is
+# to avoid inheriting variables from a parent- to its child-commands.
+#
+# As a consequence, the exit-status of this function is not meaningful and usually always zero; and
+# this function can be invoked only once during a single command invocation.
+#
+# Use bashcli-exec to execute a bashcli command in a standard way.
+#
+# usage: COMMAND-NAME ... COMMAND-ARGS ...
+bashcli-command-exec() {
+  if [ -z "$1" ]; then
+    bashcli-error "no command given (try the --help option)"
+  fi
+
+  if [ ${#_BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; then
+    bashcli-fatal "command already pending execution"
+  fi
+  _BASHCLI_COMMAND_NEXT=("$@")
+}
+
+-bashcli-command-resolve() {
   local commandList=("$@")
   local IFS=/
   local commandPath="${commandList[*]}"
@@ -27,28 +53,28 @@ bashcli-command-resolve() {
     return 1
   fi
 
-  if [ "${BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]}" ]; then
-    eval "REPLY=(${BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]})"
+  if [ "${_BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]}" ]; then
+    eval "REPLY=(${_BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]})"
     return 0
   fi
 
   bashcli-debug "resolving ${commandPath}"
 
   for commandName in "${commandList[@]}"; do
-    bashcli-command-check-name "${commandName}"
+    -bashcli-command-check-name "${commandName}"
   done
 
-  commandName=${BASHCLI_COMMAND_MAIN}
+  commandName=${_BASHCLI_COMMAND_MAIN}
 
   for ((round = 0; round < 2; ++round)); do
-    for commandDir in "${BASHCLI_COMMAND_DIRS[@]}"; do
+    for commandDir in "${_BASHCLI_COMMAND_DIRS[@]}"; do
       commandMain=${commandPath}/${commandName}
       commandFile=${commandDir}/${commandMain}
       if [ -f "${commandFile}" ]; then
         bashcli-debug "${commandList[*]} -> ${commandFile}"
         REPLY=("${commandFile}" "${commandMain}")
         bashcli-string-quote commandFile commandMain
-        BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]="${commandFile} ${commandMain}"
+        _BASHCLI_COMMAND_RESOLVE_CACHE[${commandList[*]}]="${commandFile} ${commandMain}"
         return 0
       fi
     done
@@ -66,30 +92,26 @@ bashcli-command-resolve() {
   return 1
 }
 
-bashcli-command-exec() {
-  if [ -z "$1" ]; then
-      bashcli-error "no command given (try the --help option)"
-  fi
-
-  if [ ${#BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; then
-    bashcli-fatal "command already pending execution, try bashcli-command-exec-now"
-  fi
-  BASHCLI_COMMAND_NEXT=("$@")
+-bashcli-command-loop() {
+  -bashcli-command-exec-now "$@"
+  while [ ${#_BASHCLI_COMMAND_NEXT[@]} -gt 0 ]; do
+    -bashcli-command-exec-next
+  done
 }
 
-bashcli-command-exec-next() {
-  set -- "${BASHCLI_COMMAND_NEXT[@]}"
+-bashcli-command-exec-next() {
+  set -- "${_BASHCLI_COMMAND_NEXT[@]}"
   if [ $# -eq 0 ]; then
     bashcli-error "no command pending execution"
     return 1
   fi
-  BASHCLI_COMMAND_NEXT=()
-  bashcli-command-exec-now "$@"
+  _BASHCLI_COMMAND_NEXT=()
+  -bashcli-command-exec-now "$@"
 }
 
-bashcli-command-exec-now() {
+-bashcli-command-exec-now() {
   local command=$1
-  local commandList=("${BASHCLI_COMMAND_STACK[@]}" "${command}")
+  local commandList=("${_BASHCLI_COMMAND_STACK[@]}" "${command}")
   shift
 
   if [ -z "${command}" ]; then
@@ -98,15 +120,15 @@ bashcli-command-exec-now() {
   fi
 
   bashcli-debug "preparing ${commandList[*]}"
-  bashcli-command-resolve "${commandList[@]}"
-  BASHCLI_COMMAND_STACK+=("${command}")
+  -bashcli-command-resolve "${commandList[@]}"
+  _BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
   bashcli-debug "executing ${REPLY[0]}"
   . "${REPLY}" "$@"
 }
 
-bashcli-command-subcommands() {
-  bashcli-command-resolve "$@"
+-bashcli-command-subcommands() {
+  -bashcli-command-resolve "$@"
 
   local commandPath=${REPLY[1]%/*}
   local commandMain=${REPLY[1]##*/}
@@ -115,17 +137,17 @@ bashcli-command-subcommands() {
   local IFS
   REPLY=()
 
-  if [ "${commandMain}" != "${BASHCLI_COMMAND_MAIN}" ]; then
+  if [ "${commandMain}" != "${_BASHCLI_COMMAND_MAIN}" ]; then
     return 1
   fi
 
-  for commandRootDir in "${BASHCLI_COMMAND_DIRS[@]}"; do
+  for commandRootDir in "${_BASHCLI_COMMAND_DIRS[@]}"; do
     commandDir=${commandRootDir}/${commandPath}
     if [ -d "${commandDir}" ]; then
       for subcommandMain in "${commandDir}"/*; do
-        if [ -f "${subcommandMain}" ] || [ -f "${subcommandMain}/${BASHCLI_COMMAND_MAIN}" ]; then
+        if [ -f "${subcommandMain}" ] || [ -f "${subcommandMain}/${_BASHCLI_COMMAND_MAIN}" ]; then
           subcommandName=${subcommandMain##*/}
-          if [[ "${subcommandName}" == ${BASHCLI_COMMAND_PATTERN} ]]; then
+          if [[ "${subcommandName}" == ${_BASHCLI_COMMAND_PATTERN} ]]; then
             subcommands["${subcommandName}"]=1
           fi
         fi
@@ -143,8 +165,8 @@ bashcli-command-subcommands() {
   unset "$@"
 }
 
-bashcli-command-check-name() {
-  if [[ "$1" != ${BASHCLI_COMMAND_PATTERN} ]]; then
+-bashcli-command-check-name() {
+  if [[ "$1" != ${_BASHCLI_COMMAND_PATTERN} ]]; then
     bashcli-error "invalid command name: $1"
     return 1
   fi

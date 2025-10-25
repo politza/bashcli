@@ -4,8 +4,8 @@ bashcli-string-trim() {
   local -n __string
 
   for __string; do
-    __string=${__string##+([ $'\t\r\n'])}
-    __string=${__string%%+([ $'\t\r\n'])}
+    __string=${__string##+([$' \t\r\n'])}
+    __string=${__string%%+([$' \t\r\n'])}
   done
 }
 

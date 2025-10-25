@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
 # shellcheck disable=SC2034
-bashcli-completion-complete() {
+
+-bashcli-completion-complete() {
   local cur prev words cword comp_args
   local -A BASHCLI_COMPLETIONS=()
   local commandStack=(.)
@@ -25,9 +25,9 @@ bashcli-completion-complete() {
   fi
 
   bashcli-debug "completing ${words[*]}"
-  bashcli-context-clear
-  bashcli-context-read .
-  bashcli-completion-read .
+  -bashcli-context-clear
+  -bashcli-context-read .
+  -bashcli-completion-read .
 
   # Parse the command line.
   for ((index = 1; index <= cword; ++index)); do
@@ -37,14 +37,14 @@ bashcli-completion-complete() {
       --?*)
         option=${word#--}
         option=${option%%=*}
-        if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}" ]; then
-          option=${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
+        if [ "${_BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}" ]; then
+          option=${_BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
         fi
         if [[ ${index} -lt ${cword} ]]; then
           if [[ ${word} == *=* ]]; then
             option=
           else
-            case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
+            case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
               single|multi|multi-raw) ((++index)) ;;
               *) option=
             esac
@@ -58,10 +58,10 @@ bashcli-completion-complete() {
         local optionsIndex
         for ((optionsIndex = 0; optionsIndex < ${#options}; ++optionsIndex)); do
           option="${options:${optionsIndex}:1}"
-          if [ "${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}" ]; then
-            option=${BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
+          if [ "${_BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}" ]; then
+            option=${_BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
           fi
-          case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
+          case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
             single|multi|multi-raw)
               if [[ ${optionsIndex} -eq $((${#options} - 1)) ]]; then
                 ((++index))
@@ -76,11 +76,11 @@ bashcli-completion-complete() {
         if [ "${word}" != -- ]; then
           ((++parameterIndex)) || true
         fi
-        if bashcli-command-resolve "${commandStack[@]}" "${word}" &>/dev/null; then
+        if -bashcli-command-resolve "${commandStack[@]}" "${word}" &>/dev/null; then
           local commandMain=${REPLY}
           commandStack+=("${word}")
-          bashcli-context-read "${commandStack[@]}"
-          bashcli-completion-read "${commandStack[@]}"
+          -bashcli-context-read "${commandStack[@]}"
+          -bashcli-completion-read "${commandStack[@]}"
           parameterIndex=-1
         fi ;;
       *)
@@ -90,31 +90,31 @@ bashcli-completion-complete() {
   done
 
   # Determine the type of completion.
-  if [ "${option}" ] && [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}" ]; then
+  if [ "${option}" ] && [ "${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}" ]; then
     bashcli-debug "completing value for option ${option}"
-    valueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}
-  elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter-${parameterIndex}]}" ]; then
+    valueType=${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]}
+  elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter-${parameterIndex}]}" ]; then
     bashcli-debug "completing parameter-${parameterIndex} value"
-    valueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter-${parameterIndex}]}
-  elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
+    valueType=${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter-${parameterIndex}]}
+  elif [ -z "${option}" ] && [[ "${cur}" != -* ]] && [ "${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
     bashcli-debug "completing parameter value"
-    valueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}
+    valueType=${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}
   elif [ "${option}" ]; then
     bashcli-debug "completing with file fallback"
     valueType='file'
   elif [[ "${cur}" == -* ]]; then
     bashcli-debug "completing long options"
-    for option in "${!BASHCLI_CONTEXT_OPTIONS[@]}"; do
+    for option in "${!_BASHCLI_CONTEXT_OPTIONS[@]}"; do
       if [ ${#option} -gt 1 ]; then
         local alias aliases=() suffix=
-        case ${BASHCLI_CONTEXT_OPTIONS[${option}]} in
+        case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
           single|multi|multi-raw) suffix='=' ;;
         esac
-        description=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
+        description=${_BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
         bashcli-string-trim description
         description=${description%%$'\n'}
-        for alias in "${!BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
-          if [ ${#alias} == 1 ] && [ "${option}" == "${BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}" ]; then
+        for alias in "${!_BASHCLI_CONTEXT_OPTION_ALIASES[@]}"; do
+          if [ ${#alias} == 1 ] && [ "${option}" == "${_BASHCLI_CONTEXT_OPTION_ALIASES[${alias}]}" ]; then
             aliases+=("-${alias}")
           fi
         done
@@ -144,7 +144,7 @@ bashcli-completion-complete() {
       if declare -pf "${completionFn}" &>/dev/null; then
         COMPREPLY=()
         local BASHCLI_COMPLETION_OPTION=${option}
-        local BASHCLI_COMPLETION_OPTION_TYPE=${option:+${BASHCLI_CONTEXT_OPTIONS[${option}]}}
+        local BASHCLI_COMPLETION_OPTION_TYPE=${option:+${_BASHCLI_CONTEXT_OPTIONS[${option}]}}
         local BASHCLI_COMPLETION_VALUE_TYPE=${valueType}
         local BASHCLI_COMPLETION_PARAMETER_INDEX=${parameterIndex}
         bashcli-debug "fn -> ${completionFn}"
@@ -205,13 +205,13 @@ bashcli-completion-complete() {
       esac
   esac
 
-  # Print the completions for the bashcli-completion-script function to pickup.
+  # Print the completions for the -bashcli-completion-script function to pickup.
   for  completion in "${COMPREPLY[@]}"; do
     printf "%s\n" "${completion%%$'\n'*}"
   done
 }
 
-bashcli-completion-script() {
+-bashcli-completion-script() {
   local cliName=${BASHCLI_CLI_NAME}
 
   cat <<EOF
@@ -234,10 +234,10 @@ _${cliName}_complete() {
 EOF
 }
 
-bashcli-completion-read() {
+-bashcli-completion-read() {
   local commandMain commandComplete
 
-  bashcli-command-resolve "$@" || return 1
+  -bashcli-command-resolve "$@" || return 1
   commandMain=${REPLY}
   commandComplete=${commandMain}.complete
 

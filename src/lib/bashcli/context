@@ -1,37 +1,38 @@
 #!/usr/bin/env bash
+
 # shellcheck disable=SC2034
 
-declare -g -A BASHCLI_CONTEXT_DESCRIPTIONS=()
-declare -g -A BASHCLI_CONTEXT_OPTIONS=()
-declare -g -A BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
-declare -g -A BASHCLI_CONTEXT_OPTION_ALIASES=()
-declare -g -A BASHCLI_CONTEXT_OPTION_VALUE_TYPES=()
-declare -g -A BASHCLI_CONTEXT_OPTIONS_SOURCE=()
-declare -g -A BASHCLI_CONTEXT_READ_CACHE=()
+declare -g -A _BASHCLI_CONTEXT_DESCRIPTIONS=()
+declare -g -A _BASHCLI_CONTEXT_OPTIONS=()
+declare -g -A _BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
+declare -g -A _BASHCLI_CONTEXT_OPTION_ALIASES=()
+declare -g -A _BASHCLI_CONTEXT_OPTION_VALUE_TYPES=()
+declare -g -A _BASHCLI_CONTEXT_OPTIONS_SOURCE=()
+declare -g -A _BASHCLI_CONTEXT_READ_CACHE=()
 
-declare -g -a BASHCLI_CONTEXT_DEFAULT_OPTIONS=(help)
-declare -g -r BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
+declare -g -a _BASHCLI_CONTEXT_DEFAULT_OPTIONS=(help)
+declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
 
-bashcli-context-clear() {
-  BASHCLI_CONTEXT_DESCRIPTIONS=()
-  BASHCLI_CONTEXT_OPTIONS=()
-  BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
-  BASHCLI_CONTEXT_OPTION_ALIASES=()
-  BASHCLI_CONTEXT_OPTION_VALUE_TYPES=()
-  BASHCLI_CONTEXT_OPTIONS_SOURCE=()
-  BASHCLI_CONTEXT_READ_CACHE=()
+-bashcli-context-clear() {
+  _BASHCLI_CONTEXT_DESCRIPTIONS=()
+  _BASHCLI_CONTEXT_OPTIONS=()
+  _BASHCLI_CONTEXT_OPTION_DESCRIPTIONS=()
+  _BASHCLI_CONTEXT_OPTION_ALIASES=()
+  _BASHCLI_CONTEXT_OPTION_VALUE_TYPES=()
+  _BASHCLI_CONTEXT_OPTIONS_SOURCE=()
+  _BASHCLI_CONTEXT_READ_CACHE=()
   bashcli-debug "context cleared"
 }
 
-bashcli-context-read() {
+-bashcli-context-read() {
   local -A OPTIONS OPTION_DESCRIPTIONS OPTION_ALIASES OPTION_VALUE_TYPES
   local DESCRIPTION index commandRoot commandMain commandContext
 
-  bashcli-command-resolve "$@"
+  -bashcli-command-resolve "$@"
   commandMain=${REPLY}
   commandContext=${commandMain}.context
 
-  if [ "${BASHCLI_CONTEXT_READ_CACHE[${commandContext}]}" ]; then
+  if [ "${_BASHCLI_CONTEXT_READ_CACHE[${commandContext}]}" ]; then
     return
   fi
 
@@ -43,46 +44,46 @@ bashcli-context-read() {
     OPTION_ALIASES=()
     OPTION_VALUE_TYPES=()
     . "${commandContext}"
-    bashcli-context-validate
-    bashcli-context-defaults
-    bashcli-context-merge "${commandMain}"
-    BASHCLI_CONTEXT_READ_CACHE[${commandMain}]=1
+    -bashcli-context-validate
+    -bashcli-context-defaults
+    -bashcli-context-merge "${commandMain}"
+    _BASHCLI_CONTEXT_READ_CACHE[${commandMain}]=1
   fi
 }
 
-bashcli-context-merge() {
+-bashcli-context-merge() {
   local key commandMain=$1
 
   if [ "${DESCRIPTION}" ]; then
-    BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]=${DESCRIPTION}
+    _BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]=${DESCRIPTION}
   fi
 
   for key in "${!OPTIONS[@]}"; do
-    BASHCLI_CONTEXT_OPTIONS[${key}]=${OPTIONS[${key}]}
-    BASHCLI_CONTEXT_OPTIONS_SOURCE[${key}]=${commandMain}
+    _BASHCLI_CONTEXT_OPTIONS[${key}]=${OPTIONS[${key}]}
+    _BASHCLI_CONTEXT_OPTIONS_SOURCE[${key}]=${commandMain}
   done
 
   for key in "${!OPTION_DESCRIPTIONS[@]}"; do
-    BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${key}]=${OPTION_DESCRIPTIONS[${key}]}
+    _BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${key}]=${OPTION_DESCRIPTIONS[${key}]}
   done
 
   for key in "${!OPTION_VALUE_TYPES[@]}"; do
-    BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${key}]=${OPTION_VALUE_TYPES[${key}]}
+    _BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${key}]=${OPTION_VALUE_TYPES[${key}]}
   done
 
   for key in "${!OPTION_ALIASES[@]}"; do
-    BASHCLI_CONTEXT_OPTION_ALIASES[${key}]=${OPTION_ALIASES[${key}]}
+    _BASHCLI_CONTEXT_OPTION_ALIASES[${key}]=${OPTION_ALIASES[${key}]}
   done
 }
 
-bashcli-context-defaults() {
+-bashcli-context-defaults() {
   if [ -z "${OPTIONS[help]}" ]; then
     OPTIONS[help]=boolean
     OPTION_DESCRIPTIONS[help]="Shows a help message."
   fi
 }
 
-bashcli-context-validate() {
+-bashcli-context-validate() {
   local option optionType alias IFS
 
   for option in "${!OPTIONS[@]}"; do
@@ -100,7 +101,7 @@ bashcli-context-validate() {
       *) bashcli-fatal "Option-type must be one of boolean, single, multi or enum:\${name}: ${optionType}" ;;
     esac
     if [ -z "${OPTION_DESCRIPTIONS[${option}]}" ]; then
-      OPTION_DESCRIPTIONS[${option}]="${BASHCLI_CONTEXT_NOT_DOCUMENTED}"
+      OPTION_DESCRIPTIONS[${option}]="${_BASHCLI_CONTEXT_NOT_DOCUMENTED}"
     fi
   done
 

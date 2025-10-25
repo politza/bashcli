@@ -1,33 +1,38 @@
 #!/usr/bin/env bash
 
-bashcli-complete-directory() {
-  _comp_compgen_filedir -d
-}
-
+# Completes files and directories.
 bashcli-complete-file() {
   _comp_compgen_filedir
 }
 
+# Completes files and directories.
+bashcli-complete-directory() {
+  _comp_compgen_filedir -d
+}
+
+# Completes configuration profile-names.
 bashcli-complete-config-profile() {
   bashcli-config-initialize
-  COMPREPLY=("${!BASHCLI_CONFIG_PROFILES[@]}")
+  COMPREPLY=("${!_BASHCLI_CONFIG_PROFILES[@]}")
 }
 
+# Completes configuration property values.
 bashcli-complete-config-property() {
   bashcli-config-initialize
-  COMPREPLY=("${!BASHCLI_CONFIG_PROPERTIES[@]}")
+  COMPREPLY=("${!_BASHCLI_CONFIG_PROPERTIES[@]}")
 }
 
+# Completes the names of subcommands of the current command.
 bashcli-complete-subcommand() {
   local commandList=("$@")
   local completion subcommand commandMain
 
-  if bashcli-command-subcommands "${commandList[@]}"; then
+  if -bashcli-command-subcommands "${commandList[@]}"; then
     for subcommand in "${REPLY[@]}"; do
-      if bashcli-command-resolve "${commandList[@]}" "${subcommand}"; then
+      if -bashcli-command-resolve "${commandList[@]}" "${subcommand}"; then
         local commandMain=${REPLY}
-        bashcli-context-read "${commandList[@]}" "${subcommand}" || continue
-        completion=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
+        -bashcli-context-read "${commandList[@]}" "${subcommand}" || continue
+        completion=${_BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
         bashcli-string-trim completion
         # shellcheck disable=SC2034
         BASHCLI_COMPLETIONS["${subcommand}"]=${completion%%$'\n'*}

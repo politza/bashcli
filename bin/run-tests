@@ -13,7 +13,7 @@ eval set -- "$options"
 while [ $# -gt 0 ]; do
   case $1 in
     -s) shift
-        export BASHCLI_TEST_SELECTOR=$1 ;;
+        export _BASHCLI_TEST_SELECTOR=$1 ;;
     -D) unset BASHCLI_DEBUG ;;
     -d) export BASHCLI_DEBUG=true ;;
     -v) proveArgs+=(-v) ;;

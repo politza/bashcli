@@ -4,7 +4,7 @@
 bashcli-complete-help-for-command() {
   local commandIndex=${BASHCLI_COMPLETION_PARAMETER_INDEX}
   local commandMain commandList subcommand completion
-  local BASHCLI_COMMAND_STACK=(.)
+  local _BASHCLI_COMMAND_STACK=(.)
 
   # shellcheck disable=SC2154
   if bashcli-options-parse '' commandList -- "${words[@]:1}"; then

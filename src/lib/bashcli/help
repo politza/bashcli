@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-declare -g -A BASHCLI_HELP_FACES=(
+declare -g -A _BASHCLI_HELP_FACES=(
   bold $'\033[1m'
   regular $'\033[0m'
 )
-declare -g BASHCLI_HELP_MAX_PARAMETERS=8
+declare -g _BASHCLI_HELP_MAX_PARAMETERS=8
 
 if ! [ -t 1 ]; then
-  BASHCLI_HELP_FACES=()
+  _BASHCLI_HELP_FACES=()
 fi
 
-declare -g BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
+declare -g _BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 
-bashcli-help-show() {
+-bashcli-help-show() {
   local commandList=("$@")
   local commandMain
 
@@ -20,10 +20,10 @@ bashcli-help-show() {
   shopt -s extglob
 
   bashcli-debug "${commandList[*]}"
-  bashcli-command-resolve "${commandList[@]}"
+  -bashcli-command-resolve "${commandList[@]}"
   commandMain=${REPLY}
-  bashcli-context-clear
-  bashcli-context-read "${commandList[@]}"
+  -bashcli-context-clear
+  -bashcli-context-read "${commandList[@]}"
 
   -bashcli-help-show-intro "${commandMain}" "${commandList[@]}"
   -bashcli-help-show-options
@@ -34,17 +34,17 @@ bashcli-help-show() {
   local commandMain=$1
   shift
   local commandList=("$@")
-  local description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
+  local description=${_BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
   local parameter parameterInfo parameterIndex parameterCount
 
   bashcli-string-trim description
 
   # Determine the maximum n of parameter-n value-types.
-  for parameter in "${!BASHCLI_CONTEXT_OPTION_VALUE_TYPES[@]}"; do
+  for parameter in "${!_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[@]}"; do
     if [[ ${parameter} == %parameter-+([0-9]) ]]; then
       parameterIndex=${parameter##%parameter?}
-      if [ "${parameterIndex}" -ge ${BASHCLI_HELP_MAX_PARAMETERS} ]; then
-        bashcli-warn "max parameter count exceeded: ${BASHCLI_HELP_MAX_PARAMETERS}"
+      if [ "${parameterIndex}" -ge ${_BASHCLI_HELP_MAX_PARAMETERS} ]; then
+        bashcli-warn "max parameter count exceeded: ${_BASHCLI_HELP_MAX_PARAMETERS}"
         parameterCount=0
         break
       fi
@@ -52,27 +52,27 @@ bashcli-help-show() {
     fi
   done
 
-  if [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
+  if [ "${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
       ((++parameterCount))
   fi
 
   for ((parameterIndex = 0; parameterIndex < parameterCount; ++parameterIndex)); do
-    parameterType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter-${parameterIndex}]}
+    parameterType=${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter-${parameterIndex}]}
     if [ -z "${parameterType}" ]; then
-      parameterType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]:-parameter}
+      parameterType=${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]:-parameter}
     fi
     parameterInfo+=" ${parameterType^^}"
   done
 
-  if [ "${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
+  if [ "${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[%parameter]}" ]; then
     parameterInfo+=' ...'
   fi
 
   commandList[0]=${BASHCLI_CLI_NAME}
-  printf "%sUsage:%s\n%s%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}" \
+  printf "%sUsage:%s\n%s%s\n" "${_BASHCLI_HELP_FACES[bold]}" "${_BASHCLI_HELP_FACES[regular]}" \
          "${commandList[*]}" "${parameterInfo}"
   if [ -n "${description}" ]; then
-    fmt --width "${BASHCLI_HELP_WIDTH}" <<<$'\n'"${description%%*($'\n')}"
+    fmt --width "${_BASHCLI_HELP_WIDTH}" <<<$'\n'"${description%%*($'\n')}"
   fi
 }
 
@@ -106,10 +106,10 @@ bashcli-help-show() {
       optionLabel+=${optionVariants[${index}]}
     done
 
-    optionType=${BASHCLI_CONTEXT_OPTIONS[${option}]}
+    optionType=${_BASHCLI_CONTEXT_OPTIONS[${option}]}
     case ${optionType} in
       single|multi|multi-raw)
-        optionValueType=${BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]:-OPTION}
+        optionValueType=${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]:-OPTION}
         optionValueType=${optionValueType//,/ | }
         optionLabel+=" ${optionValueType^^}"
     esac
@@ -118,16 +118,16 @@ bashcli-help-show() {
 
   # Now print the options with their description.
   if [ ${#optionLabels[@]} -gt 0 ]; then
-    printf "\n%sOptions:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
+    printf "\n%sOptions:%s\n" "${_BASHCLI_HELP_FACES[bold]}" "${_BASHCLI_HELP_FACES[regular]}"
     for ((index = 0; index < ${#options[@]}; ++index)); do
       option=${options[index]}
       if [ ${index} -gt 0 ]; then
         echo
       fi
       printf "%s\n" "${optionLabels[${option}]}"
-      description=${BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
+      description=${_BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
       bashcli-string-trim description
-      fmt --width "$((${BASHCLI_HELP_WIDTH} - 2))"  <<< "${description%%*($'\n')}" | pr --indent 2 --omit-pagination
+      fmt --width "$((${_BASHCLI_HELP_WIDTH} - 2))"  <<< "${description%%*($'\n')}" | pr --indent 2 --omit-pagination
     done
   fi
 }
@@ -138,8 +138,8 @@ bashcli-help-show() {
   local padding=4
   local subcommand subcommand description
 
-  if bashcli-command-subcommands "${commandList[@]}"; then
-    printf "\n%sSubcommands:%s\n" "${BASHCLI_HELP_FACES[bold]}" "${BASHCLI_HELP_FACES[regular]}"
+  if -bashcli-command-subcommands "${commandList[@]}"; then
+    printf "\n%sSubcommands:%s\n" "${_BASHCLI_HELP_FACES[bold]}" "${_BASHCLI_HELP_FACES[regular]}"
 
     for subcommand in "${REPLY[@]}"; do
       if [ ${#subcommand} -gt "${maxSubcommandLength}" ]; then
@@ -149,12 +149,12 @@ bashcli-help-show() {
 
     ((maxSubcommandLength += padding))
     for subcommand in "${REPLY[@]}"; do
-      bashcli-command-resolve "${commandList[@]}" "${subcommand}"
+      -bashcli-command-resolve "${commandList[@]}" "${subcommand}"
       commandMain=${REPLY}
       if [ -n "${commandMain}" ]; then
-        bashcli-context-read "${commandList[@]}" "${subcommand}"
+        -bashcli-context-read "${commandList[@]}" "${subcommand}"
       fi
-      description=${BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
+      description=${_BASHCLI_CONTEXT_DESCRIPTIONS[${commandMain}]}
       bashcli-string-trim description
       printf "%-${maxSubcommandLength}s%s\n" "${subcommand}" "${description%%$'\n'*}"
     done
@@ -164,12 +164,12 @@ bashcli-help-show() {
 -bashcli-help-sorted-options() {
   local index option default
   local IFS=$'\n'
-  local options=($(LC_ALL=C sort <<<"${!BASHCLI_CONTEXT_OPTIONS[@]}"))
+  local options=($(LC_ALL=C sort <<<"${!_BASHCLI_CONTEXT_OPTIONS[@]}"))
   REPLY=()
 
   for ((index = 0; index < ${#options[@]}; ++index)); do
     option=${options[index]}
-    for default in "${BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
+    for default in "${_BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
       if [ "${option}" == "${default}" ]; then
         break
       fi
@@ -179,8 +179,8 @@ bashcli-help-show() {
       REPLY+=("${option}")
     fi
   done
-  for option in "${BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
-    if [ "${BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
+  for option in "${_BASHCLI_CONTEXT_DEFAULT_OPTIONS[@]}"; do
+    if [ "${_BASHCLI_CONTEXT_OPTIONS[${option}]}" ]; then
       REPLY+=("${option}")
     fi
   done

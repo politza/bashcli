@@ -7,7 +7,7 @@ bashcli-options-parse options parameters -- "$@"
 
 if [ "${options[scope]}" ]; then
   # shellcheck disable=2034
-  BASHCLI_CONFIG_SCOPE=${options[scope]}
+  _BASHCLI_CONFIG_SCOPE=${options[scope]}
   bashcli-config-reinitialize
 fi
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-## Sorts an array in place.
-##
-## usage: ARRAY-VARIABLE
+# Sorts an array in place.
+#
+# The array is sorted with LC_ALL=C.
+#
+# usage: ARRAY-VARIABLE [SORT-ARGS ...]
 bashcli-array-sort() {
   local -n __array=$1
   shift
@@ -12,4 +14,5 @@ bashcli-array-sort() {
   if [ ${#__array[@]} -gt 0 ]; then
     readarray -t __array <<<"$(LC_ALL=C sort "${__sortArgs[@]}" <<<"${__array[*]}")"
   fi
+  return 0
 }
