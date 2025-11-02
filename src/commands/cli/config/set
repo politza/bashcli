@@ -1,6 +1,39 @@
 #!/usr/bin/env bash
 
 declare parameters=()
+declare -A options=()
+declare -n commonOptions=BASHCLI_CONFIG_CLI_COMMON_OPTIONS
+declare writeOptions=()
+declare command=${BASH_SOURCE##*/}
 
-bashcli-options-parse '' parameters -- "$@"
-bashcli-config-set "${parameters[@]}"
+bashcli-options-parse options parameters -- "$@"
+
+case ${command}/${#parameters[@]} in
+  set/0) bashcli-fatal "property name and value missing";;
+  set/1) bashcli-fatal "property value missing";;
+  set/2) ;;
+  unset/0) bashcli-fatal "property name missing";;
+  unset/1) ;;
+  *) bashcli-fatal "too many arguments: $*";;
+esac
+
+if [ "${commonOptions[namespace]}" ]; then
+  writeOptions+=(-n "${commonOptions[namespace]}")
+fi
+if [ "${commonOptions[scope]}" ]; then
+  if [ "${commonOptions[scope]}" == default ]; then
+    bashcli-fatal "default scope is read-only"
+  fi
+  writeOptions+=(-s "${commonOptions[scope]}")
+fi
+if [ "${commonOptions[file]}" ]; then
+  writeOptions+=(-f "${commonOptions[file]}")
+fi
+if [ "${options[profile]}" ]; then
+  writeOptions+=(-P "${options[profile]}")
+fi
+if [ "${command}" == unset ]; then
+  writeOptions+=(-U)
+fi
+
+bashcli-config-write "${writeOptions[@]}" "${parameters[@]}"

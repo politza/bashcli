@@ -2,12 +2,13 @@
 
 PATH=$PWD/fixtures/config-default:${PATH}
 output=$(mktemp)
-globalConfig=$(mktemp)
+globalConfigDir=$(mktemp -d)
+globalConfig=${globalConfigDir}/cli.conf
 
-trap "rm -r -- '${output}' '${globalConfig}'" EXIT
+trap "rm -r -- '${output}' '${globalConfigDir}'" EXIT
 
 before-each() {
-  export _BASHCLI_CONFIG_GLOBAL=${globalConfig}
+  export BASHCLI_CONFIG_GLOBAL_DIR=${globalConfigDir}
   
   cat > "${globalConfig}" <<EOF
 global-property=global-value

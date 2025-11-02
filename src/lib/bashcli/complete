@@ -12,8 +12,7 @@ bashcli-complete-directory() {
 
 # Completes configuration profile-names.
 bashcli-complete-config-profile() {
-  bashcli-config-initialize
-  COMPREPLY=("${!_BASHCLI_CONFIG_PROFILES[@]}")
+  bashcli-error "not implemented"
 }
 
 # Completes configuration property values.

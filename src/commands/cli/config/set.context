@@ -6,7 +6,20 @@ DESCRIPTION="
 Updates the value of a given property.
 "
 
+OPTIONS=(
+  profile single
+)
+
+OPTION_DESCRIPTIONS=(
+  profile "The profile to use when writing the property value."
+)
+
+OPTION_ALIASES=(
+  P profile
+)
+
 OPTION_VALUE_TYPES=(
   %parameter-0 config-property
   %parameter-1 config-property-value
+  profile config-profile
 )

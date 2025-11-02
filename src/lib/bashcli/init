@@ -14,15 +14,15 @@ if ! [ -t 2 ]; then
 fi
 
 bashcli-debug() {
+  case ${BASHCLI_DEBUG} in
+    false|'') return 0 ;;
+  esac
+
   local IFS=' '
   local context
   local fnName
   local minContextWidth=24
   local cliName=${BASHCLI_CLI_NAME}
-
-  case ${BASHCLI_DEBUG} in
-    false|'') return 0 ;;
-  esac
 
   if [[ -n "${FUNCNAME[1]}" && "${FUNCNAME[1]}" != source ]]; then
     fnName="${FUNCNAME[1]}"

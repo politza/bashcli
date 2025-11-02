@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+declare -gA _BASHCLI_OPTIONS_CONFIG_PROPERTIES=()
+
 # Parses command options
 #
 # usage: COMMAND-NAME ... COMMAND-ARGS ...
@@ -10,7 +13,7 @@ bashcli-options-parse() {
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
   local _commandMain _commandStack=("${_BASHCLI_COMMAND_STACK[@]}")
-  local _definesSubcommands
+  local _definesSubcommands _configPropertyPrefix
 
   bashcli-debug "${_commandStack[*]}"
 
@@ -66,9 +69,7 @@ bashcli-options-parse() {
   done
 
   # Read configured options.
-  if [ ${#_BASHCLI_COMMAND_STACK[@]} -gt 1 ]; then
-    -bashcli-options-from-config _parsedOptions _multiOptionRefs
-  fi
+  -bashcli-options-from-config _parsedOptions _multiOptionRefs
 
   # Parse the options into the provided variables.
   while [ $# -gt 0 ]; do
@@ -246,33 +247,39 @@ bashcli-options-parse() {
   local -n __options=$1
   local -n __multiOptionRefs=$2
   local IFS=.
-  local propertyBase="${_BASHCLI_COMMAND_STACK[*]:1}"
+  local __propertyBase="${_BASHCLI_COMMAND_STACK[*]:1}"
+  local __configReadOptions __option __property __optionType
   unset IFS
-  local option property optionType
 
-  for option in "${!_BASHCLI_CONTEXT_OPTIONS[@]}"; do
-    property=${option}
-    optionType=${_BASHCLI_CONTEXT_OPTIONS[${option}]}
+  case ${#_BASHCLI_COMMAND_STACK[@]} in
+    1) return 0;;
+    2) __configReadOptions=(-p "${BASHCLI_CLI_NAME}" -p "${_BASHCLI_COMMAND_STACK[1]}")
+       bashcli-config-read "${__configReadOptions[@]}"
+  esac
 
-    if [ "${propertyBase}" ]; then
-      property=${propertyBase}.${property}
+  for __option in "${!_BASHCLI_CONTEXT_OPTIONS[@]}"; do
+    __property=${__option}
+    __optionType=${_BASHCLI_CONTEXT_OPTIONS[${__option}]}
+
+    if [ "${__propertyBase}" ]; then
+      __property=${__propertyBase}.${__property}
     fi
 
-    case ${optionType} in
+    case ${__optionType} in
       boolean)
-        if bashcli-config-get-boolean "${property}" && [ "${REPLY}" == true ]; then
-          __options[${option}]=true
+        if bashcli-config-get -x -t boolean "${__property}" && [ "${REPLY}" == true ]; then
+          __options[${__option}]=true
         fi;;
       single)
-        if bashcli-config-get "${property}"; then
-          __options[${option}]=${REPLY}
+        if bashcli-config-get -x "${__property}"; then
+          __options[${__option}]=${REPLY}
         fi;;
       multi|multi-raw)
-        if bashcli-config-get-list "${property}"; then
+        if bashcli-config-get -x -t array "${__property}"; then
           IFS=$'\n'
-          __options[${option}]=${REPLY[*]}
+          __options[${__option}]=${REPLY[*]}
           unset IFS
-          if [ "${__multiOptionRefs[${option}]}" ]; then
+          if [ "${__multiOptionRefs[${__option}]}" ]; then
             eval "${_multiOptionRefs[${_option}]}+=(\"\${REPLY[@]}\")"
           fi
         fi;;

@@ -1,6 +1,50 @@
 #!/usr/bin/env bash
 
-declare parameters=()
+# declare parameters=()
+# # shellcheck disable=2034
+# declare -A configProperties=()
+# declare -a prefixes=()
+# declare -a readOptions=()
+# declare prefix
 
-bashcli-options-parse '' parameters -- "$@"
-bashcli-config-list "${parameters[@]}"
+# bashcli-options-parse '' parameters prefixes=prefix -- "$@"
+# case ${#parameters[@]} in
+#   0) ;;
+#   1) bashcli-fatal "too many arguments";;
+# esac
+
+# for prefix in "${prefixes[@]}"; do
+#   readOptions+=(-p "${prefix}")
+# done
+
+# bashcli-config-read configProperties "${readOptions[@]}"
+# bashcli-config-list configProperties
+
+declare parameters=()
+declare -n commonOptions=BASHCLI_CONFIG_CLI_COMMON_OPTIONS
+declare readOptions=()
+declare -a prefixes=()
+declare prefix
+
+bashcli-options-parse '' parameters prefixes=prefix -- "$@"
+
+if [ ${#parameters[@]} -ne 0 ]; then
+  bashcli-fatal "too many arguments"
+fi
+
+if [ "${commonOptions[namespace]}" ]; then
+  readOptions+=(-n "${commonOptions[namespace]}")
+fi
+if [ "${commonOptions[scope]}" ]; then
+  readOptions+=(-s "${commonOptions[scope]}")
+fi
+if [ "${commonOptions[file]}" ]; then
+  readOptions+=(-f "${commonOptions[file]}")
+fi
+for prefix in "${prefixes[@]}"; do
+  readOptions+=(-p "${prefix}")
+done
+
+bashcli-config-clear
+bashcli-config-read "${readOptions[@]}"
+bashcli-config-list

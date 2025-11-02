@@ -1,15 +1,45 @@
 #!/usr/bin/env bash
 
 declare parameters=()
+declare -n commonOptions=BASHCLI_CONFIG_CLI_COMMON_OPTIONS
+declare directory=${BASHCLI_CONFIG_LOCAL_DIR:-${BASHCLI_CONFIG_GLOBAL_DIR}}
+declare namespace=${BASHCLI_CLI_NAME}
 declare configFile
 
 bashcli-options-parse '' parameters -- "$@"
 
-if [ ${#parameters} -ne 0 ]; then
-    bashcli-error "too many arguments: $*"
-    exit 1
+case ${#parameters} in
+  0) ;;
+  *) bashcli-fatal "too many arguments: $*";;
+esac
+
+if [ "${commonOptions[file]}" ]; then
+  configFile="${commonOptions[file]}"
+  if [ -e "${configFile}" ] && ! [ -f "${configFile}" ]; then
+    bashcli-fatal "not a regular file: ${configFile}"
+  fi
+  if [ "${commonOptions[namespace]}" ]; then
+    bashcli-warn "ignoring provided namespace"
+  fi
+  if [ "${commonOptions[scope]}" ]; then
+    bashcli-warn "ignoring provided scope"
+  fi
+else
+  if [ "${commonOptions[namespace]}" ]; then
+    namespace="${commonOptions[namespace]}"
+  fi
+  if [ "${commonOptions[scope]}" ]; then
+    case "${commonOptions[scope]}" in
+      local) if [ -z "${BASHCLI_CONFIG_LOCAL_DIR}" ]; then
+               bashcli-fatal "local scope not supported"
+             fi
+             directory=${BASHCLI_CONFIG_LOCAL_DIR};;
+      global) directory=${BASHCLI_CONFIG_GLOBAL_DIR};;
+      default) directory=${BASHCLI_CONFIG_DEFAULT_DIR};;
+      *) bashcli-fatal "invalid scope: ${commonOptions[scope]}";;
+    esac
+  fi
+  configFile=${directory}/${namespace}.conf
 fi
 
-configFile=$(bashcli-config-file)
-mkdir --parents "$(dirname "${configFile}")"
 exec ${EDITOR:-vi} "${configFile}"

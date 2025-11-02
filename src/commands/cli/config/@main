@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
 
-declare -A options=()
 declare parameters=()
+# shellcheck disable=SC2034
+declare -gA BASHCLI_CONFIG_CLI_COMMON_OPTIONS=()
 
-bashcli-options-parse options parameters -- "$@"
-
-if [ "${options[scope]}" ]; then
-  # shellcheck disable=2034
-  _BASHCLI_CONFIG_SCOPE=${options[scope]}
-  bashcli-config-reinitialize
-fi
-
+bashcli-options-parse BASHCLI_CONFIG_CLI_COMMON_OPTIONS parameters -- "$@"
 bashcli-command-exec "${parameters[@]}"

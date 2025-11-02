@@ -2,14 +2,16 @@
 
 PATH=$PWD/fixtures/config:${PATH}
 output=$(mktemp)
-localConfig=$(mktemp)
-globalConfig=$(mktemp)
+localConfigDir=$(mktemp -d)
+globalConfigDir=$(mktemp -d)
+localConfig=${localConfigDir}/cli.conf
+globalConfig=${globalConfigDir}/cli.conf
 
-trap "rm -r -- '${output}' '${localConfig}' '${globalConfig}'" EXIT
+trap "rm -r -- '${output}' '${localConfigDir}' '${globalConfigDir}'" EXIT
 
 before-each() {
-  export _BASHCLI_CONFIG_GLOBAL=${globalConfig}
-  export BASHCLI_CLI_CONFIG_LOCAL=${localConfig}
+  export BASHCLI_CONFIG_GLOBAL_DIR=${globalConfigDir}
+  export BASHCLI_CONFIG_LOCAL_DIR=${localConfigDir}
   unset CLI_PROPERTY
   unset CLI__PROFILE_PROPERTY
 
@@ -28,7 +30,7 @@ test-config-get-global-value() {
   cli cli config --global get property &> "${output}"
   diff "${output}" - <<<global-value
 
-  BASHCLI_CLI_CONFIG_LOCAL=
+  BASHCLI_CONFIG_LOCAL_DIR=
   cli cli config get property &> "${output}"
   diff "${output}" - <<<global-value
 }
@@ -58,7 +60,7 @@ test-config-get-global-profile-value() {
   cli cli config --global --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 
-  BASHCLI_CLI_CONFIG_LOCAL=
+  BASHCLI_CONFIG_LOCAL_DIR=
   cli cli config --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 }
@@ -98,13 +100,13 @@ test-config-set-local-value() {
 }
 
 test-config-set-global-profile-value() {
-  cli cli config --global --profile profile set property set-profile-value &> "${output}"
+  cli cli config --global set --profile profile property set-profile-value &> "${output}"
   cli cli config --global --profile profile get property &>> "${output}"
   diff "${output}" - <<<set-profile-value
 }
 
 test-config-set-local-profile-value() {
-  cli cli config --local --profile profile set property set-profile-value &> "${output}"
+  cli cli config --local set --profile profile property set-profile-value &> "${output}"
   cli cli config --local --profile profile get property &>> "${output}"
   diff "${output}" - <<<set-profile-value
 }
@@ -160,7 +162,7 @@ EOF
 }
 
 test-config-unset-global-profile() {
-  cli cli config --global --profile profile unset property &> "${output}"
+  cli cli config --global unset --profile profile property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${globalConfig}" - <<EOF
 property=global-value
@@ -168,7 +170,7 @@ EOF
 }
 
 test-config-unset-local-profile() {
-  cli cli config --local --profile profile unset property &> "${output}"
+  cli cli config --local unset --profile profile property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${localConfig}" - <<EOF
 property=local-value

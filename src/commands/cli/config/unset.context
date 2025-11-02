@@ -3,9 +3,22 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="
-Removes a given property.
+Unsets a given property.
 "
+
+OPTIONS=(
+  profile single
+)
+
+OPTION_DESCRIPTIONS=(
+  profile "The profile for which to unset the property."
+)
+
+OPTION_ALIASES=(
+  P profile
+)
 
 OPTION_VALUE_TYPES=(
   %parameter-0 config-property
+  profile config-profile
 )

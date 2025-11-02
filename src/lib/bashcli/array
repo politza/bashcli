@@ -16,3 +16,11 @@ bashcli-array-sort() {
   fi
   return 0
 }
+
+bashcli-array-join() {
+  local -n __array=$1
+  local __separator=$2
+  local IFS=${__separator}
+
+  REPLY="${__array[*]}"
+}

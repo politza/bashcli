@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-declare -g _BASHCLI_CONFIG_GLOBAL=${_BASHCLI_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}/${BASHCLI_CLI_NAME}.conf}
-declare -g BASHCLI_CLI_CONFIG_LOCAL=${BASHCLI_CLI_CONFIG_LOCAL}
-declare -g BASHCLI_CLI_CONFIG_DEFAULT=${BASHCLI_CLI_CONFIG_DEFAULT:-${BASHCLI_CLI_DIR}/conf/default.conf}
+declare -g BASHCLI_CONFIG_GLOBAL_DIR=${BASHCLI_CONFIG_GLOBAL_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}}
+declare -g BASHCLI_CONFIG_LOCAL_DIR=${BASHCLI_CONFIG_LOCAL_DIR}
+declare -g BASHCLI_CONFIG_DEFAULT_DIR=${BASHCLI_CONFIG_DEFAULT_DIR:-${BASHCLI_CLI_DIR}/conf}
 
 declare -g _BASHCLI_CONFIG_PROPERTY_PATTERN='+([a-zA-Z0-9._-])'
 declare -g _BASHCLI_CONFIG_PROFILE_PATTERN='+([a-zA-Z0-9-])'
@@ -10,213 +10,362 @@ declare -g _BASHCLI_CONFIG_PROFILE_PATTERN='+([a-zA-Z0-9-])'
 declare -g _BASHCLI_CONFIG_MAX_EVAL_DEPTH=${_BASHCLI_CONFIG_MAX_EVAL_DEPTH:-16}
 declare -g _BASHCLI_CONFIG_EVAL_DEPTH=0
 
-declare -g _BASHCLI_CONFIG_INITIALIZED=
-
 declare -g -A _BASHCLI_CONFIG_PROPERTIES=()
-declare -g -A _BASHCLI_CONFIG_PROPERTY_PROFILE=()
+declare -g -A _BASHCLI_CONFIG_PROPERTIES_PROFILE=()
 
-declare -g    _BASHCLI_CONFIG_ACTIVE_PROFILES=()
-declare -g -A _BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER=()
-declare -g -A _BASHCLI_CONFIG_PROFILES=()
+declare -g    _BASHCLI_CONFIG_PROFILES=()
+declare -g -A _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
 
 declare -g -A _BASHCLI_CONFIG_ENV=()
 
-declare -g _BASHCLI_CONFIG_SCOPE=
+bashcli-config-initialize() {
+  local IFS=,
+  bashcli-debug "initializing with profiles [$*]"
+  unset IFS
+  _BASHCLI_CONFIG_PROPERTIES=()
+  _BASHCLI_CONFIG_PROPERTIES_PROFILE=()
+  -bashcli-config-initialize-profiles "$@"
+  -bashcli-config-initialize-env
+}
 
-# Returns a property value.
-#
-# The value is provided via the REPLY variable.
-#
-# usage: PROPERTY-NAME
-bashcli-config-get() {
-  local property=$1
-  local profile value isSet
-
-  case $# in
-    0) bashcli-error "property-name parameter missing"
-       return 1 ;;
-    1) ;;
-    *) bashcli-error "too many arguments: $*"
-       return 1;;
-  esac
-
-  -bashcli-config-check-property "${property}"
-  bashcli-config-initialize
-
-  profile=${_BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
-
-  if -bashcli-config-env-get "${profile:-default}" "${property}"; then
-    value=${REPLY}
-    isSet=1
-  elif [ "${profile}" ]; then
-    value=${_BASHCLI_CONFIG_PROPERTIES[${property}]}
-    isSet=1
+bashcli-config-clear() {
+  if [ $# -ne 0 ]; then
+    bashcli-error "no arguments expected"
+    return 1
   fi
-
-  if [ "${isSet}" ]; then
-    -bashcli-config-eval "${value}"
-    bashcli-debug "${profile:-default} ${property} ${REPLY}"
-    return 0
-  else
-    bashcli-debug "${profile:-default} ${property} <unset>"
-  fi
-  return 1
+  bashcli-config-initialize "${_BASHCLI_CONFIG_PROFILES[@]}"
 }
 
-# Gets a property value as a list.
-#
-# The result is provided via the REPLY variable.
-bashcli-config-get-list() {
-  local property=$1
-  local index list value IFS
+bashcli-config-read() {
+  local configFiles=()
+  local namespace=${BASHCLI_CLI_NAME}
+  local OPTIND=1
+  local option scope prefixes configFile
 
-  if bashcli-config-get "${property}"; then
-    IFS=,
-    readarray -d, -t list <<<"${REPLY}"
-    REPLY=()
-    for ((index = 0; index < ${#list[@]}; ++index)); do
-      value=${list[index]}
-      bashcli-string-trim value
-      REPLY+=("${value}")
-    done
-    return 0
-  fi
-  return 1
-}
+  while getopts ":s:n:f:p:" option "$@"; do
+    case ${option} in
+      s) -bashcli-config-check-scope "${OPTARG}"
+         scope=${OPTARG};;
+      n) -bashcli-config-check-namespace "${OPTARG}"
+         namespace=${OPTARG};;
+      f) if [ "${OPTARG}" ]; then
+           configFile="${OPTARG}"
+         fi;;
+      p) if [ "${OPTARG}" ]; then
+           -bashcli-config-check-property "${OPTARG}"
+           prefixes+=("${OPTARG}")
+         fi;;
+      :) bashcli-error "option requires an argument: ${OPTARG}"
+         return 1;;
+      *) bashcli-error "option not recognized: ${OPTARG}"
+         return 1;;
+    esac
+  done
 
-# Gets a property value as a boolean.
-bashcli-config-get-boolean() {
-  local property=$1
-
-  if bashcli-config-get "${property}"; then
-    if [ "${REPLY}" != true ]; then
-      REPLY=false
-    fi
-    return 0
-  fi
-
-  return 1
-}
-
-# Sets a property to a given value.
-bashcli-config-set() {
-  case $# in
-    0) bashcli-error "property-name parameter missing"
-       return 1 ;;
-    1) bashcli-error "property-value parameter missing"
-       return 1 ;;
-    2) ;;
-    *) bashcli-error "too many arguments: $*"
-       return 1 ;;
-  esac
-
-  -bashcli-config-set --set "$@"
-}
-
-# Unsets a property.
-bashcli-config-unset() {
-  case $# in
-    0) bashcli-error "property-name parameter missing"
-       return 1 ;;
-    1) ;;
-    *) bashcli-error "too many arguments: $*"
-       return 1 ;;
-  esac
-
-  -bashcli-config-set --unset "$@"
-}
-
-# List all properties.
-#
-# The result is provided via the REPLY variable.
-bashcli-config-list() {
-  local IFS=$'\n'
-  local property
-  local properties
-  local value
-
-  if [ $# -gt 0 ]; then
+  if [ ${OPTIND} -le $# ]; then
     bashcli-error "too many arguments: $*"
     return 1
   fi
 
-  bashcli-config-initialize
-  properties=($(LC_ALL=C sort <<<"${!_BASHCLI_CONFIG_PROPERTIES[@]}"))
+  -bashcli-config-files "${scope}" "${namespace}" "${configFile}"
+  configFiles=("${REPLY[@]}")
 
-  for property in "${properties[@]}"; do
-    if bashcli-config-get "${property}"; then
-       value=${REPLY}
-       -bashcli-config-escape value
-       printf "%s=%s\n" "${property}" "${value}"
+  bashcli-debug "reading with namespace=${namespace} scope=${scope} #files=${#configFiles[@]}"
+
+  for configFile in "${configFiles[@]}"; do
+    if [ -f "${configFile}" ]; then
+      -bashcli-config-read-file "${configFile}" "${namespace}" "${prefixes[@]}"
+    else
+      bashcli-debug "skipping non-regular or missing file: ${configFile}"
     fi
   done
 }
 
-# Initializes all config properties.
-bashcli-config-initialize() {
-  local IFS line profile
+-bashcli-config-files() {
+  local scope=$1
+  local namespace=$2
+  local configFile=$3
 
-  if [ "${_BASHCLI_CONFIG_INITIALIZED}" ]; then
-    return
+  if [ "${configFile}" ]; then
+    REPLY=("${configFile}")
+  else
+    REPLY=()
+    case ${scope} in
+      default) REPLY=("${BASHCLI_CONFIG_DEFAULT_DIR}/${namespace}.conf");;
+      global) REPLY=("${BASHCLI_CONFIG_GLOBAL_DIR}/${namespace}.conf");;
+      local) REPLY=("${BASHCLI_CONFIG_LOCAL_DIR:-/dev/null}/${namespace}.conf");;
+      '') REPLY=(
+            "${BASHCLI_CONFIG_DEFAULT_DIR}/${namespace}.conf"
+            "${BASHCLI_CONFIG_GLOBAL_DIR}/${namespace}.conf"
+            "${BASHCLI_CONFIG_LOCAL_DIR:-/dev/null}/${namespace}.conf"
+          );;
+      *) bashcli-fatal "internal error"
+    esac
   fi
-  _BASHCLI_CONFIG_INITIALIZED=1
-
-  bashcli-debug "initializing"
-
-  -bashcli-config-initialize-profiles "$@"
-  -bashcli-config-initialize-scope
-  -bashcli-config-initialize-env
-  -bashcli-config-read
-
-  bashcli-debug "read ${#_BASHCLI_CONFIG_PROPERTIES[@]} properties"
 }
 
-# Reinitializes all config properties.
-bashcli-config-reinitialize() {
-  _BASHCLI_CONFIG_INITIALIZED=
-  bashcli-config-initialize "${_BASHCLI_CONFIG_ACTIVE_PROFILES[@]}"
-}
+-bashcli-config-read-file() {
+  local configFile=$1
+  local namespace=$2
+  shift 2
+  local prefixes=("$@")
+  local lineNumber=1
+  local pattern=.
+  local index line property qualifiedProperty
+  local value profile priority propertyProfile currentPriority
 
-# Returns the currently active property-file.
-bashcli-config-file() {
-  local configFile
-  local scope=${_BASHCLI_CONFIG_SCOPE}
+  bashcli-debug "reading ${configFile}"
 
-  if [ -z "${scope}" ]; then
-    if [ "${BASHCLI_CLI_CONFIG_LOCAL}" ]; then
-      scope=local
-    else
-      scope=global
+  if [ ${#prefixes[@]} -gt 0 ]; then
+    bashcli-array-join prefixes '|'
+    printf -v pattern "^[[:space:]]*(%%[a-zA-Z0-9-]+\\.)?(%s)\\." "${REPLY}"
+  fi
+
+  bashcli-debug "pattern=${pattern}"
+
+  while IFS= read -r line || [ -n "${line}" ]; do
+    if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
+      profile=${REPLY[0]}
+      property=${namespace}.${REPLY[1]}
+      value=${REPLY[2]}
+      propertyProfile=${_BASHCLI_CONFIG_PROPERTIES_PROFILE[${property}]}
+
+      if [ -z "${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]}" ]; then
+        # Profile is not active.
+        continue
+      elif [ "${propertyProfile}" ]; then
+        # Property already set, check profile priorities.
+        priority=${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]}
+        currentPriority=${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${propertyProfile}]}
+
+        if [ "${priority}" -lt "${currentPriority}" ]; then
+          continue
+        fi
+      fi
+
+      bashcli-debug "%${profile}.${property}=${value}"
+
+      _BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
+      _BASHCLI_CONFIG_PROPERTIES_PROFILE[${property}]=${profile}
     fi
-  fi
+    ((++lineNumber))
+  done < <(grep -E "${pattern}" "${configFile}")
+}
 
-  case ${scope} in
-    global) configFile=${_BASHCLI_CONFIG_GLOBAL} ;;
-    local) configFile=${BASHCLI_CLI_CONFIG_LOCAL} ;;
-    *) bashcli-fatal "internal error: invalid scope: ${scope}" ;;
-  esac
-  if [ -z "${configFile}" ]; then
-    bashcli-error "property file unset"
+bashcli-config-get() {
+  local property qualifiedProperty profile value type
+  local failIfUnset isSet
+  local OPTIND=1
+  local namespace=${BASHCLI_CLI_NAME}
+
+  while getopts ":t:n:x" option "$@"; do
+    case ${option} in
+      t) type=${OPTARG};;
+      n) -bashcli-config-check-namespace "${OPTARG}"
+         namespace=${OPTARG};;
+      x) failIfUnset=true;;
+      :) bashcli-error "option requires an argument: ${OPTARG}"
+         return 1;;
+      *) bashcli-error "option not recognized: ${OPTARG}"
+         return 1;;
+    esac
+  done
+  shift "$((OPTIND - 1))"
+
+  if [ $# -ne 1 ]; then
+    bashcli-error "too many arguments"
     return 1
   fi
 
-  if [ ! -f "${configFile}" ]; then
-    mkdir --parents "$(dirname "${configFile}")"
+  property=$1
+  qualifiedProperty=${namespace}.${property}
+  -bashcli-config-check-property "${property}"
+  profile=${_BASHCLI_CONFIG_PROPERTIES_PROFILE[${qualifiedProperty}]}
+
+  if -bashcli-config-env-get "${profile:-default}" "${property}"; then
+    value=${REPLY}
+    isSet=true
+  elif [ "${profile}" ]; then
+    value=${_BASHCLI_CONFIG_PROPERTIES[${qualifiedProperty}]}
+    isSet=true
   fi
 
-  printf "%s" "${configFile}"
+  if [ "${isSet}" ]; then
+    -bashcli-config-eval "${namespace}" "${value}"
+    if [ "${type}" ]; then
+      -bashcli-config-coerce-value "${REPLY}" "${type}"
+    fi
+    bashcli-debug "${profile:-default} ${property} ${REPLY}"
+  else
+    bashcli-debug "${profile:-default} ${property} <unset>"
+  fi
+
+  [ "${isSet}" ] || [ -z "${failIfUnset}" ]
+}
+
+-bashcli-config-coerce-value() {
+  local value=$1
+  local type=$2
+  local array
+
+  case ${type} in
+    array)
+      REPLY=()
+      bashcli-string-split "${value}" , array
+      for value in "${array[@]}"; do
+        bashcli-string-trim value
+        REPLY+=("${value}")
+      done;;
+    boolean)
+      case ${value} in
+        true) REPLY=true;;
+        *) REPLY=false;;
+      esac;;
+    *)
+      bashcli-error "type not supported: ${type}"
+      return 1;;
+  esac
+}
+
+bashcli-config-write() {
+  local updateMode=set
+  local namespace=${BASHCLI_CLI_NAME}
+  local scope=local
+  local profile=default
+  local option configFile property value
+
+  while getopts ":s:n:f:P:U" option "$@"; do
+    case ${option} in
+      s) -bashcli-config-check-scope "${OPTARG}"
+         scope=${OPTARG};;
+      n) -bashcli-config-check-namespace "${OPTARG}"
+         namespace=${OPTARG};;
+      f) if [ "${OPTARG}" ]; then
+           configFile="${OPTARG}"
+         fi;;
+      U) updateMode=unset;;
+      P) -bashcli-config-check-profile "${OPTARG}"
+         profile="${OPTARG}";;
+      :) bashcli-error "option requires an argument: ${OPTARG}"
+         return 1;;
+      *) bashcli-error "option not recognized: ${OPTARG}"
+         return 1;;
+    esac
+  done
+
+  shift "$((OPTIND - 1))"
+
+  case ${updateMode}/$# in
+    set/2);;
+    unset/1);;
+    set/*) bashcli-error "property and value arguments expected: $*"
+           return 1;;
+    unset/*) bashcli-error "property argument expected: $*"
+             return 1;;
+    *) bashcli-fatal "internal error";;
+  esac
+
+  property=$1
+  value=$2
+  bashcli-string-trim property
+  bashcli-string-trim value
+  -bashcli-config-check-property "${property}"
+
+  -bashcli-config-files "${scope}" "${namespace}" "${configFile}"
+  if [ ${#REPLY[@]} -ne 1 ]; then
+    bashcli-fatal "internal error"
+  fi
+  configFile=${REPLY[0]}
+
+  bashcli-debug "${updateMode}" "${configFile}" "${profile}" "${property}" "${value}"
+  -bashcli-config-write-value "${updateMode}" "${configFile}" "${profile}" "${property}" "${value}"
+}
+
+-bashcli-config-write-value() {
+  local updateMode=$1
+  local configFile=$2
+  local profile=$3
+  local property=$4
+  local value=$5
+  local profilePrefix
+  local configFile
+  local tempFile=$(mktemp)
+  local updated=
+
+  trap 'rm -f -- "${tempFile}"' RETURN
+
+  -bashcli-config-escape value
+
+  if [ "${profile}" != default ]; then
+    profilePrefix="%${profile}."
+  fi
+
+  if [ -f "${configFile}" ]; then
+    while IFS= read -r line || [ -n "${line}" ]; do
+      if ! -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
+        printf "%s\n" "${line}"
+        continue
+      fi
+
+      if [ "${profile}" == "${REPLY[0]}" ] && [ "${property}" == "${REPLY[1]}" ]; then
+        # Update the value or remove it from the output, dependening on the update-mode.
+        if [ "${updateMode}" == set ]; then
+          updated=true
+          printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}"
+        fi
+      else
+        printf "%s\n" "${line}"
+      fi
+      ((++lineNumber))
+    done < "${configFile}" > "${tempFile}"
+
+    if [ "${updateMode}" == set ] && [ -z "${updated}" ]; then
+      # Property was not found, append it.
+      printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" >> "${tempFile}"
+    fi
+
+    mv "${tempFile}" "${configFile}"
+  elif [ -e "${configFile}" ]; then
+    bashcli-error "not a regular file: ${configFile}"
+    return 1
+  elif [ "${updateMode}" == set ]; then
+    # File does not exist yet, create it.
+    printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" > "${configFile}"
+  fi
+}
+
+# List all properties.
+bashcli-config-list() {
+  local property namespace qualifiedProperty qualifiedProperties
+
+  if [ $# -ne 0 ]; then
+    bashcli-error "no arguments expected"
+    return 1
+  fi
+
+  qualifiedProperties=("${!_BASHCLI_CONFIG_PROPERTIES[@]}")
+  bashcli-array-sort qualifiedProperties
+
+  for qualifiedProperty in "${qualifiedProperties[@]}"; do
+    namespace=${qualifiedProperties%%.*}
+    property=${qualifiedProperty#*.}
+    if bashcli-config-get -n "${namespace}" -x "${property}"; then
+      -bashcli-config-escape REPLY
+      printf "%s=%s\n" "${property}" "${REPLY}"
+    fi
+  done
 }
 
 -bashcli-config-eval() {
-  local initialValue=$1
+  local namespace=$1
+  local initialValue=$2
   local value=${initialValue}
-  local result=
-  local prefix expr exprValue property default
+  local result prefix expr exprValue property qualifiedProperty default
   REPLY=
 
   if [[ "${value}" != *[\$\\]* ]]; then
     REPLY=${value}
-    return
+    return 0
   fi
 
   if [ ${_BASHCLI_CONFIG_EVAL_DEPTH} -gt "${_BASHCLI_CONFIG_MAX_EVAL_DEPTH}" ]; then
@@ -233,13 +382,13 @@ bashcli-config-file() {
 
     case ${value:0:1} in
       \\) case ${value:1:1} in
-            n) result+=$'\n' ;;
-            r) result+=$'\r' ;;
-            t) result+=$'\t' ;;
-            s) result+=' ' ;;
-            *) result+=${value:1:1} ;;
+            n) result+=$'\n';;
+            r) result+=$'\r';;
+            t) result+=$'\t';;
+            s) result+=' ';;
+            *) result+=${value:1:1};;
           esac
-          value=${value:2} ;;
+          value=${value:2};;
       \$) if [ "${value:1:1}" != '{' ]; then
             result+='$'
             value=${value:1}
@@ -250,12 +399,9 @@ bashcli-config-file() {
             value=${value:1}
             property=${expr%%\:*}
             default=${expr:$((${#property} + 1))}
-            if ! -bashcli-config-check-property "${property}"; then
-              bashcli-error "failed to evaluate '${initialValue}'"
-              return 1
-            fi
-            if [ "${_BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}" ]; then
-              exprValue=${_BASHCLI_CONFIG_PROPERTIES[${property}]}
+            qualifiedProperty=${namespace}.${property}
+            if [ "${_BASHCLI_CONFIG_PROPERTIES_PROFILE[${qualifiedProperty}]}" ]; then
+              exprValue=${_BASHCLI_CONFIG_PROPERTIES[${qualifiedProperty}]}
             elif [ "${_BASHCLI_CONFIG_ENV[${property}]}" ]; then
               exprValue=${!property}
             fi
@@ -263,11 +409,10 @@ bashcli-config-file() {
               exprValue=${default}
             fi
             if [ "${exprValue}" ]; then
-              -bashcli-config-eval "${exprValue}"
+              -bashcli-config-eval "${namespace}" "${exprValue}"
               result+=${REPLY}
             fi
-          fi
-          ;;
+          fi;;
       esac
   done
 
@@ -287,93 +432,6 @@ bashcli-config-file() {
   _value=${_value:0:$((${#_value} - ${#_spaces}))}${_spaces//?/\\s}
 }
 
--bashcli-config-set() {
-  local updateMode=$1
-  local property=$2
-  local value=$3
-  local profile=
-
-  if [ ${#_BASHCLI_CONFIG_ACTIVE_PROFILES[@]} -gt 0 ]; then
-    profile=${_BASHCLI_CONFIG_ACTIVE_PROFILES[-1]}
-  fi
-
-  bashcli-string-trim property
-  bashcli-string-trim value
-
-  -bashcli-config-check-property "${property}"
-  bashcli-debug "${profile}" "${property}" "${value}"
-  -bashcli-config-write-value "${updateMode}" "${profile}" "${property}" "${value}"
-}
-
--bashcli-config-read() {
-  local IFS=,
-  local configFiles=()
-  local configFile
-
-  if [ -f "${BASHCLI_CLI_CONFIG_DEFAULT}" ]; then
-    configFiles+=("${BASHCLI_CLI_CONFIG_DEFAULT}")
-  fi
-
-  if [ -z "${_BASHCLI_CONFIG_SCOPE}" ] || [ "${_BASHCLI_CONFIG_SCOPE}" == global ]; then
-    configFiles+=("${_BASHCLI_CONFIG_GLOBAL}")
-  fi
-
-  if [ -z "${_BASHCLI_CONFIG_SCOPE}" ] || [ "${_BASHCLI_CONFIG_SCOPE}" == local ]; then
-    configFiles+=("${BASHCLI_CLI_CONFIG_LOCAL}")
-  fi
-
-  bashcli-debug "reading in scope ${_BASHCLI_CONFIG_SCOPE:-<none>} with profiles [${_BASHCLI_CONFIG_ACTIVE_PROFILES[*]}]"
-
-  for configFile in "${configFiles[@]}"; do
-    if [ -f "${configFile}" ]; then
-      -bashcli-config-read-file "${configFile}"
-    fi
-  done
-}
-
--bashcli-config-read-file() {
-  local configFile=$1
-  local lineNumber=1
-  local index line property value
-  local profile priority propertyProfile currentPriority update
-
-  bashcli-debug "reading ${configFile}"
-
-  while IFS= read -r line || [ -n "${line}" ]; do
-    if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
-      profile=${REPLY[0]}
-      property=${REPLY[1]}
-      value=${REPLY[2]}
-      propertyProfile=${_BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]}
-      _BASHCLI_CONFIG_PROFILES[${profile}]=1
-      update=
-
-      if [ -z "${_BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER[${profile}]}" ]; then
-        # Profile is not active.
-        :
-      elif [ -z "${propertyProfile}" ]; then
-        # Property is not yet set.
-        update=true
-      else
-        priority=${_BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER[${profile}]}
-        currentPriority=${_BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER[${propertyProfile}]}
-
-        if [ "${priority}" -gt "${currentPriority}" ]; then
-          update=true
-        elif [ "${priority}" -eq "${currentPriority}" ]; then
-          update=true
-        fi
-      fi
-
-      if [ "${update}" ]; then
-        _BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
-        _BASHCLI_CONFIG_PROPERTY_PROFILE[${property}]=${profile}
-      fi
-    fi
-    ((++lineNumber))
-  done < "${configFile}"
-}
-
 -bashcli-config-read-line() {
   local line=$1
   local configFile=$2
@@ -381,6 +439,7 @@ bashcli-config-file() {
   local profile=default
   local property value
 
+  bashcli-debug "reading: ${line}"
   if [[ ${line} == *([[:space:]])?(\#*) ]]; then
     return 1
   fi
@@ -414,63 +473,19 @@ bashcli-config-file() {
   REPLY=("${profile}" "${property}" "${value}")
 }
 
--bashcli-config-write-value() {
-  local unset=${1/--set/}
-  local profile=$2
-  local property=$3
-  local value=$4
-  local profilePrefix
-  local configFile
-  local tempFile=$(mktemp)
-  local updated=
-
-  trap 'rm -f -- "${tempFile}"' RETURN
-
-  configFile=$(bashcli-config-file)
-  -bashcli-config-escape value
-
-  if [ "${profile}" != default ]; then
-    profilePrefix="%${profile}."
-  fi
-
-  if [ -f "${configFile}" ]; then
-    while IFS= read -r line || [ -n "${line}" ]; do
-      if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
-        if [ "${profile}" == "${REPLY[0]}" ] && [ "${property}" == "${REPLY[1]}" ]; then
-          if [ -z "${unset}" ]; then
-            updated=true
-            printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}"
-          fi
-        else
-          printf "%s\n" "${line}"
-        fi
-      else
-        printf "%s\n" "${line}"
-      fi
-      ((++lineNumber))
-    done < "${configFile}" > "${tempFile}"
-    if [ -z "${unset}" ] && [ -z "${updated}" ]; then
-      printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" >> "${tempFile}"
-    fi
-    mv "${tempFile}" "${configFile}"
-  elif [ -z "${unset}" ]; then
-    printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" > "${configFile}"
-  fi
-}
-
 -bashcli-config-env-get() {
   local profile
   local minProfile=$1
   local property=$2
-  local minIndex=${_BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER[${minProfile}]}
+  local minPriority=${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${minProfile}]}
 
-  if [ -z "${minIndex}" ]; then
+  if [ -z "${minPriority}" ]; then
     bashcli-error "internal error: profile not active: ${minProfile}"
     return 1
   fi
 
-  for ((index = $((${#_BASHCLI_CONFIG_ACTIVE_PROFILES[@]} - 1)); index >= ${minIndex}; --index)); do
-    profile=${_BASHCLI_CONFIG_ACTIVE_PROFILES[${index}]}
+  for ((index = $((${#_BASHCLI_CONFIG_PROFILES[@]} - 1)); index >= ${minPriority}; --index)); do
+    profile=${_BASHCLI_CONFIG_PROFILES[${index}]}
     if -bashcli-config-env-read "${profile}" "${property}"; then
       return 0
     fi
@@ -500,6 +515,47 @@ bashcli-config-file() {
   return 1
 }
 
+-bashcli-config-initialize-profiles() {
+  local profile
+  local profiles=(default "$@")
+  local index=0
+
+  _BASHCLI_CONFIG_PROFILES=()
+  _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
+
+  # Check profile-names, remove duplicate and empty profiles, but keep the order.
+  for ((index = $((${#profiles[@]})); index >= 0; --index)); do
+    profile=${profiles[index]}
+    if [ "${profile}" ] && [ -z "${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]}" ]; then
+      -bashcli-config-check-profile "${profile}"
+      _BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]=${index}
+      _BASHCLI_CONFIG_PROFILES=("${profile}" "${_BASHCLI_CONFIG_PROFILES[@]}")
+    fi
+  done
+
+  # Remove gaps from profile priorities.
+  _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
+  for ((index = 0; index < ${#_BASHCLI_CONFIG_PROFILES[@]}; ++index)); do
+    profile=${_BASHCLI_CONFIG_PROFILES[index]}
+    _BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]=${index}
+  done
+}
+
+-bashcli-config-initialize-env() {
+  local IFS line name
+
+  if [ ${#_BASHCLI_CONFIG_ENV[@]} -gt 0 ]; then
+    return 0
+  fi
+
+  while IFS= read -r line || [ -n "${line}" ]; do
+    name=${line%%=*}
+    if [[ ${name} != _* ]]; then
+      _BASHCLI_CONFIG_ENV[${name}]=defined
+    fi
+  done < <(env)
+}
+
 -bashcli-config-check-property() {
   local property=$1
   if [[ ${property} != ${_BASHCLI_CONFIG_PROPERTY_PATTERN} ]]; then
@@ -508,58 +564,27 @@ bashcli-config-file() {
   fi
 }
 
--bashcli-config-initialize-profiles() {
-  local profile
-  local profiles=(default "$@")
-  local index=0
-
-  _BASHCLI_CONFIG_ACTIVE_PROFILES=()
-  _BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER=()
-
-  # Check profile-names, remove duplicate and empty profiles, but keep the order.
-  for ((index = $((${#profiles[@]})); index >= 0; --index)); do
-    profile=${profiles[index]}
-    if [ "${profile}" ] && [ -z "${_BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER[${profile}]}" ]; then
-      if [[ ${profile} != ${_BASHCLI_CONFIG_PROFILE_PATTERN} ]]; then
-        bashcli-error "invalid profile name: ${profile} (should match '${_BASHCLI_CONFIG_PROFILE_PATTERN}')"
-        return 1
-      fi
-      _BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER[${profile}]=${index}
-      _BASHCLI_CONFIG_ACTIVE_PROFILES=("${profile}" "${_BASHCLI_CONFIG_ACTIVE_PROFILES[@]}")
-      # shellcheck disable=2034
-      _BASHCLI_CONFIG_PROFILES[${profile}]=1
-    fi
-  done
-
-  # Fix the index.
-  _BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER=()
-  for ((index = 0; index < ${#_BASHCLI_CONFIG_ACTIVE_PROFILES[@]}; ++index)); do
-    profile=${_BASHCLI_CONFIG_ACTIVE_PROFILES[index]}
-    _BASHCLI_CONFIG_ACTIVE_PROFILES_ORDER[${profile}]=${index}
-  done
-}
-
--bashcli-config-initialize-scope() {
-  case ${_BASHCLI_CONFIG_SCOPE} in
-    global|local|'') ;;
-    *) bashcli-error "invalid scope: ${scope} (should be 'global', 'local' or empty)"
-       return 1;;
-  esac
-
-  if [ "${_BASHCLI_CONFIG_SCOPE}" == local ] && [ -z "${BASHCLI_CLI_CONFIG_LOCAL}" ]; then
-    bashcli-error "local scope not supported"
+-bashcli-config-check-profile() {
+  local profile=$1
+  if [[ ${profile} != ${_BASHCLI_CONFIG_PROFILE_PATTERN} ]]; then
+    bashcli-error "invalid profile name: ${profile} (should match '${_BASHCLI_CONFIG_PROFILE_PATTERN}')"
     return 1
   fi
 }
 
--bashcli-config-initialize-env() {
-  local IFS line name
+-bashcli-config-check-namespace() {
+  local namespace=$1
+  if [[ -z "${namespace}" || "${namespace}" == */* ]]; then
+    bashcli-error "namespace must not be empty or contain slashes: ${namespace}"
+    return 1
+  fi
+}
 
-  _BASHCLI_CONFIG_ENV=()
-  while IFS= read -r line || [ -n "${line}" ]; do
-    name=${line%%=*}
-    if [[ ${name} != _BASHCLI_* ]]; then
-      _BASHCLI_CONFIG_ENV[${name}]=1
-    fi
-  done < <(env)
+-bashcli-config-check-scope() {
+  local scope=$1
+  case ${scope} in
+    default|global|local) ;;
+    *) bashcli-error "invalid scope: ${scope} (should be one of default, local or global)"
+       return 1
+  esac
 }

@@ -3,5 +3,19 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="
-Lists all properties.
+Lists configuration properties.
 "
+
+OPTIONS=(
+  prefix multi
+)
+
+OPTION_DESCRIPTIONS=(
+  prefix "Limit listed properties using a prefix.
+
+Providing this option multiple times lists properties matching at least one prefix."
+)
+
+OPTION_ALIASES=(
+  p prefix
+)

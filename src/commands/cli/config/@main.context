@@ -6,17 +6,33 @@ Commands relating to configuration properties.
 "
 
 OPTIONS=(
-  local    enum:scope
-  global   enum:scope
+  default   enum:scope
+  local     enum:scope
+  global    enum:scope
+  namespace single
+  file      single
 )
 
 OPTION_DESCRIPTIONS=(
-  local   "Enables the local configuration scope, if supported."
-  global  "Enables the global configuration scope."
+  default   "Read from the default configuration file in ${BASHCLI_CONFIG_DEFAULT_DIR} only."
+  global    "Read from the global configuration file in ${BASHCLI_CONFIG_GLOBAL_DIR} only."
+  local     "Read from the local configuration file in ${BASHCLI_CONFIG_LOCAL_DIR:-<unset>} only."
+  file      "Read from the the given configuration file only."
+  namespace "Read the given namespace, instead of the default one.
+
+Configuration properties are partitioned into different namespaces. Each namespace is contained in
+it's own filename in the various directories, which is just the namespace concatenated with the
+'.conf' extension.
+
+The default namespace is '${BASHCLI_CLI_NAME}', which configures the CLI's command options."
 )
 
 OPTION_ALIASES=(
+  n namespace
+  f file
 )
 
 OPTION_VALUE_TYPES=(
+  namespace namespace
+  file      file
 )

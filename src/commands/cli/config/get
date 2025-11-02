@@ -1,7 +1,30 @@
 #!/usr/bin/env bash
 
 declare parameters=()
+declare -n commonOptions=BASHCLI_CONFIG_CLI_COMMON_OPTIONS
+declare readOptions=()
+declare getOptions=(-x)
 
 bashcli-options-parse '' parameters -- "$@"
-bashcli-config-get "${parameters[@]}"
+
+case ${#parameters[@]} in
+  0) bashcli-fatal "property argument missing";;
+  1) ;;
+  *) bashcli-fatal "too many arguments";;
+esac
+
+if [ "${commonOptions[namespace]}" ]; then
+  getOptions+=(-n "${commonOptions[namespace]}")
+  readOptions+=(-n "${commonOptions[namespace]}")
+fi
+if [ "${commonOptions[scope]}" ]; then
+  readOptions+=(-s "${commonOptions[scope]}")
+fi
+if [ "${commonOptions[file]}" ]; then
+  readOptions+=(-f "${commonOptions[file]}")
+fi
+
+bashcli-config-clear
+bashcli-config-read "${readOptions[@]}"
+bashcli-config-get "${getOptions[@]}" "${parameters[0]}"
 printf "%s\n" "${REPLY}"
