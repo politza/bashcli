@@ -8,6 +8,15 @@ before-each() {
   unset BASHCLI_CLI_CONFIG_LOCAL
 }
 
+bash-completion-has-comp_delimited() (
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+    declare -pf _comp_delimited &>/dev/null
+  else
+    return 1
+  fi
+)
+
 # shellcheck disable=SC2206
 completion-exec() {
   local IFS=$' '
@@ -78,6 +87,7 @@ multi-2
 EOF
 }
 
+if bash-completion-has-comp_delimited; then
 test-complete-multi-split() {
   completion-exec 'test-cli command --multi=multi-0' &> "${output}"
   diff "${output}" - <<EOF
@@ -100,6 +110,7 @@ EOF
 multi-0,multi-2,multi-1
 EOF
 }
+fi
 
 test-complete-multi-raw() {
   completion-exec 'test-cli command --multi-raw multi-raw' &> "${output}"
