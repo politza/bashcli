@@ -1,8 +1,11 @@
 SHELL = bash
 
-.PHONY: check test lint
+.PHONY: check report test lint
 
-check: test lint
+check: report test lint
+
+report:
+	bash --version
 
 test:
 	./bin/run-tests -D -j
