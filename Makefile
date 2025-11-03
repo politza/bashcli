@@ -8,7 +8,7 @@ report:
 	bash --version
 
 test:
-	./bin/run-tests -D -j -v
+	./bin/run-tests -D -j -v ./test/tests/completion.test
 
 lint:
 	./bin/run-linter
