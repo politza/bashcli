@@ -8,7 +8,7 @@ report:
 	bash --version
 
 test:
-	./bin/run-tests -d -j -v ./test/tests/completion.test -s '^test-complete-multi-split$'
+	./bin/run-tests -d -j -v ./test/tests/completion.test -s 'test-complete-multi-split'
 
 lint:
 	./bin/run-linter
