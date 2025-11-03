@@ -16,17 +16,17 @@ EOF
 }
 
 test-config-get-global-value() {
-  cli cli config get global-property &> "${output}"
+  cli config get global-property &> "${output}"
   diff "${output}" - <<<global-value
 }
 
 test-config-get-default-value() {
-  cli cli config get default-property &> "${output}"
+  cli config get default-property &> "${output}"
   diff "${output}" - <<<default-value
 }
 
 test-config-get-default-profile-value() {
-  cli cli config get global-property --profile=profile &> "${output}"
+  cli config get global-property --profile=profile &> "${output}"
   diff "${output}" - <<<default-profile-value
 }
 

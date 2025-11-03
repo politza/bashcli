@@ -27,49 +27,49 @@ EOF
 }
 
 test-config-get-global-value() {
-  cli cli config --global get property &> "${output}"
+  cli config --global get property &> "${output}"
   diff "${output}" - <<<global-value
 
   BASHCLI_CONFIG_LOCAL_DIR=
-  cli cli config get property &> "${output}"
+  cli config get property &> "${output}"
   diff "${output}" - <<<global-value
 }
 
 test-config-get-local-value() {
-  cli cli config --local get property &> "${output}"
+  cli config --local get property &> "${output}"
   diff "${output}" - <<<local-value
 
-  cli cli config get property &> "${output}"
+  cli config get property &> "${output}"
   diff "${output}" - <<<local-value
 }
 
 test-config-get-env-value() {
   export CLI_PROPERTY=env-value
 
-  cli cli config get --global property &> "${output}"
+  cli config get --global property &> "${output}"
   diff "${output}" - <<<env-value
 
-  cli cli config get --local property &> "${output}"
+  cli config get --local property &> "${output}"
   diff "${output}" - <<<env-value
 
-  cli cli config get property &> "${output}"
+  cli config get property &> "${output}"
   diff "${output}" - <<<env-value
 }
 
 test-config-get-global-profile-value() {
-  cli cli config --global --profile profile get property &> "${output}"
+  cli config --global --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 
   BASHCLI_CONFIG_LOCAL_DIR=
-  cli cli config --profile profile get property &> "${output}"
+  cli config --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 }
 
 test-config-get-local-profile-value() {
-  cli cli config --local --profile profile get property &> "${output}"
+  cli config --local --profile profile get property &> "${output}"
   diff "${output}" - <<<local-profile-value
 
-  cli cli config get --profile profile property &> "${output}"
+  cli config get --profile profile property &> "${output}"
   diff "${output}" - <<<local-profile-value
 }
 
@@ -77,76 +77,76 @@ test-config-get-env-profile-value() {
   export CLI__PROFILE_PROPERTY=env-profile-value
   export CLI_PROFILE=env-value
 
-  cli cli config get --global --profile profile property &> "${output}"
+  cli config get --global --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value
 
-  cli cli config get --local --profile profile property &> "${output}"
+  cli config get --local --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value
 
-  cli cli config get --profile profile property &> "${output}"
+  cli config get --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value
 }
 
 test-config-set-global-value() {
-  cli cli config --global set property set-value &> "${output}"
-  cli cli config --global get property &>> "${output}"
+  cli config --global set property set-value &> "${output}"
+  cli config --global get property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
 test-config-set-local-value() {
-  cli cli config --local set property set-value &> "${output}"
-  cli cli config --local get property &>> "${output}"
+  cli config --local set property set-value &> "${output}"
+  cli config --local get property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
 test-config-set-global-profile-value() {
-  cli cli config --global set --profile profile property set-profile-value &> "${output}"
-  cli cli config --global --profile profile get property &>> "${output}"
+  cli config --global set --profile profile property set-profile-value &> "${output}"
+  cli config --global --profile profile get property &>> "${output}"
   diff "${output}" - <<<set-profile-value
 }
 
 test-config-set-local-profile-value() {
-  cli cli config --local set --profile profile property set-profile-value &> "${output}"
-  cli cli config --local --profile profile get property &>> "${output}"
+  cli config --local set --profile profile property set-profile-value &> "${output}"
+  cli config --local --profile profile get property &>> "${output}"
   diff "${output}" - <<<set-profile-value
 }
 
 test-config-set-new-property() {
-  cli cli config --global set new-property set-value &> "${output}"
-  cli cli config --global get new-property &>> "${output}"
+  cli config --global set new-property set-value &> "${output}"
+  cli config --global get new-property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
 test-config-list-global() {
-  cli cli config --global list &> "${output}"
+  cli config --global list &> "${output}"
   diff "${output}" - <<EOF
 property=global-value
 EOF
 }
 
 test-config-list-local() {
-  cli cli config --local list &> "${output}"
+  cli config --local list &> "${output}"
   diff "${output}" - <<EOF
 property=local-value
 EOF
 }
 
 test-config-list-global-profile() {
-  cli cli config --global --profile profile list &> "${output}"
+  cli config --global --profile profile list &> "${output}"
   diff "${output}" - <<EOF
 property=global-profile-value
 EOF
 }
 
 test-config-list-local-profile() {
-  cli cli config --local --profile profile list &> "${output}"
+  cli config --local --profile profile list &> "${output}"
   diff "${output}" - <<EOF
 property=local-profile-value
 EOF
 }
 
 test-config-unset-global() {
-  cli cli config --global unset property &> "${output}"
+  cli config --global unset property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${globalConfig}" - <<EOF
 %profile.property=global-profile-value
@@ -154,7 +154,7 @@ EOF
 }
 
 test-config-unset-local() {
-  cli cli config --local unset property &> "${output}"
+  cli config --local unset property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${localConfig}" - <<EOF
 %profile.property=local-profile-value
@@ -162,7 +162,7 @@ EOF
 }
 
 test-config-unset-global-profile() {
-  cli cli config --global unset --profile profile property &> "${output}"
+  cli config --global unset --profile profile property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${globalConfig}" - <<EOF
 property=global-value
@@ -170,7 +170,7 @@ EOF
 }
 
 test-config-unset-local-profile() {
-  cli cli config --local unset --profile profile property &> "${output}"
+  cli config --local unset --profile profile property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${localConfig}" - <<EOF
 property=local-value
@@ -183,7 +183,7 @@ a=${b}
 b=${c}
 c=result
 EOF
-  cli cli config get a &> "${output}"
+  cli config get a &> "${output}"
   diff "${output}" - <<<result
 }
 
@@ -194,7 +194,7 @@ a=${b}
 b=${c}
 c=${TEST_CONFIG_ENV_EXPRESSION}
 EOF
-  cli cli config get a &> "${output}"
+  cli config get a &> "${output}"
   diff "${output}" - <<<result
 }
 
@@ -204,7 +204,7 @@ a=${b}
 b=${c}
 c=${a}
 EOF
-  cli cli config get a &> "${output}" && return 1
+  cli config get a &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] apparent cyclic property dependencies found during evaluation
 EOF
