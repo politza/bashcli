@@ -501,10 +501,10 @@ bashcli-config-list() {
   local variable=${BASHCLI_CLI_NAME}_
 
   if [ "${namespace}" != "${BASHCLI_CLI_NAME}" ]; then
-    variable+=${namespace}_
+    variable+=_${namespace}__
   fi
   if [ "${profile}" != default ]; then
-    property="%${profile}.${property}"
+    variable="_${profile}_${variable}"
   fi
   variable+=${property}
   variable=${variable//[^a-zA-Z0-9]/_}
@@ -554,9 +554,7 @@ bashcli-config-list() {
 
   while IFS= read -r line || [ -n "${line}" ]; do
     name=${line%%=*}
-    if [[ ${name} != _* ]]; then
-      _BASHCLI_CONFIG_ENV[${name}]=defined
-    fi
+    _BASHCLI_CONFIG_ENV[${name}]=defined
   done < <(env)
 }
 

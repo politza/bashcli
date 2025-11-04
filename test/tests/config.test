@@ -74,7 +74,7 @@ test-config-get-local-profile-value() {
 }
 
 test-config-get-env-profile-value() {
-  export CLI__PROFILE_PROPERTY=env-profile-value
+  export _PROFILE_CLI_PROPERTY=env-profile-value
   export CLI_PROFILE=env-value
 
   cli config get --global --profile profile property &> "${output}"
