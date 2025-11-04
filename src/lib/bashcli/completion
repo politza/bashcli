@@ -140,7 +140,7 @@
   # Find a completion function and invoke it.
   if [ "${valueType}" ]; then
     for cliPrefix in "${BASHCLI_CLI_NAME}" bashcli; do
-      completionFn=${valueType//*/${cliPrefix}-complete-&}
+      completionFn=${cliPrefix}-complete-${valueType}
       if declare -pf "${completionFn}" &>/dev/null; then
         COMPREPLY=()
         local BASHCLI_COMPLETION_OPTION=${option}
