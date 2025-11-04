@@ -1,17 +1,24 @@
 name: Check
 on:
   pull_request:
-  push: 
-    branches: 
+  push:
+    branches:
       - master
 
 jobs:
   test:
-    name: Check
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: [ubuntu-24.04, ubuntu-22.04]
+    name: Test with ${{ matrix.image }}
+    runs-on: ${{ matrix.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Run checks
-      run: make
+    - name: Run
+      run: |
+        if [ "${{ matrix.image }}" == ubuntu-22.04 ]; then
+          export SHELLCHECK_OPTS='--exclude=SC2086'
+        fi
+        make
