@@ -29,7 +29,7 @@ completion-exec() {
   local current=${prefixWords[-1]}
   IFS=$'\n'
 
-  test-cli cli complete \
+  test-cli cli completion \
       --comp-cword "$((${#prefixWords[@]} - 1))" \
       --comp-line "${line}" \
       --comp-point "${#prefix}" \

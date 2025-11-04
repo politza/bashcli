@@ -12,13 +12,30 @@ bashcli-complete-directory() {
 
 # Completes configuration profile-names.
 bashcli-complete-config-profile() {
-  bashcli-error "not implemented"
+  local configFiles=() configFile
+
+  bashcli-config-files
+
+  for configFile in "${REPLY[@]}"; do
+    if [ -f "${configFile}" ]; then
+      configFiles+=("${configFile}")
+    fi
+  done
+
+  readarray -t COMPREPLY < <(sed -nE 's/^[[:space:]]*%([^.]+)\..*/\1/p' "${configFiles[@]}")
 }
 
 # Completes configuration property values.
 bashcli-complete-config-property() {
+  local index
   bashcli-config-initialize
+  bashcli-config-read
+
   COMPREPLY=("${!_BASHCLI_CONFIG_PROPERTIES[@]}")
+  bashcli-debug "$(declare -p COMPREPLY)"
+  for ((index = 0; index < ${#COMPREPLY[@]}; ++index)); do
+    COMPREPLY[index]=${COMPREPLY[index]#${BASHCLI_CLI_NAME}.}
+  done
 }
 
 # Completes the names of subcommands of the current command.
