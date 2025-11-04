@@ -4,16 +4,20 @@ PATH=$PWD/fixtures/config:${PATH}
 output=$(mktemp)
 localConfigDir=$(mktemp -d)
 globalConfigDir=$(mktemp -d)
+fileConfigDir=$(mktemp -d)
 localConfig=${localConfigDir}/cli.conf
 globalConfig=${globalConfigDir}/cli.conf
+fileConfig=${fileConfigDir}/file.conf
 
-trap "rm -r -- '${output}' '${localConfigDir}' '${globalConfigDir}'" EXIT
+trap "rm -r -- '${output}' '${localConfigDir}' '${globalConfigDir}' '${fileConfigDir}'" EXIT
 
 before-each() {
   export BASHCLI_CONFIG_GLOBAL_DIR=${globalConfigDir}
   export BASHCLI_CONFIG_LOCAL_DIR=${localConfigDir}
   unset CLI_PROPERTY
-  unset CLI__PROFILE_PROPERTY
+  unset CLI__NS__PROPERTY
+  unset _PROFILE_CLI_PROPERTY
+  unset _PROFILE_CLI__NS__PROPERTY
 
   cat > "${localConfig}" <<EOF
 property=local-value
@@ -23,6 +27,11 @@ EOF
   cat > "${globalConfig}" <<EOF
 property=global-value
 %profile.property=global-profile-value
+EOF
+
+  cat > "${fileConfig}" <<EOF
+property=file-value
+%profile.property=file-profile-value
 EOF
 }
 
@@ -43,8 +52,24 @@ test-config-get-local-value() {
   diff "${output}" - <<<local-value
 }
 
+test-config-get-default-value() {
+  cli config --default get property &> "${output}"
+  diff "${output}" - <<<default-value
+}
+
+test-config-get-ns-value() {
+  cli config --namespace ns get property &> "${output}"
+  diff "${output}" - <<<ns-default-value
+}
+
+test-config-get-file-value() {
+  cli config --file "${fileConfig}" get property &> "${output}"
+  diff "${output}" - <<<file-value
+}
+
 test-config-get-env-value() {
   export CLI_PROPERTY=env-value
+  export CLI__NS__PROPERTY=ns-env-value
 
   cli config get --global property &> "${output}"
   diff "${output}" - <<<env-value
@@ -52,8 +77,14 @@ test-config-get-env-value() {
   cli config get --local property &> "${output}"
   diff "${output}" - <<<env-value
 
+  cli config get --default property &> "${output}"
+  diff "${output}" - <<<env-value
+
   cli config get property &> "${output}"
   diff "${output}" - <<<env-value
+
+  cli config get --namespace ns property &> "${output}"
+  diff "${output}" - <<<ns-env-value
 }
 
 test-config-get-global-profile-value() {
@@ -73,9 +104,16 @@ test-config-get-local-profile-value() {
   diff "${output}" - <<<local-profile-value
 }
 
+test-config-get-default-profile-value() {
+  cli config --default --profile profile get property &> "${output}"
+  diff "${output}" - <<<default-profile-value
+}
+
 test-config-get-env-profile-value() {
-  export _PROFILE_CLI_PROPERTY=env-profile-value
   export CLI_PROFILE=env-value
+  export CLI__NS__PROPERTY=ns-env-value
+  export _PROFILE_CLI_PROPERTY=env-profile-value
+  export _PROFILE_CLI__NS__PROPERTY=ns-env-profile-value
 
   cli config get --global --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value
@@ -85,6 +123,15 @@ test-config-get-env-profile-value() {
 
   cli config get --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value
+
+  cli config get --profile profile property &> "${output}"
+  diff "${output}" - <<<env-profile-value
+
+  cli config get --namespace ns --profile profile property &> "${output}"
+  diff "${output}" - <<<ns-env-profile-value
+
+  cli config get --namespace ns --file "${fileConfig}" --profile profile property &> "${output}"
+  diff "${output}" - <<<ns-env-profile-value
 }
 
 test-config-set-global-value() {
@@ -96,6 +143,19 @@ test-config-set-global-value() {
 test-config-set-local-value() {
   cli config --local set property set-value &> "${output}"
   cli config --local get property &>> "${output}"
+  diff "${output}" - <<<set-value
+}
+
+test-config-set-default-value() {
+  cli config --default set property set-value &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] default scope is read-only
+EOF
+}
+
+test-config-set-file-value() {
+  cli config --file "${fileConfig}" set property set-value &> "${output}"
+  cli config --file "${fileConfig}" get property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
@@ -131,6 +191,27 @@ property=local-value
 EOF
 }
 
+test-config-list-default() {
+  cli config --default list &> "${output}"
+  diff "${output}" - <<EOF
+property=default-value
+EOF
+}
+
+test-config-list-ns() {
+  cli config --namespace ns list &> "${output}"
+  diff "${output}" - <<EOF
+property=ns-default-value
+EOF
+}
+
+test-config-list-file() {
+  cli config --file "${fileConfig}" list &> "${output}"
+  diff "${output}" - <<EOF
+property=file-value
+EOF
+}
+
 test-config-list-global-profile() {
   cli config --global --profile profile list &> "${output}"
   diff "${output}" - <<EOF
@@ -142,6 +223,13 @@ test-config-list-local-profile() {
   cli config --local --profile profile list &> "${output}"
   diff "${output}" - <<EOF
 property=local-profile-value
+EOF
+}
+
+test-config-list-default-profile() {
+  cli config --default --profile profile list &> "${output}"
+  diff "${output}" - <<EOF
+property=default-profile-value
 EOF
 }
 
@@ -158,6 +246,13 @@ test-config-unset-local() {
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${localConfig}" - <<EOF
 %profile.property=local-profile-value
+EOF
+}
+
+test-config-unset-local() {
+  cli config --default unset property &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] default scope is read-only
 EOF
 }
 
