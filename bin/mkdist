@@ -10,13 +10,16 @@ Creates a single-file script of a CLI in DIRECTORY, which defaults to the curren
 EOF
 }
 
-options=$(getopt -o f -l force -n "$(basename "$0")" -- "$@") || {
+options=$(getopt -o f -l force,help -n "$(basename "$0")" -- "$@") || {
   exit 1
 }
 eval set -- "$options"
 
 while [ $# -gt 0 ]; do
   case $1 in
+    --help)
+      usage
+      exit 0;;
     -f|--force)
       force=true ;;
     --) shift
@@ -44,8 +47,13 @@ outputDir=${2:-$PWD}
   exit 1
 }
 
-[ -f "${cli}" ] || {
-  echo "not such file: ${cli}"
+[ -L "${cli}" ] || {
+  echo "not a symbolic link: ${cli}"
+  exit 1
+}
+
+[ "$(realpath "${cli}")" -ef "${bashcli}" ] || {
+  echo "not a bashcli link: ${cli}"
   exit 1
 }
 
@@ -65,9 +73,7 @@ archiveName=${tempDir}/${cliName}.tar.xz
 
 cp --archive "$(dirname "${bashcli}")/." "${tempDir}/bashcli"
 cp --archive "$(dirname "${cli}")/." "${tempDir}/${cliName}"
-[ "$(realpath "${cli}")" -ef "${bashcli}" ] && {
-  ln --force --symbolic ../bashcli/bashcli "${tempDir}/${cliName}/${cliName}"
-}
+ln --force --symbolic ../bashcli/bashcli "${tempDir}/${cliName}/${cliName}"
 
 hashSum=$(cd "${tempDir}" && find . -type f -print0 | xargs -0rn1 sha1sum | sha1sum - | cut -d' ' -f1)
 tar -cJf "${archiveName}" -C "${tempDir}" bashcli "${cliName}"
@@ -80,11 +86,10 @@ set -e
 export BASHCLI_DIST=${hashSum}
 CACHE_DIR=\${XDG_CACHE_HOME:-\${HOME}/.cache}/${cliName}/dist/\${BASHCLI_DIST}
 CLI_SCRIPT=\${CACHE_DIR}/${cliName}/${cliName}
-export BASHCLI_DIR=\${CACHE_DIR}/bashcli
 
 if ! [ -f "\${CLI_SCRIPT}" ]; then
    if [ "\${BASHCLI_DEBUG}" == true ]; then
-      echo "[debug](${cliName}) extracting to \${CACHE_DIR}" >&2
+      echo "[debug](${cliName}) extracting into \${CACHE_DIR}" >&2
    fi
    mkdir --parents "\${CACHE_DIR}"
    ARCHIVE_LINE=\$(awk '/^__ARCHIVE__/ {print NR + 1; exit 0; }' "\$0")

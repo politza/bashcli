@@ -15,15 +15,4 @@ enum=primary
 EOF
 }
 
-test-dist-with-script() {
-  local distDir=${dist}/script
-  mkdist ./fixtures/script-cli/cli "${distDir}"
-  "${distDir}"/cli command a b c &> "${output}"
-  diff "${output}" - <<EOF
-a
-b
-c
-EOF
-}
-
 . ./lib/run-tests

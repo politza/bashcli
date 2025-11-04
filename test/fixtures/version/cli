@@ -1,7 +1,1 @@
-#!/usr/bin/env bash
-
-export BASHCLI_CLI_VERSION=1.2.3
-export BASHCLI_CLI_SCRIPT=$0
-BASHCLI_DIR=${BASHCLI_DIR:-"$(dirname "$0")/../../../src"}
-
-exec "${BASHCLI_DIR}"/bashcli "$@"
+../../../src/bashcli
