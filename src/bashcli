@@ -9,7 +9,7 @@ fi
 shopt -s extglob nullglob
 set -eo pipefail
 
-export BASHCLI_VERSION=0.0.1
+export BASHCLI_VERSION=1.0.0
 export BASHCLI_CLI_SCRIPT=${BASHCLI_CLI_SCRIPT:-"$0"}
 if [[ "${BASHCLI_CLI_SCRIPT}" != /* ]]; then
   BASHCLI_CLI_SCRIPT=${PWD}/${BASHCLI_CLI_SCRIPT%./}
