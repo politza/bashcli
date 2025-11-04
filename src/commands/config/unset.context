@@ -4,21 +4,12 @@
 
 DESCRIPTION="
 Unsets a given property.
+
+If this command is executed with an active profile, it unsets the property defined using that
+profile. If multiple profiles are active, the last one provided on the command-line will be used.
+
 "
-
-OPTIONS=(
-  profile single
-)
-
-OPTION_DESCRIPTIONS=(
-  profile "The profile for which to unset the property."
-)
-
-OPTION_ALIASES=(
-  P profile
-)
 
 OPTION_VALUE_TYPES=(
   %parameter-0 config-property
-  profile config-profile
 )

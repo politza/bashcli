@@ -13,7 +13,7 @@ declare -g _BASHCLI_CONFIG_EVAL_DEPTH=0
 declare -g -A _BASHCLI_CONFIG_PROPERTIES=()
 declare -g -A _BASHCLI_CONFIG_PROPERTIES_PROFILE=()
 
-declare -g    _BASHCLI_CONFIG_PROFILES=()
+declare -g    BASHCLI_CONFIG_PROFILES=()
 declare -g -A _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
 
 declare -g -A _BASHCLI_CONFIG_ENV=()
@@ -33,7 +33,7 @@ bashcli-config-clear() {
     bashcli-error "no arguments expected"
     return 1
   fi
-  bashcli-config-initialize "${_BASHCLI_CONFIG_PROFILES[@]}"
+  bashcli-config-initialize "${BASHCLI_CONFIG_PROFILES[@]}"
 }
 
 bashcli-config-read() {
@@ -186,7 +186,7 @@ bashcli-config-get() {
   -bashcli-config-check-property "${property}"
   profile=${_BASHCLI_CONFIG_PROPERTIES_PROFILE[${qualifiedProperty}]}
 
-  if -bashcli-config-env-get "${profile:-default}" "${property}"; then
+  if -bashcli-config-env-get "${namespace}" "${profile:-default}" "${property}"; then
     value=${REPLY}
     isSet=true
   elif [ "${profile}" ]; then
@@ -481,19 +481,19 @@ bashcli-config-list() {
 }
 
 -bashcli-config-env-get() {
-  local profile
-  local minProfile=$1
-  local property=$2
-  local minPriority=${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${minProfile}]}
+  local namespace=$1
+  local profile=$2
+  local property=$3
+  local minPriority=${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]}
 
   if [ -z "${minPriority}" ]; then
-    bashcli-error "internal error: profile not active: ${minProfile}"
+    bashcli-error "internal error: profile not active: ${profile}"
     return 1
   fi
 
-  for ((index = $((${#_BASHCLI_CONFIG_PROFILES[@]} - 1)); index >= ${minPriority}; --index)); do
-    profile=${_BASHCLI_CONFIG_PROFILES[${index}]}
-    if -bashcli-config-env-read "${profile}" "${property}"; then
+  for ((index = $((${#BASHCLI_CONFIG_PROFILES[@]} - 1)); index >= ${minPriority}; --index)); do
+    profile=${BASHCLI_CONFIG_PROFILES[${index}]}
+    if -bashcli-config-env-read "${namespace}" "${profile}" "${property}"; then
       return 0
     fi
   done
@@ -502,20 +502,24 @@ bashcli-config-list() {
 }
 
 -bashcli-config-env-read() {
-  local profile=$1
-  local property=$2
-  local envVariable=${BASHCLI_CLI_NAME}_
+  local namespace=$1
+  local profile=$2
+  local property=$3
+  local variable=${BASHCLI_CLI_NAME}_
 
+  if [ "${namespace}" != "${BASHCLI_CLI_NAME}" ]; then
+    variable+=${namespace}_
+  fi
   if [ "${profile}" != default ]; then
     property="%${profile}.${property}"
   fi
-  envVariable+=${property}
-  envVariable=${envVariable//[^a-zA-Z0-9]/_}
-  envVariable=${envVariable^^}
+  variable+=${property}
+  variable=${variable//[^a-zA-Z0-9]/_}
+  variable=${variable^^}
 
-  if [ "${_BASHCLI_CONFIG_ENV[${envVariable}]}" ]; then
-    REPLY=${!envVariable}
-    bashcli-debug "${property} -> ${envVariable} -> ${REPLY}"
+  if [ "${_BASHCLI_CONFIG_ENV[${variable}]}" ]; then
+    REPLY=${!variable}
+    bashcli-debug "${property} -> ${variable} -> ${REPLY}"
     return 0
   fi
 
@@ -527,7 +531,7 @@ bashcli-config-list() {
   local profiles=(default "$@")
   local index=0
 
-  _BASHCLI_CONFIG_PROFILES=()
+  BASHCLI_CONFIG_PROFILES=()
   _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
 
   # Check profile-names, remove duplicate and empty profiles, but keep the order.
@@ -536,14 +540,14 @@ bashcli-config-list() {
     if [ "${profile}" ] && [ -z "${_BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]}" ]; then
       -bashcli-config-check-profile "${profile}"
       _BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]=${index}
-      _BASHCLI_CONFIG_PROFILES=("${profile}" "${_BASHCLI_CONFIG_PROFILES[@]}")
+      BASHCLI_CONFIG_PROFILES=("${profile}" "${BASHCLI_CONFIG_PROFILES[@]}")
     fi
   done
 
   # Remove gaps from profile priorities.
   _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
-  for ((index = 0; index < ${#_BASHCLI_CONFIG_PROFILES[@]}; ++index)); do
-    profile=${_BASHCLI_CONFIG_PROFILES[index]}
+  for ((index = 0; index < ${#BASHCLI_CONFIG_PROFILES[@]}; ++index)); do
+    profile=${BASHCLI_CONFIG_PROFILES[index]}
     _BASHCLI_CONFIG_PROFILE_PRIORITIES[${profile}]=${index}
   done
 }

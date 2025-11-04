@@ -4,22 +4,12 @@
 
 DESCRIPTION="
 Updates the value of a given property.
+
+If this command is executed with an active profile, the property is written using that profile. If
+multiple profiles are active, the last one provided on the command-line will be used.
 "
-
-OPTIONS=(
-  profile single
-)
-
-OPTION_DESCRIPTIONS=(
-  profile "The profile to use when writing the property value."
-)
-
-OPTION_ALIASES=(
-  P profile
-)
 
 OPTION_VALUE_TYPES=(
   %parameter-0 config-property
-  %parameter-1 config-property-value
-  profile config-profile
+  %parameter-1 value
 )

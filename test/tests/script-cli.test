@@ -17,7 +17,7 @@ test-executable-help() {
   cli command --help &> "${output}"
   diff "${output}" - <<EOF
 Usage:
-cli command
+cli command [ OPTIONS ]
 
 Options:
 --option

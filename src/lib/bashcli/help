@@ -69,7 +69,7 @@ declare -g _BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
   fi
 
   commandList[0]=${BASHCLI_CLI_NAME}
-  printf "%sUsage:%s\n%s%s\n" "${_BASHCLI_HELP_FACES[bold]}" "${_BASHCLI_HELP_FACES[regular]}" \
+  printf "%sUsage:%s\n%s [ OPTIONS ]%s\n" "${_BASHCLI_HELP_FACES[bold]}" "${_BASHCLI_HELP_FACES[regular]}" \
          "${commandList[*]}" "${parameterInfo}"
   if [ -n "${description}" ]; then
     fmt --width "${_BASHCLI_HELP_WIDTH}" <<<$'\n'"${description%%*($'\n')}"
