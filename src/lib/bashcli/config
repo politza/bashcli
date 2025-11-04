@@ -125,8 +125,6 @@ bashcli-config-files() {
     printf -v pattern "^[[:space:]]*(%%[a-zA-Z0-9-]+\\.)?(%s)\\." "${REPLY}"
   fi
 
-  bashcli-debug "pattern=${pattern}"
-
   while IFS= read -r line || [ -n "${line}" ]; do
     if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
       profile=${REPLY[0]}
@@ -146,8 +144,6 @@ bashcli-config-files() {
           continue
         fi
       fi
-
-      bashcli-debug "%${profile}.${property}=${value}"
 
       _BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
       _BASHCLI_CONFIG_PROPERTIES_PROFILE[${property}]=${profile}
@@ -199,9 +195,6 @@ bashcli-config-get() {
     if [ "${type}" ]; then
       -bashcli-config-coerce-value "${REPLY}" "${type}"
     fi
-    bashcli-debug "${profile:-default} ${property} ${REPLY}"
-  else
-    bashcli-debug "${profile:-default} ${property} <unset>"
   fi
 
   [ "${isSet}" ] || [ -z "${failIfUnset}" ]
