@@ -92,13 +92,13 @@ declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
     fi
     optionType=${OPTIONS[${option}]}
     case ${optionType} in
-      boolean|single|multi|multi-raw) ;;
+      boolean|single|multi-list|multi) ;;
       enum:?*)
         case ${OPTIONS[${optionType#enum:}]} in
-          multi|multi-raw|boolean|enum:*)
+          multi-list|multi|boolean|enum:*)
             bashcli-fatal "Enum option-value must be a single option: ${optionType:#enum:}" ;;
         esac ;;
-      *) bashcli-fatal "Option-type must be one of boolean, single, multi or enum:\${name}: ${optionType}" ;;
+      *) bashcli-fatal "Option-type must be one of boolean, single, multi, multi-list or enum:\${name}: ${optionType}" ;;
     esac
     if [ -z "${OPTION_DESCRIPTIONS[${option}]}" ]; then
       OPTION_DESCRIPTIONS[${option}]="${_BASHCLI_CONTEXT_NOT_DOCUMENTED}"

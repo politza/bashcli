@@ -20,7 +20,7 @@ Options:
 --enum, -e ENUM-VALUE
   Enum option description with trailing newlines.
 
---multi, -m MULTI-VALUE
+--multi-list, -m MULTI-LIST-VALUE
   Multi option description.
 
 --primary

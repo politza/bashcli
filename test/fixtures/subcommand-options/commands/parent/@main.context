@@ -3,8 +3,8 @@
 
 
 OPTIONS=(
-  parent-option multi
-  shared-option multi
+  parent-option multi-list
+  shared-option multi-list
 )
 
 OPTION_ALIASES=(

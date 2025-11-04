@@ -7,12 +7,12 @@ bashcli-complete-single() {
   COMPREPLY=(single-0 single-1)
 }
 
-bashcli-complete-multi-raw() {
-  COMPREPLY=(multi-raw,0 multi-raw,1)
+bashcli-complete-multi() {
+  COMPREPLY=(multi,0 multi,1)
 }
 
-bashcli-complete-multi() {
-  COMPREPLY=(multi-0 multi-1 multi-2)
+bashcli-complete-multi-list() {
+  COMPREPLY=(multi-list-0 multi-list-1 multi-list-2)
 }
 
 test-cli-complete-parameter() {

@@ -11,11 +11,11 @@ Command description third line with trailing newlines.
 "
 
 OPTIONS=(
-  boolean    boolean
-  single     single
-  multi      multi
-  enum       single
-  primary    enum:enum
+  boolean     boolean
+  single      single
+  multi-list  multi-list
+  enum        single
+  primary     enum:enum
 )
 
 OPTION_ALIASES=(
@@ -23,7 +23,7 @@ OPTION_ALIASES=(
   c boolean
   b boolean
   s single
-  m multi
+  m multi-list
   e enum
 )
 
@@ -32,7 +32,7 @@ OPTION_DESCRIPTIONS=(
   single  "Single option first line.
 Single option second line.
 Single option third line."
-  multi "\
+  multi-list "\
 Multi option description."
   enum "Enum option description with trailing newlines.\
 
@@ -42,8 +42,8 @@ Multi option description."
 )
 
 OPTION_VALUE_TYPES=(
-  boolean boolean-value
-  single single-value
-  multi multi-value
-  enum enum-value
+  boolean     boolean-value
+  single      single-value
+  multi-list  multi-list-value
+  enum        enum-value
 )

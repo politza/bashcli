@@ -2,12 +2,12 @@
 
 declare -A options=()
 declare parameters=()
+declare multiListOptions=()
 declare multiOptions=()
-declare multiRawOptions=()
 
 bashcli-options-parse \
   options parameters \
-  multiOptions=multi multiRawOptions=multi-raw \
+  multiListOptions=multi-list multiOptions=multi \
   -- "$@"
 
 if [ "${options[boolean]}" ]; then
@@ -18,12 +18,12 @@ if [ "${options[single]}" ]; then
   echo "single=${options[single]}"
 fi
 
-for ((index = 0; index < ${#multiOptions[@]}; ++index)); do
-  echo "multi[${index}]=${multiOptions[index]}"
+for ((index = 0; index < ${#multiListOptions[@]}; ++index)); do
+  echo "multi-list[${index}]=${multiListOptions[index]}"
 done
 
-for ((index = 0; index < ${#multiRawOptions[@]}; ++index)); do
-  echo "multi-raw[${index}]=${multiRawOptions[index]}"
+for ((index = 0; index < ${#multiOptions[@]}; ++index)); do
+  echo "multi[${index}]=${multiOptions[index]}"
 done
 
 if [ "${options[enum]}" ]; then

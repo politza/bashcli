@@ -45,7 +45,7 @@
             option=
           else
             case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
-              single|multi|multi-raw) ((++index)) ;;
+              single|multi-list|multi) ((++index)) ;;
               *) option=
             esac
           fi
@@ -62,7 +62,7 @@
             option=${_BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
           fi
           case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
-            single|multi|multi-raw)
+            single|multi-list|multi)
               if [[ ${optionsIndex} -eq $((${#options} - 1)) ]]; then
                 ((++index))
               else
@@ -108,7 +108,7 @@
       if [ ${#option} -gt 1 ]; then
         local alias aliases=() suffix=
         case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
-          single|multi|multi-raw) suffix='=' ;;
+          single|multi-list|multi) suffix='=' ;;
         esac
         description=${_BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
         bashcli-string-trim description
@@ -163,7 +163,7 @@
 
   # Create the array with bare completions.
   COMPREPLY=()
-  if declare -pf _comp_delimited &>/dev/null && [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi ]; then
+  if declare -pf _comp_delimited &>/dev/null && [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi-list ]; then
     _comp_delimited , -W '"${!BASHCLI_COMPLETIONS[@]}"' || true
   elif declare -pf _comp_compgen &>/dev/null; then
     _comp_compgen -- -W '"${!BASHCLI_COMPLETIONS[@]}"' || true
@@ -174,8 +174,8 @@
   # Postprocess the completions.
   case ${#COMPREPLY[@]} in
     0) ;;
-    1) local multiOptions=${cur//[^,]/},
-       if [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi ] && [ ${#multiOptions} -lt ${#BASHCLI_COMPLETIONS[@]} ]; then
+    1) local multiListOptions=${cur//[^,]/},
+       if [ "${BASHCLI_COMPLETION_OPTION_TYPE}" == multi-list ] && [ ${#multiListOptions} -lt ${#BASHCLI_COMPLETIONS[@]} ]; then
          if [ "${cur}" == "${COMPREPLY[0]}" ]; then
            COMPREPLY=("${cur},")
          fi

@@ -7,7 +7,7 @@ Lists configuration properties.
 "
 
 OPTIONS=(
-  prefix multi
+  prefix multi-list
 )
 
 OPTION_DESCRIPTIONS=(

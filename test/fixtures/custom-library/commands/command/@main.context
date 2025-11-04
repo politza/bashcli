@@ -3,5 +3,5 @@
 
 
 OPTIONS=(
-  load-test-lib    boolean
+  load-test-lib boolean
 )

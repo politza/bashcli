@@ -3,21 +3,21 @@
 
 
 OPTIONS=(
-  boolean    boolean
-  single     single
-  multi      multi
-  multi-raw  multi-raw
-  first      enum:ignored
-  second     enum:ignored
+  boolean     boolean
+  single      single
+  multi-list  multi-list
+  multi       multi
+  first       enum:ignored
+  second      enum:ignored
 )
 
 OPTION_DESCRIPTIONS=(
-  boolean   'boolean option'
-  single    'single option'
-  multi     'multi option'
-  multi-raw 'multi-raw option'
-  first     'first enum option'
-  second    'second enum option'
+  boolean    'boolean option'
+  single     'single option'
+  multi-list 'multi-list option'
+  multi      'multi option'
+  first      'first enum option'
+  second     'second enum option'
 )
 
 OPTION_ALIASES=(
@@ -25,15 +25,15 @@ OPTION_ALIASES=(
   a boolean
   c boolean
   s single
-  m multi
-  M multi-raw
+  m multi-list
+  M multi
   f first
 )
 
 OPTION_VALUE_TYPES=(
-  boolean    none
-  single     single
-  multi      multi
-  multi-raw  multi-raw
-  %parameter parameter
+  boolean     none
+  single      single
+  multi-list  multi-list
+  multi       multi
+  %parameter  parameter
 )

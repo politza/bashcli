@@ -24,58 +24,58 @@ single=0
 EOF
 }
 
-test-multi-option() {
-  cli --multi a --multi b &> "${output}"
+test-multi-list-option() {
+  cli --multi-list a --multi-list b &> "${output}"
   diff "${output}" - <<EOF
-multi[0]=a
-multi[1]=b
+multi-list[0]=a
+multi-list[1]=b
 EOF
 }
 
-test-multi-split-options() {
-  cli --multi=a,b,c &> "${output}"
+test-multi-list-split-options() {
+  cli --multi-list=a,b,c &> "${output}"
   diff "${output}" - <<EOF
-multi[0]=a
-multi[1]=b
-multi[2]=c
+multi-list[0]=a
+multi-list[1]=b
+multi-list[2]=c
 EOF
 }
 
-test-multi-split-options-multiple-times() {
-  cli --multi a,b,c --multi=d,e,f &> "${output}"
+test-multi-list-split-options-multiple-times() {
+  cli --multi-list a,b,c --multi-list=d,e,f &> "${output}"
   diff "${output}" - <<EOF
-multi[0]=a
-multi[1]=b
-multi[2]=c
-multi[3]=d
-multi[4]=e
-multi[5]=f
+multi-list[0]=a
+multi-list[1]=b
+multi-list[2]=c
+multi-list[3]=d
+multi-list[4]=e
+multi-list[5]=f
 EOF
 }
 
-test-multi-split-options-aliased() {
+test-multi-list-split-options-aliased() {
   cli -ma,b,c &> "${output}"
   diff "${output}" - <<EOF
-multi[0]=a
-multi[1]=b
-multi[2]=c
+multi-list[0]=a
+multi-list[1]=b
+multi-list[2]=c
 EOF
 }
 
-test-multi-split-options-whitespace() {
-  cli --multi=' a,  b,   c' &> "${output}"
+test-multi-list-split-options-whitespace() {
+  cli --multi-list=' a,  b,   c' &> "${output}"
   diff "${output}" - <<EOF
-multi[0]= a
-multi[1]=  b
-multi[2]=   c
+multi-list[0]= a
+multi-list[1]=  b
+multi-list[2]=   c
 EOF
 }
 
-test-multi-raw-option() {
-  cli --multi-raw a,b,c --multi-raw d,e,f &> "${output}"
+test-multi-option() {
+  cli --multi a,b,c --multi d,e,f &> "${output}"
   diff "${output}" - <<EOF
-multi-raw[0]=a,b,c
-multi-raw[1]=d,e,f
+multi[0]=a,b,c
+multi[1]=d,e,f
 EOF
 }
 
@@ -91,9 +91,9 @@ test-alias-options() {
   diff -u "${output}" - <<EOF
 boolean=true
 single=a
-multi[0]=a
-multi[1]=b
-multi-raw[0]=c
+multi-list[0]=a
+multi-list[1]=b
+multi[0]=c
 enum=primary
 EOF
 }
@@ -103,7 +103,7 @@ test-concatenated-options() {
   diff -u "${output}" - <<EOF
 boolean=true
 single=a
-multi[0]=a
+multi-list[0]=a
 EOF
 }
 
@@ -129,17 +129,17 @@ test-single-requires-argument() {
 EOF
 }
 
+test-multi-list-requires-argument() {
+  cli --multi-list &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] option requires an argument: --multi-list
+EOF
+}
+
 test-multi-requires-argument() {
   cli --multi &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] option requires an argument: --multi
-EOF
-}
-
-test-multi-raw-requires-argument() {
-  cli --multi-raw &> "${output}" && return 1
-  diff "${output}" - <<EOF
-[error] option requires an argument: --multi-raw
 EOF
 }
 

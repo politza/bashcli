@@ -41,15 +41,15 @@ completion-exec() {
 test-complete-long-options() {
   completion-exec 'test-cli command --|' &> "${output}"
   diff "${output}" - <<EOF
---boolean     boolean option (-a,-b,-c)
---first       first enum option (-f)
---help        Shows a help message.
---multi-raw=  multi-raw option (-M)
---multi=      multi option (-m)
---profile=    Enables one or more configuration profiles. (-P)
---second      second enum option
---single=     single option (-s)
---version     Displays version information about the program.
+--boolean      boolean option (-a,-b,-c)
+--first        first enum option (-f)
+--help         Shows a help message.
+--multi-list=  multi-list option (-m)
+--multi=       multi option (-M)
+--profile=     Enables one or more configuration profiles. (-P)
+--second       second enum option
+--single=      single option (-s)
+--version      Displays version information about the program.
 EOF
 }
 
@@ -69,64 +69,64 @@ parameter-1
 EOF
 }
 
-test-complete-multi() {
-  completion-exec 'test-cli command --multi m|' &> "${output}"
+test-complete-multi-list() {
+  completion-exec 'test-cli command --multi-list m|' &> "${output}"
   diff "${output}" - <<EOF
-multi-0
-multi-1
-multi-2
+multi-list-0
+multi-list-1
+multi-list-2
 EOF
 }
 
-test-complete-multi-assignment() {
-  completion-exec 'test-cli command --multi=m|' &> "${output}"
+test-complete-multi-list-assignment() {
+  completion-exec 'test-cli command --multi-list=m|' &> "${output}"
   diff "${output}" - <<EOF
-multi-0
-multi-1
-multi-2
+multi-list-0
+multi-list-1
+multi-list-2
 EOF
 }
 
 if bash-completion-has-comp_delimited; then
-test-complete-multi-split() {
-  completion-exec 'test-cli command --multi=multi-0' &> "${output}"
+test-complete-multi-list-split() {
+  completion-exec 'test-cli command --multi-list=multi-list-0' &> "${output}"
   diff "${output}" - <<EOF
-multi-0,
+multi-list-0,
 EOF
 
-  completion-exec 'test-cli command --multi=multi-0,' &> "${output}"
+  completion-exec 'test-cli command --multi-list=multi-list-0,' &> "${output}"
   diff "${output}" - <<EOF
-multi-0,multi-1
-multi-0,multi-2
+multi-list-0,multi-list-1
+multi-list-0,multi-list-2
 EOF
 
-  completion-exec 'test-cli command --multi=multi-0,multi-2,' &> "${output}"
+  completion-exec 'test-cli command --multi-list=multi-list-0,multi-list-2,' &> "${output}"
   diff "${output}" - <<EOF
-multi-0,multi-2,multi-1
+multi-list-0,multi-list-2,multi-list-1
 EOF
 
-  completion-exec 'test-cli command --multi=multi-0,multi-2,multi-1' &> "${output}"
+  completion-exec 'test-cli command --multi-list=multi-list-0,multi-list-2,multi-list-1' &> "${output}"
   diff "${output}" - <<EOF
-multi-0,multi-2,multi-1
+multi-list-0,multi-list-2,multi-list-1
 EOF
 }
 fi
 
-test-complete-multi-raw() {
-  completion-exec 'test-cli command --multi-raw multi-raw' &> "${output}"
+test-complete-multi() {
+  completion-exec 'test-cli command --multi multi' &> "${output}"
   diff "${output}" - <<EOF
-multi-raw,0
-multi-raw,1
+multi,0
+multi,1
 EOF
 }
 
-test-complete-multi-raw-with-comma() {
-  completion-exec 'test-cli command --multi-raw multi-raw,0' &> "${output}"
+test-complete-multi-with-comma() {
+  completion-exec 'test-cli command --multi multi,0' &> "${output}"
   diff "${output}" - <<EOF
-multi-raw,0
+multi,0
 EOF
 
-  completion-exec 'test-cli command --multi-raw multi-raw,0,' &> "${output}"
+  completion-exec 'test-cli command --multi multi,0,' &> "${output}"
   diff "${output}" - <<EOF
 EOF
 }

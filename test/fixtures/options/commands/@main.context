@@ -3,19 +3,19 @@
 
 
 OPTIONS=(
-  boolean    boolean
-  single     single
-  multi      multi
-  multi-raw  multi-raw
-  enum       single
-  primary    enum:enum
-  secondary  enum:enum
+  boolean     boolean
+  single      single
+  multi-list  multi-list
+  multi       multi
+  enum        single
+  primary     enum:enum
+  secondary   enum:enum
 )
 
 OPTION_ALIASES=(
   b boolean
   s single
-  m multi
-  M multi-raw
+  m multi-list
+  M multi
   e enum
 )
