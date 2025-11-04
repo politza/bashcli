@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/fixtures/options-conf:${PATH}
+PATH=$PWD/fixtures/options-config:${PATH}
 output=$(mktemp)
 configHome=$(mktemp -d)
 export XDG_CONFIG_HOME=${configHome}
