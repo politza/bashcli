@@ -91,11 +91,11 @@ bashcli-config-files() {
   case ${scope} in
     default) REPLY=("${BASHCLI_CONFIG_DEFAULT_DIR}/${namespace}.conf");;
     global) REPLY=("${BASHCLI_CONFIG_GLOBAL_DIR}/${namespace}.conf");;
-    local) if [ "${BASHCLI_CONFIG_LOCAL_DIR}" ]; then
-             REPLY=("${BASHCLI_CONFIG_LOCAL_DIR}/${namespace}.conf")
-           else
-             REPLY=("${BASHCLI_CONFIG_GLOBAL_DIR}/${namespace}.conf")
-           fi;;
+    local) if [ -z "${BASHCLI_CONFIG_LOCAL_DIR}" ]; then
+             bashcli-error "local scope not supported"
+             return 1
+           fi
+           REPLY=("${BASHCLI_CONFIG_LOCAL_DIR}/${namespace}.conf");;
     '') REPLY=(
           "${BASHCLI_CONFIG_DEFAULT_DIR}/${namespace}.conf"
           "${BASHCLI_CONFIG_GLOBAL_DIR}/${namespace}.conf"
@@ -227,7 +227,7 @@ bashcli-config-get() {
 bashcli-config-write() {
   local updateMode=set
   local namespace=${BASHCLI_CLI_NAME}
-  local scope=local
+  local scope=global
   local profile=default
   local option configFile property value
 
