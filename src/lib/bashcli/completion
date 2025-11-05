@@ -45,7 +45,7 @@
             option=
           else
             case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
-              single|multi-list|multi) ((++index)) ;;
+              single|multi|multi-list) ((++index)) ;;
               *) option=
             esac
           fi
@@ -62,7 +62,7 @@
             option=${_BASHCLI_CONTEXT_OPTION_ALIASES[${option}]}
           fi
           case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
-            single|multi-list|multi)
+            single|multi|multi-list)
               if [[ ${optionsIndex} -eq $((${#options} - 1)) ]]; then
                 ((++index))
               else
@@ -108,7 +108,7 @@
       if [ ${#option} -gt 1 ]; then
         local alias aliases=() suffix=
         case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
-          single|multi-list|multi) suffix='=' ;;
+          single|multi|multi-list) suffix='=' ;;
         esac
         description=${_BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
         bashcli-string-trim description

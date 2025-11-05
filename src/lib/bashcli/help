@@ -108,7 +108,7 @@ declare -g _BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
 
     optionType=${_BASHCLI_CONTEXT_OPTIONS[${option}]}
     case ${optionType} in
-      single|multi-list|multi)
+      single|multi|multi-list)
         optionValueType=${_BASHCLI_CONTEXT_OPTION_VALUE_TYPES[${option}]:-OPTION}
         optionValueType=${optionValueType//,/ | }
         optionLabel+=" ${optionValueType^^}"
