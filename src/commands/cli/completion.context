@@ -7,7 +7,7 @@ Complete options and parameters.
 "
 
 OPTIONS=(
-  script      boolean
+  script      flag
   comp-cword  single
   comp-line   single
   comp-point  single

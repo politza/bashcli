@@ -11,7 +11,7 @@ Command description third line with trailing newlines.
 "
 
 OPTIONS=(
-  boolean     boolean
+  boolean     flag
   single      single
   multi-list  multi-list
   enum        single

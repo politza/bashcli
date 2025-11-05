@@ -2,5 +2,5 @@
 # shellcheck disable=SC2034
 
 OPTIONS=(
-  option boolean
+  option flag
 )

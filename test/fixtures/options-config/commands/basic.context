@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 OPTIONS=(
-  boolean    boolean
+  boolean    flag
   single     single
   multi      multi
   enum       single

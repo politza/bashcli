@@ -169,7 +169,7 @@ bashcli-options-parse() {
                 fi
               done
               shift ;;
-            boolean)
+            flag)
               _parsedOptions[${_option}]=true ;;
             enum:?*)
               _parsedOptions[${_optionType#enum:}]=${_option} ;;
@@ -266,7 +266,7 @@ bashcli-options-parse() {
     fi
 
     case ${__optionType} in
-      boolean)
+      flag)
         if bashcli-config-get -x -t boolean "${__property}" && [ "${REPLY}" == true ]; then
           __options[${__option}]=true
         fi;;

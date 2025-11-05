@@ -78,7 +78,7 @@ declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
 
 -bashcli-context-defaults() {
   if [ -z "${OPTIONS[help]}" ]; then
-    OPTIONS[help]=boolean
+    OPTIONS[help]=flag
     OPTION_DESCRIPTIONS[help]="Shows a help message."
   fi
 }
@@ -92,13 +92,13 @@ declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
     fi
     optionType=${OPTIONS[${option}]}
     case ${optionType} in
-      boolean|single|multi-list|multi) ;;
+      flag|single|multi-list|multi) ;;
       enum:?*)
         case ${OPTIONS[${optionType#enum:}]} in
-          multi-list|multi|boolean|enum:*)
+          multi-list|multi|flag|enum:*)
             bashcli-fatal "Enum option-value must be a single option: ${optionType:#enum:}" ;;
         esac ;;
-      *) bashcli-fatal "Option-type must be one of boolean, single, multi, multi-list or enum:\${name}: ${optionType}" ;;
+      *) bashcli-fatal "Option-type must be one of flag, single, multi, multi-list or enum:\${name}: ${optionType}" ;;
     esac
     if [ -z "${OPTION_DESCRIPTIONS[${option}]}" ]; then
       OPTION_DESCRIPTIONS[${option}]="${_BASHCLI_CONTEXT_NOT_DOCUMENTED}"

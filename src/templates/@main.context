@@ -8,7 +8,7 @@ Not documented.
 "
 
 # Defines the options supported by this command. The associative array maps options to an
-# option-type, which must either boolean, single, multi, multi-list or enum:${NAME}.
+# option-type, which must either flag, single, multi, multi-list or enum:${NAME}.
 OPTIONS=(
 )
 

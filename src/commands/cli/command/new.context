@@ -6,7 +6,7 @@ Creates new commands.
 "
 
 OPTIONS=(
-  force     boolean
+  force     flag
   directory single
 )
 
