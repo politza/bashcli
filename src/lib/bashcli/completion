@@ -217,7 +217,6 @@
   cat <<EOF
 _${cliName}_complete() {
   readarray -t COMPREPLY < <(
-    export BASHCLI_DIR="${BASHCLI_DIR}"
     IFS=$'\n'
 
     "${BASHCLI_CLI_SCRIPT}" \\
