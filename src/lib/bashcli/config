@@ -330,6 +330,7 @@ bashcli-config-write() {
     return 1
   elif [ "${updateMode}" == set ]; then
     # File does not exist yet, create it.
+    mkdir --parent "$(dirname "${configFile}")"
     printf "%s%s=%s\n" "${profilePrefix}" "${property}" "${value}" > "${configFile}"
   fi
 }
