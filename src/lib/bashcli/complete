@@ -38,7 +38,7 @@ bashcli-complete-config-property() {
   done
 }
 
-# Completes the names of subcommands of the current command.
+# Completes the names of subcommands of the provided command.
 bashcli-complete-subcommand() {
   local commandList=("$@")
   local completion subcommand commandMain
@@ -57,4 +57,22 @@ bashcli-complete-subcommand() {
     return 0
   fi
   return 1
+}
+
+# Completes config namespaces.
+bashcli-complete-namespace() {
+  local configDirs=()
+
+  if [ -d "${BASHCLI_CONFIG_DEFAULT_DIR}" ]; then
+    configDirs+=("${BASHCLI_CONFIG_DEFAULT_DIR}")
+  fi
+  if [ -d "${BASHCLI_CONFIG_GLOBAL_DIR}" ]; then
+    configDirs+=("${BASHCLI_CONFIG_GLOBAL_DIR}")
+  fi
+  if [ -d "${BASHCLI_CONFIG_LOCAL_DIR}" ]; then
+    configDirs+=("${BASHCLI_CONFIG_LOCAL_DIR}")
+  fi
+
+  readarray -d '' -t COMPREPLY < <(find "${configDirs[@]}" -mindepth 1 -maxdepth 1 -type f -name '*.conf' -printf '%f\0')
+  COMPREPLY=("${COMPREPLY[@]/.conf/}")
 }
