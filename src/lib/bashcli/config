@@ -17,6 +17,8 @@ declare -g    BASHCLI_CONFIG_PROFILES=()
 declare -g -A _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
 
 declare -g -A _BASHCLI_CONFIG_ENV=()
+declare -g _BASHCLI_CONFIG_DIR_NAME=config
+declare -g _BASHCLI_CONFIG_FILE_EXTENSION=conf
 
 bashcli-config-initialize() {
   local IFS=,
@@ -40,16 +42,16 @@ bashcli-config-read() {
   local configFiles=()
   local namespace=${BASHCLI_CLI_NAME}
   local OPTIND=1
-  local option scope prefixes configFile
+  local scopes=all
+  local option prefixes configFile
 
   while getopts ":s:n:f:p:" option "$@"; do
     case ${option} in
-      s) -bashcli-config-check-scope "${OPTARG}"
-         scope=${OPTARG};;
+      s) scopes=${OPTARG};;
       n) -bashcli-config-check-namespace "${OPTARG}"
          namespace=${OPTARG};;
       f) if [ "${OPTARG}" ]; then
-           configFiles=("${OPTARG}")
+           configFiles+=("${OPTARG}")
          fi;;
       p) if [ "${OPTARG}" ]; then
            -bashcli-config-check-property "${OPTARG}"
@@ -67,12 +69,12 @@ bashcli-config-read() {
     return 1
   fi
 
-  if [ ${#configFiles[@]} -eq 0 ]; then
-    bashcli-config-files "${scope}" "${namespace}"
+  if [ "${scopes}" ] && [ ${#configFiles[@]} -eq 0 ]; then
+    bashcli-config-files "${scopes}" "${namespace}"
     configFiles=("${REPLY[@]}")
   fi
 
-  bashcli-debug "reading with namespace=${namespace} scope=${scope} #files=${#configFiles[@]}"
+  bashcli-debug "reading with namespace=${namespace} scopes=${scopes} #files=${#configFiles[@]}"
 
   for configFile in "${configFiles[@]}"; do
     if [ -f "${configFile}" ]; then
@@ -84,28 +86,31 @@ bashcli-config-read() {
 }
 
 bashcli-config-files() {
-  local scope=$1
+  local forWrite
+  if [ "$1" == -w ]; then
+    forWrite=true
+    shift
+  fi
   local namespace=${2:-${BASHCLI_CLI_NAME}}
+  local filename=${_BASHCLI_CONFIG_DIR_NAME}/${namespace}.${_BASHCLI_CONFIG_FILE_EXTENSION}
+  local scope scopes
 
+  bashcli-resource-parse-scopes "$1"
+  scopes=("${REPLY[@]}")
   REPLY=()
-  case ${scope} in
-    default) REPLY=("${BASHCLI_CONFIG_DEFAULT_DIR}/${namespace}.conf");;
-    global) REPLY=("${BASHCLI_CONFIG_GLOBAL_DIR}/${namespace}.conf");;
-    local) if [ -z "${BASHCLI_CONFIG_LOCAL_DIR}" ]; then
-             bashcli-error "local scope not supported"
-             return 1
-           fi
-           REPLY=("${BASHCLI_CONFIG_LOCAL_DIR}/${namespace}.conf");;
-    '') REPLY=(
-          "${BASHCLI_CONFIG_DEFAULT_DIR}/${namespace}.conf"
-          "${BASHCLI_CONFIG_GLOBAL_DIR}/${namespace}.conf"
-        )
-        if [ "${BASHCLI_CONFIG_LOCAL_DIR}" ]; then
-          REPLY+=("${BASHCLI_CONFIG_LOCAL_DIR}/${namespace}.conf")
-        fi;;
-    *) bashcli-error "no such scope: ${scope}"
-       return 1
-  esac
+
+  for scope in "${scopes[@]}"; do
+    if [ "${forWrite}" ]; then
+      case ${scope} in
+        builtin|default)
+          bashcli-error "builtin and default scopes are read-only"
+          return 1;;
+        esac
+    fi
+    REPLY+=("${BASHCLI_RESOURCE_DIRS[${scope}]}/${filename}")
+  done
+
+  bashcli-debug "${REPLY[*]}"
 }
 
 -bashcli-config-read-file() {
@@ -227,18 +232,18 @@ bashcli-config-get() {
 bashcli-config-write() {
   local updateMode=set
   local namespace=${BASHCLI_CLI_NAME}
-  local scope=global
+  local scopes=global
   local profile=default
+  local configFiles=()
   local option configFile property value
 
   while getopts ":s:n:f:P:U" option "$@"; do
     case ${option} in
-      s) -bashcli-config-check-scope "${OPTARG}"
-         scope=${OPTARG};;
+      s) scopes=${OPTARG};;
       n) -bashcli-config-check-namespace "${OPTARG}"
          namespace=${OPTARG};;
       f) if [ "${OPTARG}" ]; then
-           configFiles=("${OPTARG}")
+           configFiles+=("${OPTARG}")
          fi;;
       U) updateMode=unset;;
       P) -bashcli-config-check-profile "${OPTARG}"
@@ -268,14 +273,20 @@ bashcli-config-write() {
   bashcli-string-trim value
   -bashcli-config-check-property "${property}"
 
-  if [ ${#configFiles[@]} -eq 0 ]; then
-    bashcli-config-files "${scope}" "${namespace}"
+  if [ "${scopes}" ] && [ ${#configFiles[@]} -eq 0 ]; then
+    bashcli-config-files -w "${scopes}" "${namespace}"
     configFiles=("${REPLY[@]}")
-    if [ ${#configFiles[@]} -ne 1 ]; then
-      bashcli-fatal "internal error"
-    fi
+  fi
+
+  if [ ${#configFiles[@]} -ne 1 ]; then
+    bashcli-error "require a single scope or config-file when updating properties"
+    return 1
   fi
   configFile=${configFiles[0]}
+  case "${configFile}" in
+    "${BASHCLI_RESOURCE_DIRS[default]}"|"${BASHCLI_RESOURCE_DIRS[builtin]}")
+      bashcli-error "default and builtin scopes are read-only" ;;
+  esac
 
   bashcli-debug "${updateMode}" "${configFile}" "${profile}" "${property}" "${value}"
   -bashcli-config-write-value "${updateMode}" "${configFile}" "${profile}" "${property}" "${value}"

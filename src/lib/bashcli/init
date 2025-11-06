@@ -106,6 +106,7 @@ bashcli-exec() {
 
 bashcli-load-library bashcli/array
 bashcli-load-library bashcli/cache
+bashcli-load-library bashcli/resource
 bashcli-load-library bashcli/command
 bashcli-load-library bashcli/config
 bashcli-load-library bashcli/context

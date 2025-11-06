@@ -2,50 +2,54 @@
 
 PATH=${PWD}/fixtures/config:${PATH}
 output=$(mktemp)
-localConfigDir=$(mktemp -d)
-globalConfigDir=$(mktemp -d)
-fileConfigDir=$(mktemp -d)
-localConfig=${localConfigDir}/cli.conf
-globalConfig=${globalConfigDir}/cli.conf
-fileConfig=${fileConfigDir}/file.conf
+TEST_BASHCLI_LOCAL_DIR=$(mktemp -d)
+TEST_BASHCLI_GLOBAL_DIR=$(mktemp -d)
+TEST_BASHCLI_FILE_DIR=$(mktemp -d)
+TEST_BASHCLI_LOCAL_CONFIG=${TEST_BASHCLI_LOCAL_DIR}/config/cli.conf
+TEST_BASHCLI_GLOBAL_CONFIG=${TEST_BASHCLI_GLOBAL_DIR}/config/cli.conf
+TEST_BASHCLI_FILE_CONFIG=${TEST_BASHCLI_FILE_DIR}/config/file.conf
 
-trap "rm -r -- '${output}' '${localConfigDir}' '${globalConfigDir}' '${fileConfigDir}'" EXIT
+trap "rm -r -- '${output}' '${TEST_BASHCLI_LOCAL_DIR}' '${TEST_BASHCLI_GLOBAL_DIR}' '${TEST_BASHCLI_FILE_DIR}'" EXIT
 
 before-each() {
-  export BASHCLI_CONFIG_GLOBAL_DIR=${globalConfigDir}
-  export BASHCLI_CONFIG_LOCAL_DIR=${localConfigDir}
+  export BASHCLI_GLOBAL_DIR=${TEST_BASHCLI_GLOBAL_DIR}
+  export BASHCLI_LOCAL_DIR=${TEST_BASHCLI_LOCAL_DIR}
   unset CLI_PROPERTY
   unset CLI__NS__PROPERTY
   unset _PROFILE_CLI_PROPERTY
   unset _PROFILE_CLI__NS__PROPERTY
 
-  cat > "${localConfig}" <<EOF
+  mkdir --parents "${TEST_BASHCLI_LOCAL_CONFIG%/*}"
+  mkdir --parents "${TEST_BASHCLI_GLOBAL_CONFIG%/*}"
+  mkdir --parents "${TEST_BASHCLI_FILE_CONFIG%/*}"
+
+  cat > "${TEST_BASHCLI_LOCAL_CONFIG}" <<EOF
 property=local-value
 %profile.property=local-profile-value
 EOF
 
-  cat > "${globalConfig}" <<EOF
+  cat > "${TEST_BASHCLI_GLOBAL_CONFIG}" <<EOF
 property=global-value
 %profile.property=global-profile-value
 EOF
 
-  cat > "${fileConfig}" <<EOF
+  cat > "${TEST_BASHCLI_FILE_CONFIG}" <<EOF
 property=file-value
 %profile.property=file-profile-value
 EOF
 }
 
 test-config-get-global-value() {
-  cli config --global get property &> "${output}"
+  cli config --scopes global get property &> "${output}"
   diff "${output}" - <<<global-value
 
-  BASHCLI_CONFIG_LOCAL_DIR=
+  BASHCLI_LOCAL_DIR=
   cli config get property &> "${output}"
   diff "${output}" - <<<global-value
 }
 
 test-config-get-local-value() {
-  cli config --local get property &> "${output}"
+  cli config --scopes local get property &> "${output}"
   diff "${output}" - <<<local-value
 
   cli config get property &> "${output}"
@@ -53,7 +57,7 @@ test-config-get-local-value() {
 }
 
 test-config-get-default-value() {
-  cli config --default get property &> "${output}"
+  cli config --scopes default get property &> "${output}"
   diff "${output}" - <<<default-value
 }
 
@@ -63,7 +67,7 @@ test-config-get-ns-value() {
 }
 
 test-config-get-file-value() {
-  cli config --file "${fileConfig}" get property &> "${output}"
+  cli config --file "${TEST_BASHCLI_FILE_CONFIG}" get property &> "${output}"
   diff "${output}" - <<<file-value
 }
 
@@ -71,13 +75,13 @@ test-config-get-env-value() {
   export CLI_PROPERTY=env-value
   export CLI__NS__PROPERTY=ns-env-value
 
-  cli config get --global property &> "${output}"
+  cli config get --scopes global property &> "${output}"
   diff "${output}" - <<<env-value
 
-  cli config get --local property &> "${output}"
+  cli config get --scopes local property &> "${output}"
   diff "${output}" - <<<env-value
 
-  cli config get --default property &> "${output}"
+  cli config get --scopes default property &> "${output}"
   diff "${output}" - <<<env-value
 
   cli config get property &> "${output}"
@@ -88,16 +92,16 @@ test-config-get-env-value() {
 }
 
 test-config-get-global-profile-value() {
-  cli config --global --profile profile get property &> "${output}"
+  cli config --scopes global --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 
-  BASHCLI_CONFIG_LOCAL_DIR=
+  BASHCLI_LOCAL_DIR=
   cli config --profile profile get property &> "${output}"
   diff "${output}" - <<<global-profile-value
 }
 
 test-config-get-local-profile-value() {
-  cli config --local --profile profile get property &> "${output}"
+  cli config --scopes local --profile profile get property &> "${output}"
   diff "${output}" - <<<local-profile-value
 
   cli config get --profile profile property &> "${output}"
@@ -105,7 +109,7 @@ test-config-get-local-profile-value() {
 }
 
 test-config-get-default-profile-value() {
-  cli config --default --profile profile get property &> "${output}"
+  cli config --scopes default --profile profile get property &> "${output}"
   diff "${output}" - <<<default-profile-value
 }
 
@@ -115,10 +119,10 @@ test-config-get-env-profile-value() {
   export _PROFILE_CLI_PROPERTY=env-profile-value
   export _PROFILE_CLI__NS__PROPERTY=ns-env-profile-value
 
-  cli config get --global --profile profile property &> "${output}"
+  cli config get --scopes global --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value
 
-  cli config get --local --profile profile property &> "${output}"
+  cli config get --scopes local --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value
 
   cli config get --profile profile property &> "${output}"
@@ -130,69 +134,76 @@ test-config-get-env-profile-value() {
   cli config get --namespace ns --profile profile property &> "${output}"
   diff "${output}" - <<<ns-env-profile-value
 
-  cli config get --namespace ns --file "${fileConfig}" --profile profile property &> "${output}"
+  cli config get --namespace ns --file "${TEST_BASHCLI_FILE_CONFIG}" --profile profile property &> "${output}"
   diff "${output}" - <<<ns-env-profile-value
 }
 
 test-config-set-global-value() {
-  cli config --global set property set-value &> "${output}"
-  cli config --global get property &>> "${output}"
+  cli config --scopes global set property set-value &> "${output}"
+  cli config --scopes global get property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
 test-config-set-local-value() {
-  cli config --local set property set-value &> "${output}"
-  cli config --local get property &>> "${output}"
+  cli config --scopes local set property set-value &> "${output}"
+  cli config --scopes local get property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
 test-config-set-default-value() {
-  cli config --default set property set-value &> "${output}" && return 1
+  cli config --scopes default set property set-value &> "${output}" && return 1
   diff "${output}" - <<EOF
-[error] default scope is read-only
+[error] builtin and default scopes are read-only
 EOF
 }
 
 test-config-set-file-value() {
-  cli config --file "${fileConfig}" set property set-value &> "${output}"
-  cli config --file "${fileConfig}" get property &>> "${output}"
+  cli config --file "${TEST_BASHCLI_FILE_CONFIG}" set property set-value &> "${output}"
+  cli config --file "${TEST_BASHCLI_FILE_CONFIG}" get property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
+test-config-set-using-multiple-scopes() {
+  cli config --scopes global,local set property set-value &> "${output}" && return 1
+  diff "${output}" - <<EOF
+[error] require a single scope or config-file when updating properties
+EOF
+}
+
 test-config-set-global-profile-value() {
-  cli config --global set --profile profile property set-profile-value &> "${output}"
-  cli config --global --profile profile get property &>> "${output}"
+  cli config --scopes global set --profile profile property set-profile-value &> "${output}"
+  cli config --scopes global --profile profile get property &>> "${output}"
   diff "${output}" - <<<set-profile-value
 }
 
 test-config-set-local-profile-value() {
-  cli config --local set --profile profile property set-profile-value &> "${output}"
-  cli config --local --profile profile get property &>> "${output}"
+  cli config --scopes local set --profile profile property set-profile-value &> "${output}"
+  cli config --scopes local --profile profile get property &>> "${output}"
   diff "${output}" - <<<set-profile-value
 }
 
 test-config-set-new-property() {
-  cli config --global set new-property set-value &> "${output}"
-  cli config --global get new-property &>> "${output}"
+  cli config --scopes global set new-property set-value &> "${output}"
+  cli config --scopes global get new-property &>> "${output}"
   diff "${output}" - <<<set-value
 }
 
 test-config-list-global() {
-  cli config --global list &> "${output}"
+  cli config --scopes global list &> "${output}"
   diff "${output}" - <<EOF
 property=global-value
 EOF
 }
 
 test-config-list-local() {
-  cli config --local list &> "${output}"
+  cli config --scopes local list &> "${output}"
   diff "${output}" - <<EOF
 property=local-value
 EOF
 }
 
 test-config-list-default() {
-  cli config --default list &> "${output}"
+  cli config --scopes default list &> "${output}"
   diff "${output}" - <<EOF
 property=default-value
 EOF
@@ -206,74 +217,74 @@ EOF
 }
 
 test-config-list-file() {
-  cli config --file "${fileConfig}" list &> "${output}"
+  cli config --file "${TEST_BASHCLI_FILE_CONFIG}" list &> "${output}"
   diff "${output}" - <<EOF
 property=file-value
 EOF
 }
 
 test-config-list-global-profile() {
-  cli config --global --profile profile list &> "${output}"
+  cli config --scopes global --profile profile list &> "${output}"
   diff "${output}" - <<EOF
 property=global-profile-value
 EOF
 }
 
 test-config-list-local-profile() {
-  cli config --local --profile profile list &> "${output}"
+  cli config --scopes local --profile profile list &> "${output}"
   diff "${output}" - <<EOF
 property=local-profile-value
 EOF
 }
 
 test-config-list-default-profile() {
-  cli config --default --profile profile list &> "${output}"
+  cli config --scopes default --profile profile list &> "${output}"
   diff "${output}" - <<EOF
 property=default-profile-value
 EOF
 }
 
 test-config-unset-global() {
-  cli config --global unset property &> "${output}"
+  cli config --scopes global unset property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
-  diff "${globalConfig}" - <<EOF
+  diff "${TEST_BASHCLI_GLOBAL_CONFIG}" - <<EOF
 %profile.property=global-profile-value
 EOF
 }
 
 test-config-unset-local() {
-  cli config --local unset property &> "${output}"
+  cli config --scopes local unset property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
-  diff "${localConfig}" - <<EOF
+  diff "${TEST_BASHCLI_LOCAL_CONFIG}" - <<EOF
 %profile.property=local-profile-value
 EOF
 }
 
 test-config-unset-local() {
-  cli config --default unset property &> "${output}" && return 1
+  cli config --scopes default unset property &> "${output}" && return 1
   diff "${output}" - <<EOF
-[error] default scope is read-only
+[error] builtin and default scopes are read-only
 EOF
 }
 
 test-config-unset-global-profile() {
-  cli config --global unset --profile profile property &> "${output}"
+  cli config --scopes global unset --profile profile property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
-  diff "${globalConfig}" - <<EOF
+  diff "${TEST_BASHCLI_GLOBAL_CONFIG}" - <<EOF
 property=global-value
 EOF
 }
 
 test-config-unset-local-profile() {
-  cli config --local unset --profile profile property &> "${output}"
+  cli config --scopes local unset --profile profile property &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
-  diff "${localConfig}" - <<EOF
+  diff "${TEST_BASHCLI_LOCAL_CONFIG}" - <<EOF
 property=local-value
 EOF
 }
 
 test-config-property-expression() {
-  cat > "${globalConfig}" <<'EOF'
+  cat > "${TEST_BASHCLI_GLOBAL_CONFIG}" <<'EOF'
 a=${b}
 b=${c}
 c=result
@@ -284,7 +295,7 @@ EOF
 
 test-config-env-expression() {
   export TEST_CONFIG_ENV_EXPRESSION=result
-  cat > "${globalConfig}" <<'EOF'
+  cat > "${TEST_BASHCLI_GLOBAL_CONFIG}" <<'EOF'
 a=${b}
 b=${c}
 c=${TEST_CONFIG_ENV_EXPRESSION}
@@ -294,7 +305,7 @@ EOF
 }
 
 test-config-circular-expression() {
-  cat > "${globalConfig}" <<'EOF'
+  cat > "${TEST_BASHCLI_GLOBAL_CONFIG}" <<'EOF'
 a=${b}
 b=${c}
 c=${a}

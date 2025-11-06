@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
 declare parameters=()
-# shellcheck disable=SC2034
+declare -a scopes=()
 declare -gA BASHCLI_CONFIG_CLI_COMMON_OPTIONS=()
+declare IFS
 
-bashcli-options-parse BASHCLI_CONFIG_CLI_COMMON_OPTIONS parameters -- "$@"
+bashcli-options-parse BASHCLI_CONFIG_CLI_COMMON_OPTIONS parameters scopes=scopes -- "$@"
+IFS=,
+# shellcheck disable=SC2034
+BASHCLI_CONFIG_CLI_COMMON_OPTIONS[scopes]="${scopes[*]}"
 bashcli-command-exec "${parameters[@]}"

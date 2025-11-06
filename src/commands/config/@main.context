@@ -11,17 +11,15 @@ command options.
 "
 
 OPTIONS=(
-  default   enum:scope
-  local     enum:scope
-  global    enum:scope
+  scopes    multi-list
   namespace single
   file      single
 )
 
 OPTION_DESCRIPTIONS=(
-  default   "Read from the default configuration file in ${BASHCLI_CONFIG_DEFAULT_DIR} only."
-  global    "Read/write from/to the global configuration file in ${BASHCLI_CONFIG_GLOBAL_DIR} only."
-  local     "Read/write from/to the local configuration file in ${BASHCLI_CONFIG_LOCAL_DIR:-<unset>} only."
+  scopes    "Read from the configuration files corresponding to the provided scopes only.
+
+When writing or editing, a single scope or filename is required."
   file      "Read/write from/to the given configuration file only."
   namespace "Read/write using the given namespace, instead of the default one."
 )
@@ -32,6 +30,7 @@ OPTION_ALIASES=(
 )
 
 OPTION_VALUE_TYPES=(
+  scopes    resource-scope
   namespace namespace
   file      file
 )

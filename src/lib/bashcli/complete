@@ -76,3 +76,9 @@ bashcli-complete-namespace() {
   readarray -d '' -t COMPREPLY < <(find "${configDirs[@]}" -mindepth 1 -maxdepth 1 -type f -name '*.conf' -printf '%f\0')
   COMPREPLY=("${COMPREPLY[@]/.conf/}")
 }
+
+# Complete resource scopes.
+bashcli-complete-resource-scope() {
+  COMPREPLY=(all none builtin default global project local)
+  COMPREPLY+=(~builtin ~default ~global ~project ~local)
+}

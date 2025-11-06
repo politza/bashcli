@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
 
-declare -g _BASHCLI_USER_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/${BASHCLI_CLI_NAME}"
-declare -g -a _BASHCLI_COMMAND_DIRS=(
-  "${_BASHCLI_USER_DIR}/commands"
-  "${BASHCLI_CLI_DIR}/commands"
-)
-
-if ! [ "${BASHCLI_DIR}/commands" -ef "${BASHCLI_CLI_DIR}/commands" ]; then
-  _BASHCLI_COMMAND_DIRS+=("${BASHCLI_DIR}/commands")
-fi
-
 declare -g -a _BASHCLI_COMMAND_STACK=()
 declare -g -a _BASHCLI_COMMAND_NEXT=()
 declare -g _BASHCLI_COMMAND_PATTERN='?(.|+([a-zA-Z0-9_-]))'
@@ -45,7 +35,7 @@ bashcli-command-exec() {
   local commandList=("$@")
   local IFS=/
   local commandPath="${commandList[*]}"
-  local round commandName commandDir commandFile commandMain
+  local round index commandName resourceDir resourceScope commandFile commandMain
   REPLY=()
 
   if [ ${#commandList[@]} -eq 0 ]; then
@@ -67,9 +57,11 @@ bashcli-command-exec() {
   commandName=${_BASHCLI_COMMAND_MAIN}
 
   for ((round = 0; round < 2; ++round)); do
-    for commandDir in "${_BASHCLI_COMMAND_DIRS[@]}"; do
+    for ((index = ${#BASHCLI_RESOURCE_SCOPES[@]} - 1; index >= 0; --index)); do
+      resourceScope=${BASHCLI_RESOURCE_SCOPES[index]}
+      resourceDir=${BASHCLI_RESOURCE_DIRS[${resourceScope}]}
       commandMain=${commandPath}/${commandName}
-      commandFile=${commandDir}/${commandMain}
+      commandFile=${resourceDir}/commands/${commandMain}
       if [ -f "${commandFile}" ]; then
         bashcli-debug "${commandList[*]} -> ${commandFile}"
         REPLY=("${commandFile}" "${commandMain}")
@@ -133,7 +125,7 @@ bashcli-command-exec() {
   local commandPath=${REPLY[1]%/*}
   local commandMain=${REPLY[1]##*/}
   local -A subcommands=()
-  local commandRootDir subcommandMain subcommandName commandDir
+  local index resourceScope resourceDir subcommandMain subcommandName commandDir
   local IFS
   REPLY=()
 
@@ -141,8 +133,10 @@ bashcli-command-exec() {
     return 1
   fi
 
-  for commandRootDir in "${_BASHCLI_COMMAND_DIRS[@]}"; do
-    commandDir=${commandRootDir}/${commandPath}
+  for ((index = ${#BASHCLI_RESOURCE_SCOPES[@]} - 1; index >= 0; --index)); do
+    resourceScope=${BASHCLI_RESOURCE_SCOPES[index]}
+    resourceDir=${BASHCLI_RESOURCE_DIRS[${resourceScope}]}
+    commandDir=${resourceDir}/commands/${commandPath}
     if [ -d "${commandDir}" ]; then
       for subcommandMain in "${commandDir}"/*; do
         if [ -f "${subcommandMain}" ] || [ -f "${subcommandMain}/${_BASHCLI_COMMAND_MAIN}" ]; then

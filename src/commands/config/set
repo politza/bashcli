@@ -19,11 +19,8 @@ esac
 if [ "${commonOptions[namespace]}" ]; then
   writeOptions+=(-n "${commonOptions[namespace]}")
 fi
-if [ "${commonOptions[scope]}" ]; then
-  if [ "${commonOptions[scope]}" == default ]; then
-    bashcli-fatal "default scope is read-only"
-  fi
-  writeOptions+=(-s "${commonOptions[scope]}")
+if [ "${commonOptions[scopes]}" ]; then
+  writeOptions+=(-s "${commonOptions[scopes]}")
 fi
 if [ "${commonOptions[file]}" ]; then
   writeOptions+=(-f "${commonOptions[file]}")

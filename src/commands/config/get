@@ -17,8 +17,8 @@ if [ "${commonOptions[namespace]}" ]; then
   getOptions+=(-n "${commonOptions[namespace]}")
   readOptions+=(-n "${commonOptions[namespace]}")
 fi
-if [ "${commonOptions[scope]}" ]; then
-  readOptions+=(-s "${commonOptions[scope]}")
+if [ "${commonOptions[scopes]}" ]; then
+  readOptions+=(-s "${commonOptions[scopes]}")
 fi
 if [ "${commonOptions[file]}" ]; then
   readOptions+=(-f "${commonOptions[file]}")

@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+declare -ga BASHCLI_RESOURCE_SCOPES=(builtin default global)
+declare -gA BASHCLI_RESOURCE_DIRS=(
+  builtin "${BASHCLI_DIR}"
+  default "${BASHCLI_CLI_DIR}"
+  global  "${BASHCLI_GLOBAL_DIR:-${XDG_CONFIG_HOME:-${HOME}/.config}/${BASHCLI_CLI_NAME}}"
+)
+
+[ "${BASHCLI_PROJECT_DIR}" ] && {
+  BASHCLI_RESOURCE_SCOPES+=(project)
+  # shellcheck disable=SC2154,SC2034
+  BASHCLI_RESOURCE_DIRS[project]=${BASHCLI_PROJECT_DIR}
+}
+[ "${BASHCLI_LOCAL_DIR}" ] && {
+  BASHCLI_RESOURCE_SCOPES+=(local)
+  # shellcheck disable=SC2154,SC2034
+  BASHCLI_RESOURCE_DIRS[local]=${BASHCLI_LOCAL_DIR}
+}
+
+# shellcheck disable=SC2165,SC2167
+bashcli-resource-parse-scopes() {
+  local -A resolvedScopes=()
+  local scope scopes
+  REPLY=()
+
+  bashcli-string-split "$1" , scopes
+
+  for scope in "${scopes[@]}"; do
+    bashcli-string-trim scope
+    case ${scope} in
+      builtin|default|global|project|local)
+        if [ -z "${BASHCLI_RESOURCE_DIRS[${scope}]}" ]; then
+          bashcli-error "scope not supported by this program: ${scope}"
+          return 1
+        fi
+        resolvedScopes[${scope}]=set ;;
+      (~@(builtin|default|global|project|local))
+      resolvedScopes[${scope}]= ;;
+      none|~all) resolvedScopes=() ;;
+      all|~none)
+        resolvedScopes=()
+        for scope in "${BASHCLI_RESOURCE_SCOPES[@]}"; do
+          resolvedScopes[${scope}]=set
+        done ;;
+      *) bashcli-error "unknown scope: ${scope}"
+         return 1;;
+    esac
+  done
+  for scope in "${BASHCLI_RESOURCE_SCOPES[@]}"; do
+    if [ "${resolvedScopes[${scope}]}" ]; then
+      REPLY+=("${scope}")
+    fi
+  done
+
+  if [ ${#REPLY[@]} -eq 0 ]; then
+    bashcli-error "scopes resolved to an empty set: $1"
+    return 1
+  fi
+
+  bashcli-debug "$1 -> ${REPLY[*]}"
+}
