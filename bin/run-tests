@@ -8,7 +8,7 @@ proveArgs=(-r --ext test)
 options=$(getopt -o s:Ddvj -n "$(basename "$0")" -- "$@") || {
   exit 1
 }
-eval set -- "$options"
+eval set -- "${options}"
 
 while [ $# -gt 0 ]; do
   case $1 in

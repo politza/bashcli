@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/fixtures/cli-new:${PATH}
+PATH=${PWD}/fixtures/cli-new:${PATH}
 export XDG_CONFIG_HOME=/dev/null
-TEMPLATE_DIR=$PWD/../src/templates
+TEMPLATE_DIR=${PWD}/../src/templates
 output=$(mktemp)
 directory=$(mktemp -d)
 trap "rm -r -- '${output}' '${directory}'" EXIT

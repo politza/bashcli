@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/fixtures/help:${PATH}
+PATH=${PWD}/fixtures/help:${PATH}
 output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 

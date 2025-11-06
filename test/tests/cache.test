@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/fixtures/cache:${PATH}
+PATH=${PWD}/fixtures/cache:${PATH}
 output=$(mktemp)
 cache=$(mktemp -d)
 trap "rm -r -- '${output}' '${cache}'" EXIT

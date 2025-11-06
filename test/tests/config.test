@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/fixtures/config:${PATH}
+PATH=${PWD}/fixtures/config:${PATH}
 output=$(mktemp)
 localConfigDir=$(mktemp -d)
 globalConfigDir=$(mktemp -d)

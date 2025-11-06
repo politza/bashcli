@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -g _BASHCLI_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/${BASHCLI_CLI_NAME}"
+declare -g _BASHCLI_USER_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/${BASHCLI_CLI_NAME}"
 declare -g -a _BASHCLI_COMMAND_DIRS=(
   "${_BASHCLI_USER_DIR}/commands"
   "${BASHCLI_CLI_DIR}/commands"

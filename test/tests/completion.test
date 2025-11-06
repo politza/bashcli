@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/fixtures/completion:${PATH}
+PATH=${PWD}/fixtures/completion:${PATH}
 output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 

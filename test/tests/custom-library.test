@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/fixtures/custom-library:${PATH}
+PATH=${PWD}/fixtures/custom-library:${PATH}
 output=$(mktemp)
 trap "rm -r -- '${output}'" EXIT
 

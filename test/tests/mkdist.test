@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=$PWD/../bin:${PATH}
+PATH=${PWD}/../bin:${PATH}
 output=$(mktemp)
 dist=$(mktemp -d)
 trap "rm -r -- '${output}' '${dist}'" EXIT RETURN

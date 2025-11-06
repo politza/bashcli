@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -g _BASHCLI_CACHE_DIR=${_BASHCLI_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/${BASHCLI_CLI_NAME}/cache}
+declare -g _BASHCLI_CACHE_DIR=${_BASHCLI_CACHE_DIR:-${XDG_CACHE_HOME:-${HOME}/.cache}/${BASHCLI_CLI_NAME}/cache}
 
 # Gets a value from the cache.
 #

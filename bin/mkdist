@@ -13,7 +13,7 @@ EOF
 options=$(getopt -o f -l force,help -n "$(basename "$0")" -- "$@") || {
   exit 1
 }
-eval set -- "$options"
+eval set -- "${options}"
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -35,7 +35,7 @@ done
 
 bashcli=$(realpath "$(dirname "$0")/../src/bashcli")
 cli=$1
-outputDir=${2:-$PWD}
+outputDir=${2:-${PWD}}
 
 [ -f "${bashcli}" ] || {
   echo "no such file: ${bashcli}"
