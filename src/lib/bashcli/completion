@@ -15,10 +15,10 @@
 
   if type _comp_initialize >/dev/null 2>&1 ; then
     # bash-completion >= 2.12
-    _comp_initialize -s -- "$@" || return
+    _comp_initialize -s -n "><=;|&(:" -- "$@" || return
   elif type _init_completion >/dev/null 2>&1; then
     # bash-completion < 2.12
-    _init_completion -s -- "$@" || return
+    _init_completion -s -n "><=;|&(:" -- "$@" || return
   else
     bashcli-error "bash-completion is not available or could not be loaded"
     return 1
@@ -205,8 +205,14 @@
       esac
   esac
 
+  if [[ ${cur} == *:* && ${COMP_WORDBREAKS} == *:* ]]; then
+    # Remove colon-word prefix from items in COMPREPLY
+    local colonWord=${cur%"${cur##*:}"}
+    COMPREPLY=("${COMPREPLY[@]#"${colonWord}"}")
+  fi
+
   # Print the completions for the -bashcli-completion-script function to pickup.
-  for  completion in "${COMPREPLY[@]}"; do
+  for completion in "${COMPREPLY[@]}"; do
     printf "%s\n" "${completion%%$'\n'*}"
   done
 }
