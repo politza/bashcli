@@ -27,6 +27,8 @@ EOF
 test-multi-list-option() {
   cli --multi-list a --multi-list b &> "${output}"
   diff "${output}" - <<EOF
+multi-list=a
+b
 multi-list[0]=a
 multi-list[1]=b
 EOF
@@ -35,6 +37,9 @@ EOF
 test-multi-list-split-options() {
   cli --multi-list=a,b,c &> "${output}"
   diff "${output}" - <<EOF
+multi-list=a
+b
+c
 multi-list[0]=a
 multi-list[1]=b
 multi-list[2]=c
@@ -44,6 +49,12 @@ EOF
 test-multi-list-split-options-multiple-times() {
   cli --multi-list a,b,c --multi-list=d,e,f &> "${output}"
   diff "${output}" - <<EOF
+multi-list=a
+b
+c
+d
+e
+f
 multi-list[0]=a
 multi-list[1]=b
 multi-list[2]=c
@@ -56,6 +67,9 @@ EOF
 test-multi-list-split-options-aliased() {
   cli -ma,b,c &> "${output}"
   diff "${output}" - <<EOF
+multi-list=a
+b
+c
 multi-list[0]=a
 multi-list[1]=b
 multi-list[2]=c
@@ -65,6 +79,9 @@ EOF
 test-multi-list-split-options-whitespace() {
   cli --multi-list=' a,  b,   c' &> "${output}"
   diff "${output}" - <<EOF
+multi-list= a
+  b
+   c
 multi-list[0]= a
 multi-list[1]=  b
 multi-list[2]=   c
@@ -74,6 +91,8 @@ EOF
 test-multi-option() {
   cli --multi a,b,c --multi d,e,f &> "${output}"
   diff "${output}" - <<EOF
+multi=a,b,c
+d,e,f
 multi[0]=a,b,c
 multi[1]=d,e,f
 EOF
@@ -91,6 +110,9 @@ test-alias-options() {
   diff -u "${output}" - <<EOF
 boolean=true
 single=a
+multi=c
+multi-list=a
+b
 multi-list[0]=a
 multi-list[1]=b
 multi[0]=c
@@ -103,6 +125,7 @@ test-concatenated-options() {
   diff -u "${output}" - <<EOF
 boolean=true
 single=a
+multi-list=a
 multi-list[0]=a
 EOF
 }

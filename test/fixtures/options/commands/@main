@@ -18,6 +18,14 @@ if [ "${options[single]}" ]; then
   echo "single=${options[single]}"
 fi
 
+if [ "${options[multi]}" ]; then
+  echo "multi=${options[multi]}"
+fi
+
+if [ "${options[multi-list]}" ]; then
+  echo "multi-list=${options[multi-list]}"
+fi
+
 for ((index = 0; index < ${#multiListOptions[@]}; ++index)); do
   echo "multi-list[${index}]=${multiListOptions[index]}"
 done

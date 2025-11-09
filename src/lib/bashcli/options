@@ -154,15 +154,15 @@ bashcli-options-parse() {
               _parsedOptions[${_option}]=$2
               shift ;;
             multi|multi-list)
-              if [ -n "${_parsedOptions[${_option}]}" ]; then
-                _parsedOptions[${_option}]+=$'\n'
-              fi
               if [ "${_optionType}" == multi-list ]; then
                 bashcli-string-split "$2" , _arguments
               else
                 _arguments=("$2")
               fi
               for _argument in "${_arguments[@]}"; do
+                if [ -n "${_parsedOptions[${_option}]}" ]; then
+                  _parsedOptions[${_option}]+=$'\n'
+                fi
                 _parsedOptions[${_option}]+=${_argument}
                 if [ -R "${_multiOptionRefs[${_option}]}" ]; then
                   eval "${_multiOptionRefs[${_option}]}+=(\"${_argument}\")"
