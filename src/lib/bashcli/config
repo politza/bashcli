@@ -163,6 +163,7 @@ bashcli-config-get() {
   local OPTIND=1
   local namespace=${BASHCLI_CLI_NAME}
 
+  REPLY=
   while getopts ":t:n:x" option "$@"; do
     case ${option} in
       t) type=${OPTARG};;
