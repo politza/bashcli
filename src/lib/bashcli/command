@@ -17,8 +17,6 @@ declare -g -A _BASHCLI_COMMAND_RESOLVE_CACHE=()
 # As a consequence, the exit-status of this function is not meaningful and usually always zero; and
 # this function can be invoked only once during a single command invocation.
 #
-# Use bashcli-exec to execute a bashcli command in a standard way.
-#
 # usage: COMMAND-NAME ... COMMAND-ARGS ...
 bashcli-command-exec() {
   if [ -z "$1" ]; then

@@ -100,9 +100,9 @@ bashcli-load-library() {
   return 1
 }
 
-bashcli-exec() {
-  "${BASHCLI_CLI_SCRIPT}" "$@"
-}
+eval "${BASHCLI_CLI_NAME}() {
+  \"${BASHCLI_CLI_SCRIPT}\" \"\$@\"
+}"
 
 bashcli-load-library bashcli/array
 bashcli-load-library bashcli/cache
