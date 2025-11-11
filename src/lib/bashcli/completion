@@ -106,10 +106,7 @@
     bashcli-debug "completing long options"
     for option in "${!_BASHCLI_CONTEXT_OPTIONS[@]}"; do
       if [ ${#option} -gt 1 ]; then
-        local alias aliases=() suffix=
-        case ${_BASHCLI_CONTEXT_OPTIONS[${option}]} in
-          single|multi|multi-list) suffix='=' ;;
-        esac
+        local alias aliases=()
         description=${_BASHCLI_CONTEXT_OPTION_DESCRIPTIONS[${option}]}
         bashcli-string-trim description
         description=${description%%$'\n'}
@@ -125,7 +122,7 @@
           description+=" (${aliases[*]})"
           unset IFS
         fi
-        BASHCLI_COMPLETIONS[--${option}${suffix}]=${description}
+        BASHCLI_COMPLETIONS[--${option}]=${description}
       fi
     done
   else
