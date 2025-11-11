@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+PATH=${PWD}/fixtures/logrotate:${PATH}
+TEST_DIR=$(mktemp -d)
+export BASHCLI_LOGROTATE_MAX_KEPT=2
+
+trap "rm -r -- '${TEST_DIR}'" EXIT
+
+before-each() {
+  cd "${TEST_DIR}" || return 1
+  rm --force -- "${TEST_DIR}"/service.*
+
+  echo 0 > service.log
+  for count in 1 2 3; do
+    echo ${count} > service.log.${count}
+  done
+}
+
+test-logrotate-basic() {
+  logrotate service.log
+  test -f service.log.1
+  test -f service.log.2
+  test -f service.log.3
+  diff service.log.1 - <<<0
+  diff service.log.2 - <<<1
+  diff service.log.3 - <<<3
+}
+
+test-logrotate-pattern() {
+  logrotate -p %s.service.log service.log
+  test -f 1.service.log
+  test -f 2.service.log && return 1
+  test -f 3.service.log && return 1
+  test -f service.log.1
+  test -f service.log.2
+  test -f service.log.3
+  diff 1.service.log - <<<0
+  diff service.log.1 - <<<1
+  diff service.log.2 - <<<2
+  diff service.log.3 - <<<3
+}
+
+test-logrotate-max-kept() {
+  logrotate -m 1 service.log
+  test -f service.log.1
+  test -f service.log.2
+  test -f service.log.3
+  diff service.log.1 - <<<0
+  diff service.log.2 - <<<2
+  diff service.log.3 - <<<3
+}
+
+. ./lib/run-tests
