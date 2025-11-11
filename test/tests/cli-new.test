@@ -12,19 +12,19 @@ before-each() {
   mkdir "${directory}"
 }
 
-exec-cli-new() {
-  test-cli cli command new -d "${directory}" "$@"
+exec-cli-create() {
+  test-cli cli command create -d "${directory}" "$@"
 }
 
-test-cli-new-basic-command() {
-  exec-cli-new basic # &> "${output}"
+test-cli-create-basic-command() {
+  exec-cli-create basic # &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${directory}"/basic "${TEMPLATE_DIR}"/command
   diff "${directory}"/basic.context "${TEMPLATE_DIR}"/command.context
 }
 
-test-cli-new-nested-command() {
-  exec-cli-new parent/child &> "${output}"
+test-cli-create-nested-command() {
+  exec-cli-create parent/child &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${directory}"/parent/@main "${TEMPLATE_DIR}"/@main
   diff "${directory}"/parent/@main.context "${TEMPLATE_DIR}"/@main.context
@@ -32,44 +32,44 @@ test-cli-new-nested-command() {
   diff "${directory}"/parent/child.context "${TEMPLATE_DIR}"/command.context
 }
 
-test-cli-new-empty-command() {
-  exec-cli-new '//' &> "${output}" && return 1
+test-cli-create-empty-command() {
+  exec-cli-create '//' &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command is empty: //
 EOF
 }
 
-test-cli-new-invalid-command() {
-  exec-cli-new %command &> "${output}" && return 1
+test-cli-create-invalid-command() {
+  exec-cli-create %command &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] invalid command name: %command
 EOF
 }
 
-test-cli-new-command-already-exists() {
+test-cli-create-command-already-exists() {
   touch "${directory}"/command
-  exec-cli-new command &> "${output}" && return 1
+  exec-cli-create command &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command already exists: command (use --force to overwrite)
 EOF
 
-  exec-cli-new command --force &> "${output}"
+  exec-cli-create command --force &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${directory}"/command "${TEMPLATE_DIR}"/command
   diff "${directory}"/command.context "${TEMPLATE_DIR}"/command.context
 }
 
-test-cli-new-command-already-exists-as-non-terminal() {
+test-cli-create-command-already-exists-as-non-terminal() {
   mkdir "${directory}"/command
-  exec-cli-new command &> "${output}" && return 1
+  exec-cli-create command &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command already exists as a non-terminal: command
 EOF
 }
 
-test-cli-new-command-already-exists-as-terminal() {
+test-cli-create-command-already-exists-as-terminal() {
   touch "${directory}"/parent
-  exec-cli-new parent/child &> "${output}" && return 1
+  exec-cli-create parent/child &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command already exists as a terminal: parent
 EOF
