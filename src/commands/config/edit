@@ -27,7 +27,7 @@ else
   if [ "${commonOptions[namespace]}" ]; then
     namespace="${commonOptions[namespace]}"
   fi
-    bashcli-config-files "${namespace}" "${commonOptions[scopes]:-global}"
+    bashcli-config-files "${commonOptions[scopes]:-global}" "${namespace}"
     if [ ${#REPLY[@]} -ne 1 ]; then
       bashcli-fatal "require a single scope: ${commonOptions[scopes]}"
     fi

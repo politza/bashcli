@@ -22,7 +22,10 @@ bashcli-complete-config-profile() {
     fi
   done
 
-  readarray -t COMPREPLY < <(sed -nE 's/^[[:space:]]*%([^.]+)\..*/\1/p' "${configFiles[@]}")
+
+  if [ ${#configFiles[@]} -gt 0 ]; then
+    readarray -t COMPREPLY < <(sed -nE 's/^[[:space:]]*%([^.]+)\..*/\1/p' "${configFiles[@]}")
+  fi
 }
 
 # Completes configuration property values.
