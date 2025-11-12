@@ -40,7 +40,7 @@ bashcli-config-clear() {
 
 bashcli-config-read() {
   local configFiles=()
-  local namespace=${BASHCLI_CLI_NAME}
+  local namespace=options
   local OPTIND=1
   local scopes=all
   local option prefixes configFile
@@ -91,7 +91,7 @@ bashcli-config-files() {
     forWrite=true
     shift
   fi
-  local namespace=${2:-${BASHCLI_CLI_NAME}}
+  local namespace=${2:-options}
   local filename=${_BASHCLI_CONFIG_DIR_NAME}/${namespace}.${_BASHCLI_CONFIG_FILE_EXTENSION}
   local scope scopes
 
@@ -161,7 +161,7 @@ bashcli-config-get() {
   local property qualifiedProperty profile value type
   local failIfUnset isSet
   local OPTIND=1
-  local namespace=${BASHCLI_CLI_NAME}
+  local namespace=options
 
   REPLY=
   while getopts ":t:n:x" option "$@"; do
@@ -232,7 +232,7 @@ bashcli-config-get() {
 
 bashcli-config-write() {
   local updateMode=set
-  local namespace=${BASHCLI_CLI_NAME}
+  local namespace=options
   local scopes=global
   local profile=default
   local configFiles=()
@@ -511,11 +511,8 @@ bashcli-config-list() {
   local namespace=$1
   local profile=$2
   local property=$3
-  local variable=${BASHCLI_CLI_NAME}_
+  local variable=${BASHCLI_CLI_NAME}_${namespace}_
 
-  if [ "${namespace}" != "${BASHCLI_CLI_NAME}" ]; then
-    variable+=_${namespace}__
-  fi
   if [ "${profile}" != default ]; then
     variable="_${profile}_${variable}"
   fi

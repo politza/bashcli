@@ -5,8 +5,8 @@ output=$(mktemp)
 TEST_BASHCLI_LOCAL_DIR=$(mktemp -d)
 TEST_BASHCLI_GLOBAL_DIR=$(mktemp -d)
 TEST_BASHCLI_FILE_DIR=$(mktemp -d)
-TEST_BASHCLI_LOCAL_CONFIG=${TEST_BASHCLI_LOCAL_DIR}/config/cli.conf
-TEST_BASHCLI_GLOBAL_CONFIG=${TEST_BASHCLI_GLOBAL_DIR}/config/cli.conf
+TEST_BASHCLI_LOCAL_CONFIG=${TEST_BASHCLI_LOCAL_DIR}/config/options.conf
+TEST_BASHCLI_GLOBAL_CONFIG=${TEST_BASHCLI_GLOBAL_DIR}/config/options.conf
 TEST_BASHCLI_FILE_CONFIG=${TEST_BASHCLI_FILE_DIR}/config/file.conf
 
 trap "rm -r -- '${output}' '${TEST_BASHCLI_LOCAL_DIR}' '${TEST_BASHCLI_GLOBAL_DIR}' '${TEST_BASHCLI_FILE_DIR}'" EXIT
@@ -14,10 +14,10 @@ trap "rm -r -- '${output}' '${TEST_BASHCLI_LOCAL_DIR}' '${TEST_BASHCLI_GLOBAL_DI
 before-each() {
   export BASHCLI_GLOBAL_DIR=${TEST_BASHCLI_GLOBAL_DIR}
   export BASHCLI_LOCAL_DIR=${TEST_BASHCLI_LOCAL_DIR}
-  unset CLI_PROPERTY
-  unset CLI__NS__PROPERTY
-  unset _PROFILE_CLI_PROPERTY
-  unset _PROFILE_CLI__NS__PROPERTY
+  unset CLI_OPTIONS_PROPERTY
+  unset CLI_NS_PROPERTY
+  unset _PROFILE_CLI_OPTIONS_PROPERTY
+  unset _PROFILE_CLI_NS_PROPERTY
 
   mkdir --parents "${TEST_BASHCLI_LOCAL_CONFIG%/*}"
   mkdir --parents "${TEST_BASHCLI_GLOBAL_CONFIG%/*}"
@@ -72,8 +72,8 @@ test-config-get-file-value() {
 }
 
 test-config-get-env-value() {
-  export CLI_PROPERTY=env-value
-  export CLI__NS__PROPERTY=ns-env-value
+  export CLI_OPTIONS_PROPERTY=env-value
+  export CLI_NS_PROPERTY=ns-env-value
 
   cli config get --scopes global property &> "${output}"
   diff "${output}" - <<<env-value
@@ -115,9 +115,9 @@ test-config-get-default-profile-value() {
 
 test-config-get-env-profile-value() {
   export CLI_PROFILE=env-value
-  export CLI__NS__PROPERTY=ns-env-value
-  export _PROFILE_CLI_PROPERTY=env-profile-value
-  export _PROFILE_CLI__NS__PROPERTY=ns-env-profile-value
+  export CLI_NS_PROPERTY=ns-env-value
+  export _PROFILE_CLI_OPTIONS_PROPERTY=env-profile-value
+  export _PROFILE_CLI_NS_PROPERTY=ns-env-profile-value
 
   cli config get --scopes global --profile profile property &> "${output}"
   diff "${output}" - <<<env-profile-value

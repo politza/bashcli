@@ -3,7 +3,7 @@
 PATH=${PWD}/fixtures/config-default:${PATH}
 output=$(mktemp)
 TEST_BASHCLI_GLOBAL_DIR=$(mktemp -d)
-TEST_BASHCLI_GLOBAL_CONFIG=${TEST_BASHCLI_GLOBAL_DIR}/config/cli.conf
+TEST_BASHCLI_GLOBAL_CONFIG=${TEST_BASHCLI_GLOBAL_DIR}/config/options.conf
 
 trap "rm -r -- '${output}' '${TEST_BASHCLI_GLOBAL_DIR}'" EXIT
 

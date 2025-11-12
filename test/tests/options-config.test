@@ -7,10 +7,6 @@ export XDG_CONFIG_HOME=${configHome}
 
 trap "rm -r -- '${output}' '${configHome}'" EXIT
 
-after-each() {
-  unset CLI_COMMAND_SINGLE
-}
-
 test-default-options() {
   cli basic &> "${output}"
   diff "${output}" - <<EOF
