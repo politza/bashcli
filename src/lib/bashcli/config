@@ -109,8 +109,6 @@ bashcli-config-files() {
     fi
     REPLY+=("${BASHCLI_RESOURCE_DIRS[${scope}]}/${filename}")
   done
-
-  bashcli-debug "${REPLY[*]}"
 }
 
 -bashcli-config-read-file() {
@@ -228,6 +226,34 @@ bashcli-config-get() {
       bashcli-error "type not supported: ${type}"
       return 1;;
   esac
+}
+
+bashcli-config-get-properties() {
+  local OPTIND=1
+  local namespace=${BASHCLI_CLI_NAME}
+  local property propertyNoNamespace option
+
+  REPLY=()
+  while getopts "n:" option "$@"; do
+    case ${option} in
+      n) -bashcli-config-check-namespace "${OPTARG}"
+         namespace=${OPTARG};;
+      *) return 1;;
+    esac
+  done
+
+  shift "$((OPTIND - 1))"
+  if [ $# -ne 0 ]; then
+    bashcli-error "too many arguments"
+    return 1
+  fi
+
+  for property in "${!_BASHCLI_CONFIG_PROPERTIES[@]}"; do
+    if [[ "${property}" == "${namespace}".* ]]; then
+      propertyNoNamespace=${property:$((${#namespace} + 1))}
+      REPLY+=("${propertyNoNamespace}")
+    fi
+  done
 }
 
 bashcli-config-write() {

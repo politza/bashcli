@@ -53,10 +53,44 @@ bashcli-resource-parse-scopes() {
     fi
   done
 
-  if [ ${#REPLY[@]} -eq 0 ]; then
-    bashcli-error "scopes resolved to an empty set: $1"
+  bashcli-debug "$1 -> ${REPLY[*]}"
+}
+
+bashcli-resource-get() {
+  local OPTIND=1
+  local scopesOption=all
+  local scope scopes resource reverse option directory filename
+
+  REPLY=
+  while getopts "s:r" option "$@"; do
+    case ${option} in
+      s) scopesOption=${OPTARG};;
+      r) reverse=true;;         # FIXME: reverse should be the opposite
+      *) return 1;;
+    esac
+  done
+  shift "$((OPTIND - 1))"
+
+  if [ $# -ne 1 ]; then
+    bashcli-error "too many arguments"
     return 1
   fi
+  resource=$1
 
-  bashcli-debug "$1 -> ${REPLY[*]}"
+  bashcli-resource-parse-scopes "${scopesOption}"
+  scopes=("${REPLY[@]}")
+
+  if [ "${reverse}" ]; then
+    bashcli-array-reverse scopes
+  fi
+
+  for scope in "${scopes[@]}"; do
+    directory=${BASHCLI_RESOURCE_DIRS[${scope}]}
+    filename=${directory}/${resource}
+    if [ -f "${filename}" ]; then
+      REPLY=${filename}
+      return 0
+    fi
+  done
+  return 1
 }

@@ -24,3 +24,14 @@ bashcli-array-join() {
 
   REPLY="${__array[*]}"
 }
+
+bashcli-array-reverse() {
+  local -n __array=$1
+  local __copy=("${__array[@]}")
+  local __index
+
+  __array=()
+  for ((__index = ${#__copy[@]} - 1; __index >= 0; --__index)); do
+    __array+=("${__copy[__index]}")
+  done
+}
