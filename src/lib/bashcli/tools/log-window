@@ -24,10 +24,11 @@ bashcli-tools-log-window() {
   local logStart=0
   local windowSize=
   local logFile=
+  local logAppend=
   local ansiSgrPattern=$'\e''\[*([0-9])*(;+([0-9]))@([a-zA-Z])'
   local option interrupted clearWindow
 
-  while getopts ":S:s:l:C" option "$@"; do
+  while getopts ":S:s:l:Cac:" option "$@"; do
     case ${option} in
       S) statusRegexp=${OPTARG};;
       l) logFile=${OPTARG}
@@ -41,6 +42,8 @@ bashcli-tools-log-window() {
          fi
          logSize=${OPTARG};;
       C) clearWindow=true;;
+      c) clearWindowIfMatch=${OPTARG};;
+      a) logAppend=true;;
       :) bashcli-error "option requires an argument: ${OPTARG}"
          return 1;;
       *) bashcli-error "option not recognized: ${OPTARG}"
@@ -54,7 +57,11 @@ bashcli-tools-log-window() {
     windowSize=${logSize}
   fi
 
-  if [ "${logFile}" ]; then
+  if [ "${clearWindowIfMatch}" ] && [ -z "${logFile}" ]; then
+    logFile=$(mktemp)
+    trap 'rm -- "${logFile}"' return
+  fi
+  if [ "${logFile}" ] && [ -z "${logAppend}" ]; then
     cat /dev/null > "${logFile}"
   fi
 
@@ -97,6 +104,12 @@ bashcli-tools-log-window() {
     printf "%s" "${termWindowTop}"
   done
 
+  if [ -z "${clearWindow}" ] && [ "${clearWindowIfMatch}" ] && [ -f "${logFile}" ]; then
+    if tail "${logFile}" | grep -qE "${clearWindowIfMatch}"; then
+      clearWindow=true
+    fi
+  fi
+  
   if [ "${clearWindow}" ]; then
     tput cr ed
   else

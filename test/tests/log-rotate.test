@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=${PWD}/fixtures/logrotate:${PATH}
+PATH=${PWD}/fixtures/log-rotate:${PATH}
 TEST_DIR=$(mktemp -d)
 export BASHCLI_LOGROTATE_MAX_KEPT=2
 
@@ -16,8 +16,8 @@ before-each() {
   done
 }
 
-test-logrotate-basic() {
-  logrotate service.log
+test-log-rotate-basic() {
+  log-rotate service.log
   test -f service.log.1
   test -f service.log.2
   test -f service.log.3
@@ -26,8 +26,8 @@ test-logrotate-basic() {
   diff service.log.3 - <<<3
 }
 
-test-logrotate-pattern() {
-  logrotate -p %s.service.log service.log
+test-log-rotate-pattern() {
+  log-rotate -p %s.service.log service.log
   test -f 1.service.log
   test -f 2.service.log && return 1
   test -f 3.service.log && return 1
@@ -40,8 +40,8 @@ test-logrotate-pattern() {
   diff service.log.3 - <<<3
 }
 
-test-logrotate-max-kept() {
-  logrotate -m 1 service.log
+test-log-rotate-max-kept() {
+  log-rotate -m 1 service.log
   test -f service.log.1
   test -f service.log.2
   test -f service.log.3

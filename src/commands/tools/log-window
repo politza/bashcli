@@ -17,12 +17,22 @@ if [ "${options[size]}" ]; then
 fi
 if [ "${options[log-file]}" ]; then
   logWindowArgs+=(-l "${options[log-file]}")
+  if [ "${options[log-rotate]}" ] && [ "${options[log-rotate]}" -gt 0 ]; then
+    bashcli-load-library bashcli/tools/log-rotate
+    bashcli-tools-log-rotate -m "${options[log-rotate]}" "${options[log-file]}"
+  fi
+fi
+if [ "${options[log-append]}" ]; then
+  logWindowArgs+=(-a)
 fi
 if [ "${options[status-regexp]}" ]; then
   logWindowArgs+=(-S "${options[status-regexp]}")
 fi
 if [ "${options[clear-window]}" ]; then
   logWindowArgs+=(-C)
+fi
+if [ "${options[clear-window-if-match]}" ]; then
+  logWindowArgs+=(-c "${options[clear-window-if-match]}")
 fi
 
 bashcli-tools-log-window "${logWindowArgs[@]}"

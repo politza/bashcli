@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-declare -g BASHCLI_LOGROTATE_MAX_KEPT=${BASHCLI_LOGROTATE_MAX_KEPT:-3}
-
-bashcli-logrotate() {
+bashcli-tools-log-rotate() {
   local filename
+  local extension
   local pattern
-  local maxKept=${BASHCLI_LOGROTATE_MAX_KEPT}
+  local maxKept=3
 
   while getopts "p:m:" option "$@"; do
     case ${option} in
@@ -21,8 +20,9 @@ bashcli-logrotate() {
     return 1
   fi
   filename=$1
+  extension=${filename##*.}
   if [ -z "${pattern}" ]; then
-    pattern=${filename}.%s
+    pattern=${filename%.*}.%s${extension+.}${extension}
   fi
 
   local patternWithoutPlaceholder=${pattern//%s/}
