@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+bashcli-load-library bashcli/tools/log-window
+
+declare -A options=()
+declare parameters=()
+declare logWindowArgs=()
+
+bashcli-options-parse options parameters -- "$@"
+
+if [ ${#parameters[@]} -ne 0 ]; then
+  bashcli-fatal "too many arguments: $*"
+fi
+
+if [ "${options[size]}" ]; then
+  logWindowArgs+=(-s "${options[size]}")
+fi
+if [ "${options[log-file]}" ]; then
+  logWindowArgs+=(-l "${options[log-file]}")
+fi
+if [ "${options[status-regexp]}" ]; then
+  logWindowArgs+=(-S "${options[status-regexp]}")
+fi
+if [ "${options[clear-window]}" ]; then
+  logWindowArgs+=(-C)
+fi
+
+bashcli-tools-log-window "${logWindowArgs[@]}"

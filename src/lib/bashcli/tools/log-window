@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+# Terminfo capabilities used in this file, see 'man 5 terminfo'.
+#
+#  bold  :: enable bold font
+#  civis :: hide the cursor
+#  cnorm :: show the cursor
+#  cr    :: carriage return
+#  cud   :: cursor down $1 lines
+#  cuu   :: cursor up $1 lines
+#  ed    :: clear to end of screen
+#  el    :: clear to end of line
+#  rmam  :: disable line wrapping
+#  setab :: set background color $1
+#  sgr0  :: reset color and other attributes
+#  smam  :: enable line wrapping
+
+bashcli-tools-log-window() {
+  local statusColor=32
+  local statusLine=
+  local statusRegexp=
+  local logLines=()
+  local logSize=12
+  local logStart=0
+  local windowSize=
+  local logFile=
+  local ansiSgrPattern=$'\e''\[*([0-9])*(;+([0-9]))@([a-zA-Z])'
+  local option interrupted clearWindow
+
+  while getopts ":S:s:l:C" option "$@"; do
+    case ${option} in
+      S) statusRegexp=${OPTARG};;
+      l) logFile=${OPTARG}
+         if ! [ -d "$(dirname "${logFile}")" ]; then
+           bashcli-error "unable to write to log-file: ${logFile}"
+           return 1
+         fi ;;
+      s) if [[ "${OPTARG}" != +([0-9]) ]]; then
+           bashcli-error "size argument must be a number: ${OPTARG}"
+           return 1
+         fi
+         logSize=${OPTARG};;
+      C) clearWindow=true;;
+      :) bashcli-error "option requires an argument: ${OPTARG}"
+         return 1;;
+      *) bashcli-error "option not recognized: ${OPTARG}"
+         return 1;;
+    esac
+  done
+
+  if [ "${statusRegexp}" ]; then
+    windowSize=$((${logSize} + 1))
+  else
+    windowSize=${logSize}
+  fi
+
+  if [ "${logFile}" ]; then
+    cat /dev/null > "${logFile}"
+  fi
+
+  local termLogLineStart=$(tput cr)
+  local termLogLineEnd=$(tput el cud 1)
+  local termStatusStart=$(tput cr setab "${statusColor}" bold)
+  local termStatusEnd=$(tput sgr0 el cud 1)
+  local termWindowTop=$(tput cuu "${windowSize}")
+
+  tput rmam civis
+  trap interrupted=true INT TERM
+
+  while IFS= read -r line || [ "${line}" ] && [ -z "${interrupted}" ]; do
+    if [ "${logFile}" ]; then
+      printf "%s\n" "${line}" >> "${logFile}"
+    fi
+    if [ ${#logLines[@]} -eq 0 ]; then
+      for ((index = 0; index < windowSize; ++index)); do
+        printf "\n"
+      done
+      printf "%s" "${termWindowTop}"
+    fi
+
+    if [ ${#logLines[@]} -ge ${logSize} ]; then
+      unset 'logLines[logStart]'
+      ((++logStart))
+    fi
+    logLines+=("${line}")
+
+    if [ "${statusRegexp}" ]; then
+      if [[ "${line}" =~ ${statusRegexp} ]]; then
+        statusLine=${line//${ansiSgrPattern}/}
+      fi
+      printf "%s%s%s" "${termStatusStart}" "${statusLine}" "${termStatusEnd}"
+    fi
+
+    for ((index = logStart; index < $((logStart + logSize)); ++index)); do
+      printf "%s%s%s" "${termLogLineStart}" "${logLines[index]}" "${termLogLineEnd}"
+    done
+    printf "%s" "${termWindowTop}"
+  done
+
+  if [ "${clearWindow}" ]; then
+    tput cr ed
+  else
+    tput cud "${windowSize}" cr el
+  fi
+  tput sgr0 cnorm smam
+
+  if [ "${logFile}" ]; then
+    sed -i -Ee 's/'$'\e''\[([0-9]+(;[0-9]+)*)?m//g' "${logFile}"
+  fi
+}
