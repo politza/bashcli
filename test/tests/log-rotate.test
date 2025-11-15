@@ -2,7 +2,6 @@
 
 PATH=${PWD}/fixtures/log-rotate:${PATH}
 TEST_DIR=$(mktemp -d)
-export BASHCLI_LOGROTATE_MAX_KEPT=2
 
 trap "rm -r -- '${TEST_DIR}'" EXIT
 
@@ -12,18 +11,18 @@ before-each() {
 
   echo 0 > service.log
   for count in 1 2 3; do
-    echo ${count} > service.log.${count}
+    echo ${count} > service.${count}.log
   done
 }
 
 test-log-rotate-basic() {
-  log-rotate service.log
-  test -f service.log.1
-  test -f service.log.2
-  test -f service.log.3
-  diff service.log.1 - <<<0
-  diff service.log.2 - <<<1
-  diff service.log.3 - <<<3
+  log-rotate -m 2 service.log
+  test -f service.1.log
+  test -f service.2.log
+  test -f service.3.log
+  diff service.1.log - <<<0
+  diff service.2.log - <<<1
+  diff service.3.log - <<<3
 }
 
 test-log-rotate-pattern() {
@@ -31,23 +30,23 @@ test-log-rotate-pattern() {
   test -f 1.service.log
   test -f 2.service.log && return 1
   test -f 3.service.log && return 1
-  test -f service.log.1
-  test -f service.log.2
-  test -f service.log.3
+  test -f service.1.log
+  test -f service.2.log
+  test -f service.3.log
   diff 1.service.log - <<<0
-  diff service.log.1 - <<<1
-  diff service.log.2 - <<<2
-  diff service.log.3 - <<<3
+  diff service.1.log - <<<1
+  diff service.2.log - <<<2
+  diff service.3.log - <<<3
 }
 
 test-log-rotate-max-kept() {
   log-rotate -m 1 service.log
-  test -f service.log.1
-  test -f service.log.2
-  test -f service.log.3
-  diff service.log.1 - <<<0
-  diff service.log.2 - <<<2
-  diff service.log.3 - <<<3
+  test -f service.1.log
+  test -f service.2.log
+  test -f service.3.log
+  diff service.1.log - <<<0
+  diff service.2.log - <<<2
+  diff service.3.log - <<<3
 }
 
 . ./lib/run-tests

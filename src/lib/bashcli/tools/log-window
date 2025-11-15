@@ -85,7 +85,7 @@ bashcli-tools-log-window() {
       printf "%s" "${termWindowTop}"
     fi
 
-    if [ ${#logLines[@]} -ge ${logSize} ]; then
+    if [ ${#logLines[@]} -ge "${logSize}" ]; then
       unset 'logLines[logStart]'
       ((++logStart))
     fi
