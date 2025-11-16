@@ -1,0 +1,107 @@
+#+TITLE: Bashcli
+* Introduction
+
+  =bashcli= is a framework for writing CLIs using bash-script.  It provides the following features:
+
+  + hierarchicaly structured comand sets, like =docker= and many others
+  + declarative command options of various types
+  + builtin extendable completion of option and non-option arguments
+  + builtin help command, incorporating provided command and option-documentation
+  + a config-property system inspired by [[https://microprofile.io/][microprofile]] and [[https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration][git-config]]
+  + user-customization of command options via above config-properties
+  + automatic integration of user-provided commands
+  + creation of a single-file, self-extracting distributable
+
+* Getting Started
+
+  1. Creat a new project and add this one as a submodule
+     #+begin_src bash
+       git init mycli 
+       cd mycli
+       git submodule add git@github.com:politza/bashcli.git
+     #+end_src
+  2. Create a src directory and a symbolic link
+     #+begin_src bash
+       mkdir src
+       ln -s ../bashcli/src/bashcli src/mycli
+     #+end_src
+  3. Create a new hello-world command
+     #+begin_src bash
+       ./src/mycli cli command create hello-world
+       echo 'echo "Hello World"' >> ./src/commands/hello-world
+     #+end_src
+  4. Test the new command
+     #+begin_src bash
+       ./src/mycli hello-world
+       ./src/mycli help
+     #+end_src
+  5. Activate and test command completion
+     #+begin_src bash
+       eval "$(./src/mycli cli completion --script)"
+       $PWD/src/mycli <TAB>
+     #+end_src
+  6. Create a distributable
+     #+begin_src bash
+       ./bashcli/bin/mkdist ./src/mycli dist
+       ./dist/mycli hello-world
+     #+end_src
+* Overwiew
+  The purpose of this section is to give a high-level overview of the various concepts involved,
+  without getting lost in all of their implementation details.
+** Command Structure
+   In it's most basic form, a command is just a file in a specific directory. The name of the file
+   determines the command's name and the directory its place in the hierarchy of commands.
+
+   The root-directory of this hierarchy is the =commands= directory, its location primarily determined
+   by the location of the symbolic link pointing to the =bashcli= script. A command can be either a
+   (inner) node-command (i.e. it contains other commands, which it invokes) or a leaf-command (i.e.
+   it does not contain other commands). The filename of a leaf-command is just its name, while
+   node-commands reside in a directory named after the command containing the special filename
+   =@main=.
+
+   For example, assume we extend the =mycli= CLI from the [[#Getting Started][Getting Started]] secion with a command that
+   operates on files. And that we implement this using a =files= command with 3 subcommands, namely
+   =create=, =remove= and =delete=. The directory structure implementing these commands would then look
+   like this:
+   #+begin_example
+.
+├── commands
+│   ├── files
+│   │   ├── @main
+│   │   ├── create
+│   │   ├── delete
+│   │   ├── rename
+└── mycli -> ../bashcli/src/bashcli
+   #+end_example
+   The =@main= script would implement the =files= command, which would delegate its work to one of the 3
+   subcommands (see [[./demos/files][./demos/files]]).
+** Command Execution
+** Command Options
+** Command Context
+** Command Completion
+* Functions and Variables
+* Brainstorming
+- command option types
+- completion
+  - extension mechanism  
+  - variables (BASH_COMPLETION_*)
+  - bash_completion dependency
+- option value types
+- parameter value types
+- option documentation
+- command documentation
+- option aliases
+- option parsing
+- command configuration via properties
+- configuration properties
+- environment override of properties
+- configuration namespaces
+- resource directories
+- resource profiles
+- shell setup (setopt, shopt, etc.)
+- node- and leaf-commands
+- command resolution
+- clean variable environment (declare = local)
+- making context available to subcommands (delcare -g)
+- lib folder
+- lib init script
