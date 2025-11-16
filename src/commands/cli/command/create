@@ -2,6 +2,7 @@
 
 declare -A options=()
 declare -a parameters=()
+declare templateBaseDir=templates/cli/command
 
 bashcli-options-parse options parameters -- "$@"
 
@@ -10,13 +11,13 @@ case ${#parameters[@]} in
 esac
 
 # Initialize directories and templates.
-if [ -d "${_BASHCLI_USER_DIR}/templates" ]; then
-  templateDir="${_BASHCLI_USER_DIR}/templates"
-elif [ -d "${BASHCLI_CLI_DIR}/templates" ]; then
-  templateDir="${BASHCLI_CLI_DIR}/templates"
+if [ -d "${_BASHCLI_USER_DIR}/${templateBaseDir}" ]; then
+  templateDir="${_BASHCLI_USER_DIR}/${templateBaseDir}"
+elif [ -d "${BASHCLI_CLI_DIR}/${templateBaseDir}" ]; then
+  templateDir="${BASHCLI_CLI_DIR}/${templateBaseDir}"
 else
   # shellcheck disable=SC2153
-  templateDir="${BASHCLI_DIR}/templates"
+  templateDir="${BASHCLI_DIR}/${templateBaseDir}"
 fi
 
 if [ ! -d "${templateDir}" ]; then
