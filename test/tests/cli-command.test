@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-PATH=${PWD}/fixtures/cli-new:${PATH}
+PATH=${PWD}/fixtures/cli-command:${PATH}
 export XDG_CONFIG_HOME=/dev/null
-TEMPLATE_DIR=${PWD}/../src/templates
+TEMPLATE_DIR=${PWD}/../src/templates/cli/command
 output=$(mktemp)
 directory=$(mktemp -d)
 trap "rm -r -- '${output}' '${directory}'" EXIT
@@ -12,19 +12,19 @@ before-each() {
   mkdir "${directory}"
 }
 
-exec-cli-create() {
-  test-cli cli command create -d "${directory}" "$@"
+command-create() {
+  cli cli command create -d "${directory}" "$@"
 }
 
 test-cli-create-basic-command() {
-  exec-cli-create basic # &> "${output}"
+  command-create basic # &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${directory}"/basic "${TEMPLATE_DIR}"/command
   diff "${directory}"/basic.context "${TEMPLATE_DIR}"/command.context
 }
 
 test-cli-create-nested-command() {
-  exec-cli-create parent/child &> "${output}"
+  command-create parent/child &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${directory}"/parent/@main "${TEMPLATE_DIR}"/@main
   diff "${directory}"/parent/@main.context "${TEMPLATE_DIR}"/@main.context
@@ -33,14 +33,14 @@ test-cli-create-nested-command() {
 }
 
 test-cli-create-empty-command() {
-  exec-cli-create '//' &> "${output}" && return 1
+  command-create '//' &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command is empty: //
 EOF
 }
 
 test-cli-create-invalid-command() {
-  exec-cli-create %command &> "${output}" && return 1
+  command-create %command &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] invalid command name: %command
 EOF
@@ -48,12 +48,12 @@ EOF
 
 test-cli-create-command-already-exists() {
   touch "${directory}"/command
-  exec-cli-create command &> "${output}" && return 1
+  command-create command &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command already exists: command (use --force to overwrite)
 EOF
 
-  exec-cli-create command --force &> "${output}"
+  command-create command --force &> "${output}"
   [ "$(stat -c%s "${output}")" -eq 0 ]
   diff "${directory}"/command "${TEMPLATE_DIR}"/command
   diff "${directory}"/command.context "${TEMPLATE_DIR}"/command.context
@@ -61,7 +61,7 @@ EOF
 
 test-cli-create-command-already-exists-as-non-terminal() {
   mkdir "${directory}"/command
-  exec-cli-create command &> "${output}" && return 1
+  command-create command &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command already exists as a non-terminal: command
 EOF
@@ -69,7 +69,7 @@ EOF
 
 test-cli-create-command-already-exists-as-terminal() {
   touch "${directory}"/parent
-  exec-cli-create parent/child &> "${output}" && return 1
+  command-create parent/child &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] command already exists as a terminal: parent
 EOF
