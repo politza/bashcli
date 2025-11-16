@@ -4,4 +4,4 @@ while IFS= read -d '' -r filename; do
   head -n1 "${filename}" | \
     grep -Eq '^#!(/usr/bin/env bash|/bin/bash)' && \
     printf "%s\n" "${filename}"
-done < <(git ls-files -z)
+done < <(git ls-files -z -- src/commands src/lib test)
