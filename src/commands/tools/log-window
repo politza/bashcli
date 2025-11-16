@@ -18,8 +18,8 @@ fi
 if [ "${options[log-file]}" ]; then
   logWindowArgs+=(-l "${options[log-file]}")
   if [ "${options[log-rotate]}" ] && [ "${options[log-rotate]}" -gt 0 ]; then
-    bashcli-load-library bashcli/tools/log-rotate
-    bashcli-tools-log-rotate -m "${options[log-rotate]}" "${options[log-file]}"
+    bashcli-load-library bashcli/tools/file-rotate
+    bashcli-tools-file-rotate -m "${options[log-rotate]}" "${options[log-file]}"
   fi
 fi
 if [ "${options[log-append]}" ]; then

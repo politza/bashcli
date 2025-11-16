@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-bashcli-load-library bashcli/tools/log-rotate
-bashcli-tools-log-rotate "$@"

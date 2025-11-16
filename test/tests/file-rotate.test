@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH=${PWD}/fixtures/log-rotate:${PATH}
+PATH=${PWD}/fixtures/file-rotate:${PATH}
 TEST_DIR=$(mktemp -d)
 
 trap "rm -r -- '${TEST_DIR}'" EXIT
@@ -15,8 +15,8 @@ before-each() {
   done
 }
 
-test-log-rotate-basic() {
-  log-rotate -m 2 service.log
+test-file-rotate-basic() {
+  file-rotate -m 2 service.log
   test -f service.1.log
   test -f service.2.log
   test -f service.3.log
@@ -25,8 +25,8 @@ test-log-rotate-basic() {
   diff service.3.log - <<<3
 }
 
-test-log-rotate-pattern() {
-  log-rotate -p %s.service.log service.log
+test-file-rotate-pattern() {
+  file-rotate -p %s.service.log service.log
   test -f 1.service.log
   test -f 2.service.log && return 1
   test -f 3.service.log && return 1
@@ -39,8 +39,8 @@ test-log-rotate-pattern() {
   diff service.3.log - <<<3
 }
 
-test-log-rotate-max-kept() {
-  log-rotate -m 1 service.log
+test-file-rotate-max-kept() {
+  file-rotate -m 1 service.log
   test -f service.1.log
   test -f service.2.log
   test -f service.3.log
