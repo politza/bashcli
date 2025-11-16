@@ -80,8 +80,7 @@ bashcli-complete-namespace() {
   COMPREPLY=("${COMPREPLY[@]/.conf/}")
 }
 
-# Complete resource scopes.
-bashcli-complete-resource-scope() {
+bashcli-complete-resources-scope() {
   COMPREPLY=(all none builtin default global project local)
   COMPREPLY+=(~builtin ~default ~global ~project ~local)
 }

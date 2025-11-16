@@ -95,7 +95,7 @@ bashcli-config-files() {
   local filename=${_BASHCLI_CONFIG_DIR_NAME}/${namespace}.${_BASHCLI_CONFIG_FILE_EXTENSION}
   local scope scopes
 
-  bashcli-resource-parse-scopes "${1-all}"
+  bashcli-resources-parse-scopes "${1-all}"
   scopes=("${REPLY[@]}")
   REPLY=()
 

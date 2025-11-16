@@ -19,7 +19,7 @@ declare -gA BASHCLI_RESOURCE_DIRS=(
 }
 
 # shellcheck disable=SC2165,SC2167
-bashcli-resource-parse-scopes() {
+bashcli-resources-parse-scopes() {
   local -A resolvedScopes=()
   local scope scopes
   REPLY=()
@@ -56,7 +56,7 @@ bashcli-resource-parse-scopes() {
   bashcli-debug "$1 -> ${REPLY[*]}"
 }
 
-bashcli-resource-get() {
+bashcli-resources-get() {
   local OPTIND=1
   local scopesOption=all
   local scope scopes resource reverse option directory filename
@@ -65,7 +65,7 @@ bashcli-resource-get() {
   while getopts "s:r" option "$@"; do
     case ${option} in
       s) scopesOption=${OPTARG};;
-      r) reverse=true;;         # FIXME: reverse should be the opposite
+      r) reverse=true;;
       *) return 1;;
     esac
   done
@@ -77,7 +77,7 @@ bashcli-resource-get() {
   fi
   resource=$1
 
-  bashcli-resource-parse-scopes "${scopesOption}"
+  bashcli-resources-parse-scopes "${scopesOption}"
   scopes=("${REPLY[@]}")
 
   if [ "${reverse}" ]; then
