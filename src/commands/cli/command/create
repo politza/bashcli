@@ -41,6 +41,7 @@ declare -A templates=(
 )
 
 bashcli-debug "using template-directory ${templateDir}"
+mkdir --parents "${cliCommandDir}"
 bashcli-debug "using command-directory ${cliCommandDir}"
 bashcli-debug "normalizing commands"
 bashcli-array-sort parameters -r
