@@ -59,7 +59,7 @@ bashcli-tools-log-window() {
 
   if [ "${clearWindowIfMatch}" ] && [ -z "${logFile}" ]; then
     logFile=$(mktemp)
-    trap 'rm -- "${logFile}"' return
+    trap "rm --force -- '${logFile}'" exit
   fi
   if [ "${logFile}" ] && [ -z "${logAppend}" ]; then
     cat /dev/null > "${logFile}"
