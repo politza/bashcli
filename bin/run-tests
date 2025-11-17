@@ -3,7 +3,7 @@
 set -e
 
 testFiles=(test/tests)
-testDirectory="$(dirname "$0")"/../test
+testDirectory=test
 proveArgs=(-r --ext test)
 options=$(getopt -o s:Ddvj -n "$(basename "$0")" -- "$@") || {
   exit 1

@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
 set -e
-cd "$(dirname "$0")"/..
-IFS=$'\n'
-readarray -t FILES < <(./bin/project-bash-files)
 
-shellcheck -f gcc "${FILES[@]}"
+bashFiles=()
+
+while IFS= read -d '' -r filename; do
+  head -n1 "${filename}" | \
+    grep -Eq '^#!(/usr/bin/env bash|/bin/bash)' && \
+    bashFiles+=("${filename}")
+done < <(git ls-files -z -- src/commands src/lib test)
+
+shellcheck -f gcc "${bashFiles[@]}"
