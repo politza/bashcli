@@ -150,6 +150,9 @@ bashcli-config-files() {
 
       _BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
       _BASHCLI_CONFIG_PROPERTIES_PROFILE[${property}]=${profile}
+      if [ "${BASHCLI_DEBUG}" ]; then
+        bashcli-debug "%${profile}.${property}=${value}"
+      fi
     fi
     ((++lineNumber))
   done < <(grep -E "${pattern}" "${configFile}")
@@ -198,6 +201,14 @@ bashcli-config-get() {
     -bashcli-config-eval "${namespace}" "${value}"
     if [ "${type}" ]; then
       -bashcli-config-coerce-value "${REPLY}" "${type}"
+    fi
+  fi
+
+  if [ "${BASHCLI_DEBUG}" ]; then
+    if [ "${isSet}" ]; then
+      bashcli-debug "${profile:-default} ${property} ${REPLY}"
+    else
+      bashcli-debug "${profile:-default} ${property} <unset>"
     fi
   fi
 
@@ -478,7 +489,6 @@ bashcli-config-list() {
   local profile=default
   local property value
 
-  bashcli-debug "reading: ${line}"
   if [[ ${line} == *([[:space:]])?(\#*) ]]; then
     return 1
   fi
