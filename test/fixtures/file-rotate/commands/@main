@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-bashcli-load-library bashcli/tools/file-rotate
-bashcli-tools-file-rotate "$@"

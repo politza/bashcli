@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-declare parameters=()
-bashcli-options-parse '' parameters -- "$@"
-bashcli-command-exec "${parameters[@]}"
