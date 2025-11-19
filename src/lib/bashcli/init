@@ -106,7 +106,7 @@ eval "${BASHCLI_CLI_NAME}() {
 
 bashcli-load-library bashcli/array
 bashcli-load-library bashcli/cache
-bashcli-load-library bashcli/resources
+bashcli-load-library bashcli/resource-scopes
 bashcli-load-library bashcli/command
 bashcli-load-library bashcli/config
 bashcli-load-library bashcli/context

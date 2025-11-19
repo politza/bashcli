@@ -57,7 +57,7 @@ bashcli-command-exec() {
   for ((round = 0; round < 2; ++round)); do
     for ((index = ${#BASHCLI_RESOURCE_SCOPES[@]} - 1; index >= 0; --index)); do
       resourceScope=${BASHCLI_RESOURCE_SCOPES[index]}
-      resourceDir=${BASHCLI_RESOURCE_DIRS[${resourceScope}]}
+      resourceDir=${BASHCLI_RESOURCE_SCOPES_DIRS[${resourceScope}]}
       commandMain=${commandPath}/${commandName}
       commandFile=${resourceDir}/commands/${commandMain}
       if [ -f "${commandFile}" ]; then
@@ -133,7 +133,7 @@ bashcli-command-exec() {
 
   for ((index = ${#BASHCLI_RESOURCE_SCOPES[@]} - 1; index >= 0; --index)); do
     resourceScope=${BASHCLI_RESOURCE_SCOPES[index]}
-    resourceDir=${BASHCLI_RESOURCE_DIRS[${resourceScope}]}
+    resourceDir=${BASHCLI_RESOURCE_SCOPES_DIRS[${resourceScope}]}
     commandDir=${resourceDir}/commands/${commandPath}
     if [ -d "${commandDir}" ]; then
       for subcommandMain in "${commandDir}"/*; do

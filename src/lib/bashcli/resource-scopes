@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 declare -ga BASHCLI_RESOURCE_SCOPES=(builtin default global)
-declare -gA BASHCLI_RESOURCE_DIRS=(
+declare -gA BASHCLI_RESOURCE_SCOPES_DIRS=(
   builtin "${BASHCLI_DIR}"
   default "${BASHCLI_CLI_DIR}"
   global  "${BASHCLI_GLOBAL_DIR:-${XDG_CONFIG_HOME:-${HOME}/.config}/${BASHCLI_CLI_NAME}}"
@@ -10,16 +10,16 @@ declare -gA BASHCLI_RESOURCE_DIRS=(
 [ "${BASHCLI_PROJECT_DIR}" ] && {
   BASHCLI_RESOURCE_SCOPES+=(project)
   # shellcheck disable=SC2154,SC2034
-  BASHCLI_RESOURCE_DIRS[project]=${BASHCLI_PROJECT_DIR}
+  BASHCLI_RESOURCE_SCOPES_DIRS[project]=${BASHCLI_PROJECT_DIR}
 }
 [ "${BASHCLI_LOCAL_DIR}" ] && {
   BASHCLI_RESOURCE_SCOPES+=(local)
   # shellcheck disable=SC2154,SC2034
-  BASHCLI_RESOURCE_DIRS[local]=${BASHCLI_LOCAL_DIR}
+  BASHCLI_RESOURCE_SCOPES_DIRS[local]=${BASHCLI_LOCAL_DIR}
 }
 
 # shellcheck disable=SC2165,SC2167
-bashcli-resources-parse-scopes() {
+bashcli-resource-scopes-parse() {
   local -A resolvedScopes=()
   local scope scopes
   REPLY=()
@@ -30,7 +30,7 @@ bashcli-resources-parse-scopes() {
     bashcli-string-trim scope
     case ${scope} in
       builtin|default|global|project|local)
-        if [ -z "${BASHCLI_RESOURCE_DIRS[${scope}]}" ]; then
+        if [ -z "${BASHCLI_RESOURCE_SCOPES_DIRS[${scope}]}" ]; then
           bashcli-error "scope not supported by this program: ${scope}"
           return 1
         fi
@@ -56,7 +56,7 @@ bashcli-resources-parse-scopes() {
   bashcli-debug "$1 -> ${REPLY[*]}"
 }
 
-bashcli-resources-get() {
+bashcli-resource-scopes-resolve() {
   local OPTIND=1
   local scopesOption=all
   local scope scopes resource reverse option directory filename
@@ -77,7 +77,7 @@ bashcli-resources-get() {
   fi
   resource=$1
 
-  bashcli-resources-parse-scopes "${scopesOption}"
+  bashcli-resource-scopes-parse "${scopesOption}"
   scopes=("${REPLY[@]}")
 
   if [ "${reverse}" ]; then
@@ -85,9 +85,9 @@ bashcli-resources-get() {
   fi
 
   for scope in "${scopes[@]}"; do
-    directory=${BASHCLI_RESOURCE_DIRS[${scope}]}
+    directory=${BASHCLI_RESOURCE_SCOPES_DIRS[${scope}]}
     filename=${directory}/${resource}
-    if [ -f "${filename}" ]; then
+    if [ -e "${filename}" ]; then
       REPLY=${filename}
       return 0
     fi
