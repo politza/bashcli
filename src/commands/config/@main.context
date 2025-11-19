@@ -11,13 +11,13 @@ command options.
 "
 
 OPTIONS=(
-  scopes    multi-list
+  scope     multi-list
   namespace single
   file      single
 )
 
 OPTION_DESCRIPTIONS=(
-  scopes    "Read from the configuration files corresponding to the provided scopes only.
+  scope     "Read from the configuration files corresponding to the provided scopes only.
 
 When writing or editing, a single scope or filename is required."
   file      "Read/write from/to the given configuration file only."
@@ -30,7 +30,7 @@ OPTION_ALIASES=(
 )
 
 OPTION_VALUE_TYPES=(
-  scopes    resources-scope
+  scope     resources-scope
   namespace namespace
   file      file
 )
