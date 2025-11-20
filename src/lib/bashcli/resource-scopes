@@ -72,7 +72,7 @@ bashcli-resource-scopes-resolve() {
   shift "$((OPTIND - 1))"
 
   if [ $# -ne 1 ]; then
-    bashcli-error "too many arguments"
+    bashcli-error "require exactly one resource: $*"
     return 1
   fi
   resource=$1
@@ -88,9 +88,12 @@ bashcli-resource-scopes-resolve() {
     directory=${BASHCLI_RESOURCE_SCOPES_DIRS[${scope}]}
     filename=${directory}/${resource}
     if [ -e "${filename}" ]; then
+      bashcli-debug "${scope} ${resource} ${filename}"
       REPLY=${filename}
       return 0
     fi
   done
+
+  bashcli-debug "${scope} ${resource} <none>"
   return 1
 }
