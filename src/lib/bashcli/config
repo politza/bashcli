@@ -206,7 +206,7 @@ bashcli-config-get() {
 
   if [ "${BASHCLI_DEBUG}" ]; then
     if [ "${isSet}" ]; then
-      bashcli-debug "${profile:-default} ${property} ${REPLY}"
+      bashcli-debug "${profile:-default} ${property} ${REPLY[*]}"
     else
       bashcli-debug "${profile:-default} ${property} <unset>"
     fi

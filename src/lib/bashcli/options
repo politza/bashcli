@@ -280,7 +280,7 @@ bashcli-options-parse() {
           __options[${__option}]=${REPLY[*]}
           unset IFS
           if [ "${__multiOptionRefs[${__option}]}" ]; then
-            eval "${_multiOptionRefs[${_option}]}+=(\"\${REPLY[@]}\")"
+            eval "${_multiOptionRefs[${__option}]}+=(\"\${REPLY[@]}\")"
           fi
         fi;;
     esac

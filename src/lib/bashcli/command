@@ -113,7 +113,7 @@ bashcli-command-exec() {
   -bashcli-command-resolve "${commandList[@]}"
   _BASHCLI_COMMAND_STACK+=("${command}")
   -bashcli-command-local-unset command commandList
-  bashcli-debug "executing ${REPLY[0]}"
+  bashcli-debug "${REPLY[0]} $*"
   . "${REPLY}" "$@"
 }
 
