@@ -19,6 +19,10 @@ export BASHCLI_CLI_NAME=${BASHCLI_CLI_SCRIPT##*/}
 export BASHCLI_DIR=$(realpath "$0")
 BASHCLI_DIR=${BASHCLI_DIR%/*}
 
+if [ "${BASHCLI_CLI_NAME}" != bashcli ] \
+     && [ -f "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/pre-init" ]; then
+    . "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/pre-init"
+fi
 . "${BASHCLI_DIR}"/lib/bashcli/init
 if [ "${BASHCLI_CLI_NAME}" != bashcli ] \
      && [ -f "${BASHCLI_CLI_DIR}/lib/${BASHCLI_CLI_NAME}/init" ]; then
