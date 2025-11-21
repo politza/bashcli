@@ -35,3 +35,19 @@ bashcli-array-reverse() {
     __array+=("${__copy[__index]}")
   done
 }
+
+bashcli-array-uniq() {
+  local -n __array=$1
+  local __copy=("${__array[@]}")
+  local -A __elementSet=()
+  local __index __element
+
+  __array=()
+  for ((__index = 0; __index < ${#__copy[@]}; ++__index)); do
+    __element=${__copy[__index]}
+    if [ -z "${__elementSet[${__element}]}" ]; then
+      __elementSet[${__element}]=1
+      __array+=("${__element}")
+    fi
+  done
+}
