@@ -19,7 +19,14 @@ declare COMP_LINE=${options[comp-line]}
 declare COMP_POINT=${options[comp-point]}
 declare COMP_TYPE=${options[comp-type]}
 declare COMP_WORDS
-
 readarray -t COMP_WORDS <<<"${options[comp-words]}"
+# shellcheck disable=SC2034
+declare BASHCLI_COMPLETION_ALIAS=()
+
+if [ "${options[comp-alias]}" ]; then
+  declare expansion=${options[comp-alias]}
+  expansion=${expansion#*=}
+  eval "read -r -a BASHCLI_COMPLETION_ALIAS <<< ${expansion}"
+fi
 
 -bashcli-completion-complete "${parameters[@]}"

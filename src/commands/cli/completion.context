@@ -13,6 +13,7 @@ OPTIONS=(
   comp-point  single
   comp-type   single
   comp-words  single
+  comp-alias  single
 )
 
 OPTION_DESCRIPTIONS=(
@@ -26,4 +27,5 @@ eval \"\$(${BASHCLI_CLI_NAME} --script)\""
   comp-point  "Used internally when completing."
   comp-type   "Used internally when completing."
   comp-words  "Used internally when completing."
+  comp-alias  "Used internally when completing."
 )

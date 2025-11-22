@@ -13,10 +13,10 @@
     . /usr/share/bash-completion/bash_completion
   fi
 
-  if type _comp_initialize >/dev/null 2>&1 ; then
+  if type _comp_initialize &>/dev/null; then
     # bash-completion >= 2.12
     _comp_initialize -s -n "><=;|&(:" -- "$@" || return
-  elif type _init_completion >/dev/null 2>&1; then
+  elif type _init_completion &>/dev/null; then
     # bash-completion < 2.12
     _init_completion -s -n "><=;|&(:" -- "$@" || return
   else
@@ -28,6 +28,19 @@
   -bashcli-context-clear
   -bashcli-context-read .
   -bashcli-completion-read .
+
+  # Support completion of simple aliases.
+  if [ "${BASHCLI_CLI_NAME}" == "${BASHCLI_COMPLETION_ALIAS[0]}" ]; then
+    bashcli-debug "completing alias expansion -> ${BASHCLI_COMPLETION_ALIAS[*]}"
+    for word in "${BASHCLI_COMPLETION_ALIAS[@]:1}"; do
+      if -bashcli-command-resolve "${commandStack[@]}" "${word}" &>/dev/null; then
+        local commandMain=${REPLY}
+        commandStack+=("${word}")
+        -bashcli-context-read "${commandStack[@]}"
+        -bashcli-completion-read "${commandStack[@]}"
+      fi
+    done
+  fi
 
   # Parse the command line.
   for ((index = 1; index <= cword; ++index)); do
@@ -85,7 +98,6 @@
         fi ;;
       *)
         ((++parameterIndex)) || true ;;
-
     esac
   done
 
@@ -218,6 +230,14 @@
   local cliName=${BASHCLI_CLI_NAME}
 
   cat <<EOF
+${cliName}-complete() {
+  [ \$# -eq 1 ] || {
+    echo "usage: \${FUNCNAME} command" >&2
+    return 1
+  }
+  complete -o nospace -o default -F _${cliName}_complete "\$1"
+}
+
 _${cliName}_complete() {
   readarray -t COMPREPLY < <(
     IFS=$'\n'
@@ -229,6 +249,7 @@ _${cliName}_complete() {
       --comp-point "\${COMP_POINT}"    \\
       --comp-type  "\${COMP_TYPE}"     \\
       --comp-words "\${COMP_WORDS[*]}" \\
+      --comp-alias "\$(alias "\${COMP_WORDS[0]}" 2>/dev/null)" \\
       -- \\
       "\$@"
   )

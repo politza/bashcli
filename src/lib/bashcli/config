@@ -150,9 +150,9 @@ bashcli-config-files() {
 
       _BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
       _BASHCLI_CONFIG_PROPERTIES_PROFILE[${property}]=${profile}
-      # if [ "${BASHCLI_DEBUG}" ]; then
-      #   bashcli-debug "%${profile}.${property}=${value}"
-      # fi
+      if [ "${BASHCLI_DEBUG}" ]; then
+        bashcli-debug "%${profile}.${property}=${value}"
+      fi
     fi
     ((++lineNumber))
   done < <(grep -E "${pattern}" "${configFile}")
