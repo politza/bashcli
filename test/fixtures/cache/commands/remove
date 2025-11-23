@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-bashcli-load-library bashcli/cache
-
-declare -A options=()
-
-bashcli-options-parse options -- "$@"
-bashcli-cache-remove "${options[name]}"

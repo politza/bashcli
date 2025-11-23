@@ -2,20 +2,4 @@
 
 bashcli-load-library bashcli/cache
 
-declare -A options=()
-declare keyFn=cli-cache-key-fn
-
-bashcli-options-parse options -- "$@"
-
-cli-cache-key-fn() {
-  local name=$1
-  local keyFile=$2
-
-  printf "%s" "${options[key]}" > "${keyFile}"
-}
-
-if [ -z "${options[key]}" ]; then
-  keyFn=
-fi
-
-bashcli-cache-put "${options[name]}" "${options[value]}" ${keyFn}
+bashcli-cache-put "$@"

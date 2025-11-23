@@ -599,9 +599,11 @@ bashcli-config-list() {
     return 0
   fi
 
-  while IFS= read -r line || [ -n "${line}" ]; do
+  while IFS= read -r line; do
     name=${line%%=*}
-    _BASHCLI_CONFIG_ENV[${name}]=defined
+    if [ "${name}" ]; then
+      _BASHCLI_CONFIG_ENV[${name}]=defined
+    fi
   done < <(env)
 }
 

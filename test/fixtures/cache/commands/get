@@ -2,22 +2,5 @@
 
 bashcli-load-library bashcli/cache
 
-
-declare -A options=()
-declare validator=cli-cache-validator
-
-bashcli-options-parse options -- "$@"
-
-cli-cache-validator() {
-  local name=$1
-  local keyFile=$2
-
-  [ "${name}" == "${options[name]}" ] \
-    && [ "$(cat "${keyFile}")" == "${options[key]}" ]
-}
-
-if [ -z "${options[key]}" ]; then
-  validator=
-fi
-
-bashcli-cache-get "${options[name]}" ${validator}
+bashcli-cache-get "$@"
+printf "%s" "${REPLY}"
