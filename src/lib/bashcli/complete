@@ -12,16 +12,22 @@ bashcli-complete-directory() {
 
 # Completes configuration profile-names.
 bashcli-complete-config-profile() {
-  local configFiles=() configFile
+  local scope directory filename
+  local configFiles=()
 
-  bashcli-config-files
-
-  for configFile in "${REPLY[@]}"; do
-    if [ -f "${configFile}" ]; then
-      configFiles+=("${configFile}")
+  for scope in "${BASHCLI_RESOURCE_SCOPES[@]}"; do
+    directory=${BASHCLI_RESOURCE_SCOPES_DIRS[${scope}]}/${BASHCLI_CONFIG_DIR_NAME}
+    bashcli-debug "${scope} -> ${directory}"
+    if ! [ -d "${directory}" ]; then
+      continue
     fi
+    for filename in "${directory}"/*."${BASHCLI_CONFIG_FILE_EXTENSION}"; do
+      if [ -f "${filename}" ]; then
+        bashcli-debug "${filename}"
+        configFiles+=("${filename}")
+      fi
+    done
   done
-
 
   if [ ${#configFiles[@]} -gt 0 ]; then
     readarray -t COMPREPLY < <(sed -nE 's/^[[:space:]]*%([^.]+)\..*/\1/p' "${configFiles[@]}")
@@ -80,7 +86,7 @@ bashcli-complete-namespace() {
   COMPREPLY=("${COMPREPLY[@]/.conf/}")
 }
 
-bashcli-complete-resources-scope() {
+bashcli-complete-resource-scope() {
   COMPREPLY=(all none builtin default global project local)
   COMPREPLY+=(~builtin ~default ~global ~project ~local)
 }

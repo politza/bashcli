@@ -30,7 +30,7 @@ OPTION_ALIASES=(
 )
 
 OPTION_VALUE_TYPES=(
-  scope     resources-scope
+  scope     resource-scope
   namespace namespace
   file      file
 )
