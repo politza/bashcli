@@ -2,6 +2,7 @@
 
 bashcli-load-library bashcli/completion
 bashcli-load-library bashcli/complete
+bashcli-load-library "${BASHCLI_CLI_NAME}/complete" 2>/dev/null || true
 
 declare -A options=()
 declare -a parameters=()
