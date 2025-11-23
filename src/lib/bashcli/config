@@ -80,7 +80,7 @@ bashcli-config-read() {
     if [ -f "${configFile}" ]; then
       -bashcli-config-read-file "${configFile}" "${namespace}" "${prefixes[@]}"
     else
-      bashcli-debug "skipping non-regular or missing file: ${configFile}"
+      bashcli-debug "skipping ${configFile}"
     fi
   done
 }
