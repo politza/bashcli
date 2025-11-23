@@ -8,16 +8,19 @@ Creates new commands.
 OPTIONS=(
   force     flag
   directory single
+  edit      flag
 )
 
 OPTION_DESCRIPTIONS=(
   force     "Overwrite already existing files."
   directory "The directory in which to create the command files."
+  edit      "Open the created command in an editor."
 )
 
 OPTION_ALIASES=(
   f force
   d directory
+  e edit
 )
 
 OPTION_VALUE_TYPES=(

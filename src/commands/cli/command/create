@@ -3,6 +3,7 @@
 declare -A options=()
 declare -a parameters=()
 declare templateBaseDir=templates/cli/command
+declare createdCommandFiles=()
 
 bashcli-options-parse options parameters -- "$@"
 
@@ -123,6 +124,9 @@ for command in "${commands[@]}"; do
           if [[ "${template}" == @main?(|.*) && -e "${templates[${template}]}" ]]; then
             bashcli-debug "cp ${templates[${template}]} -> ${commandPath}"
             cp -- "${templates[${template}]}" "${commandPath}"
+            if [ "${template}" == command ]; then
+              createdCommandFiles+=("${commandPath}/@main")
+            fi
           fi
         done
       fi
@@ -137,8 +141,15 @@ for command in "${commands[@]}"; do
           fi
           bashcli-debug "cp ${templates[${template}]} -> ${templateDest}"
           cp -- "${templates[${template}]}" "${templateDest}"
+          if [ "${template}" == command ]; then
+            createdCommandFiles+=("${templateDest}")
+          fi
         fi
       done
     fi
   done
 done
+
+if [ "${options[edit]}" ] && [ ${#createdCommandFiles[@]} -gt 0 ]; then
+  ${EDITOR:-vi} "${createdCommandFiles[@]}"
+fi
