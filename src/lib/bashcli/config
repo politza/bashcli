@@ -95,10 +95,11 @@ bashcli-config-files() {
   local filename=${BASHCLI_CONFIG_DIR_NAME}/${namespace}.${BASHCLI_CONFIG_FILE_EXTENSION}
   local scope scopes
 
-  bashcli-resource-scopes-parse "${1-all}"
+  bashcli-resource-scopes-parse "$1"
   scopes=("${REPLY[@]}")
   REPLY=()
 
+  bashcli-debug "scopes=[${scopes[@]}]"
   for scope in "${scopes[@]}"; do
     if [ "${forWrite}" ]; then
       case ${scope} in
@@ -150,9 +151,9 @@ bashcli-config-files() {
 
       _BASHCLI_CONFIG_PROPERTIES[${property}]=${value}
       _BASHCLI_CONFIG_PROPERTIES_PROFILE[${property}]=${profile}
-      if [ "${BASHCLI_DEBUG}" ]; then
-        bashcli-debug "%${profile}.${property}=${value}"
-      fi
+      # if [ "${BASHCLI_DEBUG}" ]; then
+      #   bashcli-debug "%${profile}.${property}=${value}"
+      # fi
     fi
     ((++lineNumber))
   done < <(grep -E "${pattern}" "${configFile}")
@@ -201,13 +202,13 @@ bashcli-config-get() {
     -bashcli-config-eval "${namespace}" "${value}"
   fi
 
-  if [ "${BASHCLI_DEBUG}" ]; then
-    if [ "${isSet}" ]; then
-      bashcli-debug "${profile:-default} ${property} ${REPLY}"
-    else
-      bashcli-debug "${profile:-default} ${property} <unset>"
-    fi
-  fi
+  # if [ "${BASHCLI_DEBUG}" ]; then
+  #   if [ "${isSet}" ]; then
+  #     bashcli-debug "${profile:-default} ${property} ${REPLY}"
+  #   else
+  #     bashcli-debug "${profile:-default} ${property} <unset>"
+  #   fi
+  # fi
 
   if [ "${type}" ]; then
     -bashcli-config-coerce-value "${REPLY}" "${type}"
@@ -564,7 +565,7 @@ bashcli-config-list() {
 
   if [ "${_BASHCLI_CONFIG_ENV[${variable}]}" ]; then
     REPLY=${!variable}
-    bashcli-debug "${property} -> ${variable} -> ${REPLY}"
+    # bashcli-debug "${property} -> ${variable} -> ${REPLY}"
     return 0
   fi
 
