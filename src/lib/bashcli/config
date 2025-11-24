@@ -47,7 +47,11 @@ bashcli-config-read() {
 
   while getopts ":s:n:f:p:" option "$@"; do
     case ${option} in
-      s) scopes=${OPTARG};;
+      s) if [ -z "${OPTARG}" ]; then
+           bashcli-error "scopes must not be empty"
+           return 1
+         fi
+         scopes=${OPTARG};;
       n) -bashcli-config-check-namespace "${OPTARG}"
          namespace=${OPTARG};;
       f) if [ "${OPTARG}" ]; then
@@ -95,6 +99,10 @@ bashcli-config-files() {
   local filename=${BASHCLI_CONFIG_DIR_NAME}/${namespace}.${BASHCLI_CONFIG_FILE_EXTENSION}
   local scope scopes
 
+  if [ -z "$1" ]; then
+    bashcli-error "scopes must not be empty"
+    return 1
+  fi
   bashcli-resource-scopes-parse "$1"
   scopes=("${REPLY[@]}")
   REPLY=()
@@ -279,7 +287,11 @@ bashcli-config-write() {
 
   while getopts ":s:n:f:P:U" option "$@"; do
     case ${option} in
-      s) scopes=${OPTARG};;
+      s) if [ -z "${OPTARG}" ]; then
+           bashcli-error "scopes must not be empty"
+           return 1
+         fi
+         scopes=${OPTARG};;
       n) -bashcli-config-check-namespace "${OPTARG}"
          namespace=${OPTARG};;
       f) if [ "${OPTARG}" ]; then
