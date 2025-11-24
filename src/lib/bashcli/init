@@ -10,7 +10,7 @@ declare -g -A BASHCLI_TTY_STYLES=(
   success $'\033[92m'
   failure $'\033[91m'
   bold    $'\033[1m'
-  none    $'\033[39m'
+  none    $'\033[0m'
 )
 
 if [ -t 1 ]; then
