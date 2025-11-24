@@ -77,7 +77,7 @@ bashcli-config-read() {
   bashcli-debug "reading with namespace=${namespace} scopes=${scopes} #files=${#configFiles[@]}"
 
   for configFile in "${configFiles[@]}"; do
-    if [ -f "${configFile}" ]; then
+    if [ -e "${configFile}" ]; then
       -bashcli-config-read-file "${configFile}" "${namespace}" "${prefixes[@]}"
     else
       bashcli-debug "skipping ${configFile}"
@@ -491,6 +491,11 @@ bashcli-config-list() {
   local property value
 
   if [[ ${line} == *([[:space:]])?(\#*) ]]; then
+    return 1
+  fi
+
+  if [[ ${line} != *=* ]]; then
+    bashcli-debug "invalid property definition: ${line}"
     return 1
   fi
 

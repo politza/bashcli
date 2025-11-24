@@ -36,7 +36,7 @@ bashcli-resource-scopes-parse() {
         fi
         resolvedScopes[${scope}]=set ;;
       (~@(builtin|default|global|project|local))
-      resolvedScopes[${scope}]= ;;
+      resolvedScopes[${scope:1}]= ;;
       none|~all) resolvedScopes=() ;;
       all|~none)
         resolvedScopes=()
@@ -47,6 +47,7 @@ bashcli-resource-scopes-parse() {
          return 1;;
     esac
   done
+
   for scope in "${BASHCLI_RESOURCE_SCOPES[@]}"; do
     if [ "${resolvedScopes[${scope}]}" ]; then
       REPLY+=("${scope}")
@@ -96,4 +97,9 @@ bashcli-resource-scopes-resolve() {
 
   bashcli-debug "${scope} ${resource} <none>"
   return 1
+}
+
+bashcli-resource-scopes-unparse() {
+  local IFS=,
+  REPLY="$*"
 }
