@@ -46,7 +46,7 @@ bashcli-debug() {
     if [[ ${fnName} == ?(-)bashcli-* ]]; then
       fnName=${fnName#-}
       fnName=${fnName#bashcli-}
-    elif [[ ${fnName} == ${cliName}-* ]]; then
+    elif [[ ${fnName} == ?(-)${cliName}-* ]]; then
       fnName=${fnName#${cliName}-}
     fi
     context+="${fnName}"

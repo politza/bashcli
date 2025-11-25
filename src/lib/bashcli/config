@@ -107,7 +107,7 @@ bashcli-config-files() {
   scopes=("${REPLY[@]}")
   REPLY=()
 
-  bashcli-debug "scopes=[${scopes[@]}]"
+  bashcli-debug "scopes=[${scopes[*]}]"
   for scope in "${scopes[@]}"; do
     if [ "${forWrite}" ]; then
       case ${scope} in

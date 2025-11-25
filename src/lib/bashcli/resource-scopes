@@ -22,6 +22,7 @@ declare -gA BASHCLI_RESOURCE_SCOPES_DIRS=(
 bashcli-resource-scopes-parse() {
   local -A resolvedScopes=()
   local scope scopes
+  local IFS
   REPLY=()
 
   bashcli-string-split "$1" , scopes
@@ -54,6 +55,7 @@ bashcli-resource-scopes-parse() {
     fi
   done
 
+  IFS=' '
   bashcli-debug "$1 -> ${REPLY[*]}"
 }
 
