@@ -9,12 +9,16 @@ OPTIONS=(
   profile  multi-list
   version  flag
   debug    flag
+  debug-filter single
 )
 
 OPTION_DESCRIPTIONS=(
   profile "Enables one or more configuration profiles."
   version "Displays version information about the program."
   debug   "Enable debug logging."
+  debug-filter "Enable debug logging for matching commands and functions.
+
+The argument should be an extended regular expression."
 )
 
 OPTION_ALIASES=(

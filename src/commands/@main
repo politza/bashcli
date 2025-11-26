@@ -15,6 +15,13 @@ fi
 if [ "${options[debug]}" ]; then
   export BASHCLI_DEBUG=${BASHCLI_DEBUG:-true}
 fi
+if [ "${options[debug-filter]}" ]; then
+  case "${BASHCLI_DEBUG}" in
+    true|false) BASHCLI_DEBUG= ;;
+  esac
+  export BASHCLI_DEBUG="${BASHCLI_DEBUG+(${BASHCLI_DEBUG})|}${options[debug-filter]}"
+fi
+
 
 bashcli-config-initialize "${profiles[@]}"
 bashcli-command-exec "${parameters[@]}"
