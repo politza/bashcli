@@ -48,7 +48,6 @@ bashcli-cache-file() {
   local namespace=$1
   local key=$2
   local directory=${BASHCLI_CACHE_DIR}/${namespace}
-  local filename
   REPLY=
 
   bashcli-debug "ns=${namespace} key='${key}'"
@@ -67,7 +66,11 @@ bashcli-cache-file() {
     mkdir --parents "${directory}"
   fi
 
-  filename=$(printf "%s" "${key}" | sha1sum -)
-  filename=${directory}/${filename%% *}
-  REPLY=${filename}
+  bashcli-cache-hash < <(printf "%s" "${key}")
+  REPLY=${directory}/${REPLY}
+}
+
+bashcli-cache-hash() {
+  REPLY=$(sha1sum -)
+  REPLY=${REPLY%% *}
 }
