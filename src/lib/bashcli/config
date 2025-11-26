@@ -109,7 +109,9 @@ bashcli-config-files() {
   scopes=("${REPLY[@]}")
   REPLY=()
 
+  local IFS=" "
   bashcli-debug "scopes=[${scopes[*]}]"
+  unset IFS
   for scope in "${scopes[@]}"; do
     if [ "${forWrite}" ]; then
       case ${scope} in
