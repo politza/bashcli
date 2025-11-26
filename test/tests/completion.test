@@ -40,8 +40,9 @@ completion-exec() {
 
 test-complete-long-options() {
   completion-exec 'test-cli command --|' &> "${output}"
-  diff "${output}" - <<EOF
+  diff -u "${output}" - <<EOF
 --boolean     boolean option (-a,-b,-c)
+--debug       Enable debug logging.
 --first       first enum option (-f)
 --help        Shows a help message.
 --multi       multi option (-M)

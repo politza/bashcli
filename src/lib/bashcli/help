@@ -184,4 +184,5 @@ declare -g _BASHCLI_HELP_WIDTH=$(( ${COLUMNS:-80} < 80 ? ${COLUMNS:-80} : 80))
       REPLY+=("${option}")
     fi
   done
+  bashcli-debug "${REPLY[@]}"
 }

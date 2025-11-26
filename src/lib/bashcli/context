@@ -10,7 +10,7 @@ declare -g -A _BASHCLI_CONTEXT_OPTION_VALUE_TYPES=()
 declare -g -A _BASHCLI_CONTEXT_OPTIONS_SOURCE=()
 declare -g -A _BASHCLI_CONTEXT_READ_CACHE=()
 
-declare -g -a _BASHCLI_CONTEXT_DEFAULT_OPTIONS=(help)
+declare -g -a _BASHCLI_CONTEXT_DEFAULT_OPTIONS=(help debug)
 declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
 
 -bashcli-context-clear() {
