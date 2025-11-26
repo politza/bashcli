@@ -12,5 +12,9 @@ if [ "${options[version]}" ]; then
   exit 0
 fi
 
+if [ "${options[debug]}" ]; then
+  export BASHCLI_DEBUG=${BASHCLI_DEBUG:-true}
+fi
+
 bashcli-config-initialize "${profiles[@]}"
 bashcli-command-exec "${parameters[@]}"

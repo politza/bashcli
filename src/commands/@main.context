@@ -8,11 +8,13 @@ This is the entry command of the CLI.
 OPTIONS=(
   profile  multi-list
   version  flag
+  debug    flag
 )
 
 OPTION_DESCRIPTIONS=(
   profile "Enables one or more configuration profiles."
   version "Displays version information about the program."
+  debug   "Enable debug logging."
 )
 
 OPTION_ALIASES=(

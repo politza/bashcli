@@ -43,9 +43,9 @@ bashcli-config-read() {
   local namespace=options
   local OPTIND=1
   local scopes=all
-  local option prefixes configFile
+  local option prefixes configFile forcedProfile
 
-  while getopts ":s:n:f:p:" option "$@"; do
+  while getopts ":s:n:f:p:P:" option "$@"; do
     case ${option} in
       s) if [ -z "${OPTARG}" ]; then
            bashcli-error "scopes must not be empty"
@@ -61,6 +61,8 @@ bashcli-config-read() {
            -bashcli-config-check-property "${OPTARG}"
            prefixes+=("${OPTARG}")
          fi;;
+      P) -bashcli-config-check-profile "${OPTARG}"
+         forcedProfile=${OPTARG} ;;
       :) bashcli-error "option requires an argument: ${OPTARG}"
          return 1;;
       *) bashcli-error "option not recognized: ${OPTARG}"
@@ -82,7 +84,7 @@ bashcli-config-read() {
 
   for configFile in "${configFiles[@]}"; do
     if [ -e "${configFile}" ]; then
-      -bashcli-config-read-file "${configFile}" "${namespace}" "${prefixes[@]}"
+      -bashcli-config-read-file "${configFile}" "${namespace}" "${forcedProfile}" "${prefixes[@]}"
     else
       bashcli-debug "skipping ${configFile}"
     fi
@@ -123,7 +125,8 @@ bashcli-config-files() {
 -bashcli-config-read-file() {
   local configFile=$1
   local namespace=$2
-  shift 2
+  local forcedProfile=$3
+  shift 3
   local prefixes=("$@")
   local lineNumber=1
   local pattern=.
@@ -139,7 +142,7 @@ bashcli-config-files() {
 
   while IFS= read -r line || [ -n "${line}" ]; do
     if -bashcli-config-read-line "${line}" "${configFile}" "${lineNumber}"; then
-      profile=${REPLY[0]}
+      profile=${forcedProfile:-${REPLY[0]}}
       property=${namespace}.${REPLY[1]}
       value=${REPLY[2]}
       propertyProfile=${_BASHCLI_CONFIG_PROPERTIES_PROFILE[${property}]}
@@ -508,7 +511,7 @@ bashcli-config-list() {
   fi
 
   if [[ ${line} != *=* ]]; then
-    bashcli-debug "invalid property definition: ${line}"
+    bashcli-warn "ignoring invalid property definition: ${line}"
     return 1
   fi
 
