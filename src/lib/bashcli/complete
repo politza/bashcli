@@ -43,7 +43,7 @@ bashcli-complete-config-property() {
   COMPREPLY=("${!_BASHCLI_CONFIG_PROPERTIES[@]}")
   bashcli-debug "$(declare -p COMPREPLY)"
   for ((index = 0; index < ${#COMPREPLY[@]}; ++index)); do
-    COMPREPLY[index]=${COMPREPLY[index]#${BASHCLI_CLI_NAME}.}
+    COMPREPLY[index]=${COMPREPLY[index]#options.}
   done
 }
 
