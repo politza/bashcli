@@ -3,7 +3,7 @@
 
 
 DESCRIPTION="\
-Complete options and parameters.
+Completes options and parameters.
 "
 
 OPTIONS=(
@@ -17,7 +17,7 @@ OPTIONS=(
 )
 
 OPTION_DESCRIPTIONS=(
-  script  "Prints the definition of a completion function.
+  script  "Print the definition of a completion function.
 
 Can be used with eval like this:
 

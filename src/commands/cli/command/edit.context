@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="
-Edit a command.
+Edits a command script using an editor.
 "
 
 OPTION_VALUE_TYPES=(

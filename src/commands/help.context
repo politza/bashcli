@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="\
-Display help for a given command.
+Displays documentation for a given command.
 "
 
 OPTIONS=(

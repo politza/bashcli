@@ -3,5 +3,5 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="
-Edit a configuration file using an editor.
+Edits a configuration file using an editor.
 "

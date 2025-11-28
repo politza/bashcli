@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="
-Commands relating to reading, writing and listing configuration properties.
+Commands relating to configuration properties.
 
 Configuration properties are partitioned into different namespaces. Each namespace is contained in
 it's own filename in the various directories, which is just the namespace concatenated with the

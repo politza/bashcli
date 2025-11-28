@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 DESCRIPTION="
-This is the entry command of the CLI.
+The root command of the CLI.
 "
 
 OPTIONS=(
@@ -13,8 +13,8 @@ OPTIONS=(
 )
 
 OPTION_DESCRIPTIONS=(
-  profile "Enables one or more configuration profiles."
-  version "Displays version information about the program."
+  profile "Enable one or more configuration profiles."
+  version "Display version information about the program."
   debug   "Enable debug logging."
   debug-filter "Enable debug logging for matching commands and functions.
 
