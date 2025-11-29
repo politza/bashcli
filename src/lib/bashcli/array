@@ -43,3 +43,16 @@ bashcli-array-uniq() {
     fi
   done
 }
+
+bashcli-array-contains() {
+  local -n __array=$1
+  local __value=$2
+  local __item
+
+  for __item in "${__array[@]}"; do
+    if [ "${__item}" == "${__value}" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
