@@ -138,7 +138,7 @@ bashcli-config-files() {
   bashcli-debug "reading ${configFile}"
 
   if [ ${#prefixes[@]} -gt 0 ]; then
-    bashcli-array-join prefixes '|'
+    bashcli-string-join '|' prefixes
     printf -v pattern "^[[:space:]]*(%%[a-zA-Z0-9-]+\\.)?(%s)\\." "${REPLY}"
   fi
 

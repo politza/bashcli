@@ -17,14 +17,6 @@ bashcli-array-sort() {
   return 0
 }
 
-bashcli-array-join() {
-  local -n __array=$1
-  local __separator=$2
-  local IFS=${__separator}
-
-  REPLY="${__array[*]}"
-}
-
 bashcli-array-reverse() {
   local -n __array=$1
   local __copy=("${__array[@]}")

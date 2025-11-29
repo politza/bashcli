@@ -26,3 +26,11 @@ bashcli-string-split() {
   __array=()
   readarray -d "$2" -t __array < <(printf "%s" "$1") || true
 }
+
+bashcli-string-join() {
+  local __separator=$1
+  local -n __array=$2
+  local IFS=${__separator}
+
+  REPLY="${__array[*]}"
+}
