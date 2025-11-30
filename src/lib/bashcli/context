@@ -12,6 +12,7 @@ declare -g -A _BASHCLI_CONTEXT_READ_CACHE=()
 
 declare -g -a _BASHCLI_CONTEXT_DEFAULT_OPTIONS=(help debug)
 declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
+declare -g -r _BASHCLI_CONTEXT_COMPLEMENT_DOCUMENTATION='Negates the effect of %s.'
 
 -bashcli-context-clear() {
   _BASHCLI_CONTEXT_DESCRIPTIONS=()
@@ -84,7 +85,7 @@ declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
 }
 
 -bashcli-context-validate() {
-  local option optionType alias IFS
+  local option optionType alias prefix documentation IFS
   local commandContext=$1
 
   for option in "${!OPTIONS[@]}"; do
@@ -93,16 +94,24 @@ declare -g -r _BASHCLI_CONTEXT_NOT_DOCUMENTED='Not documented.'
     fi
     optionType=${OPTIONS[${option}]}
     case ${optionType} in
+      flag:*) if [ "${OPTIONS[${optionType#flag:}]}" != flag ]; then
+                bashcli-fatal "the complement of a flag must be a flag: ${option}, ${optionType}"
+              fi ;;
       flag|single|multi|multi-list) ;;
       enum:?*)
         case ${OPTIONS[${optionType#enum:}]} in
-          multi|multi-list|flag|enum:*)
+          multi|multi-list|flag|flag:*|enum:*)
             bashcli-fatal "Enum option-value must be a single option: ${optionType:#enum:}" ;;
         esac ;;
       *) bashcli-fatal "Type of ${option} must be one of flag, single, multi, multi-list or enum: ${commandContext}" ;;
     esac
     if [ -z "${OPTION_DESCRIPTIONS[${option}]}" ]; then
-      OPTION_DESCRIPTIONS[${option}]="${_BASHCLI_CONTEXT_NOT_DOCUMENTED}"
+      case ${optionType} in
+        flag:*) prefix=${option//?/-}
+                printf -v documentation "${_BASHCLI_CONTEXT_COMPLEMENT_DOCUMENTATION}" "${prefix:0:2}${optionType#flag:}"
+                OPTION_DESCRIPTIONS[${option}]=${documentation};;
+        *) OPTION_DESCRIPTIONS[${option}]="${_BASHCLI_CONTEXT_NOT_DOCUMENTED}"
+      esac
     fi
   done
 

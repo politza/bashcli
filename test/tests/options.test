@@ -166,4 +166,9 @@ test-multi-requires-argument() {
 EOF
 }
 
+test-flag-complement() {
+  cli --boolean --no-boolean &> "${output}"
+  [ "$(stat -c%s "${output}")" -eq 0 ]
+}
+
 . ./lib/run-tests

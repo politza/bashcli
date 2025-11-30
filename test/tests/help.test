@@ -23,6 +23,12 @@ Options:
 --multi-list, -m MULTI-LIST-VALUE
   Multi option description.
 
+--no-boolean, -B
+  Negates the effect of --boolean.
+
+--no-boolean-documented
+  Not a boolean.
+
 --primary
   Primary option description.
 

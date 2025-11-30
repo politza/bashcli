@@ -10,6 +10,7 @@ OPTIONS=(
   enum        single
   primary     enum:enum
   secondary   enum:enum
+  no-boolean  flag:boolean
 )
 
 OPTION_ALIASES=(

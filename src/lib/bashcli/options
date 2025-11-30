@@ -169,6 +169,8 @@ bashcli-options-parse() {
                 fi
               done
               shift ;;
+            flag:*)
+              _parsedOptions[${_optionType#flag:}]= ;;
             flag)
               _parsedOptions[${_option}]=true ;;
             enum:?*)
@@ -269,6 +271,10 @@ bashcli-options-parse() {
       flag)
         if bashcli-config-get -x -t boolean "${__property}" && [ "${REPLY}" == true ]; then
           __options[${__option}]=true
+        fi;;
+      flag:*)
+        if bashcli-config-get -x -t boolean "${__optionType#flag:}" && [ "${REPLY}" == true ]; then
+          __options[${__option}]=false
         fi;;
       single)
         if bashcli-config-get -x "${__property}"; then

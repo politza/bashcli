@@ -16,6 +16,8 @@ OPTIONS=(
   multi-list  multi-list
   enum        single
   primary     enum:enum
+  no-boolean  flag:boolean
+  no-boolean-documented flag:boolean
 )
 
 OPTION_ALIASES=(
@@ -25,6 +27,7 @@ OPTION_ALIASES=(
   s single
   m multi-list
   e enum
+  B no-boolean
 )
 
 OPTION_DESCRIPTIONS=(
@@ -39,6 +42,7 @@ Multi option description."
 
 "
   primary "Primary option description."
+  no-boolean-documented "Not a boolean."
 )
 
 OPTION_VALUE_TYPES=(
