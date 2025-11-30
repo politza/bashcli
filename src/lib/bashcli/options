@@ -172,7 +172,7 @@ bashcli-options-parse() {
               done
               bashcli-debug "${_optionType} ${_option} ${_parsedOptions[${_option}]//$'\n'/,}"
               shift ;;
-            flag:*)
+            flag:?*)
               bashcli-debug "flag ~${_optionType#flag:}"
               _parsedOptions[${_optionType#flag:}]= ;;
             flag)
@@ -280,7 +280,7 @@ bashcli-options-parse() {
           bashcli-debug "flag ${__option}"
           __options[${__option}]=true
         fi;;
-      flag:*)
+      flag:?*)
         if bashcli-config-get -x -t boolean "${__optionType#flag:}" && [ "${REPLY}" == true ]; then
           bashcli-debug "flag ~${__optionType#flag:}"
           __options[${__optionType#flag:}]=

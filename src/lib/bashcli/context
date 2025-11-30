@@ -90,24 +90,24 @@ declare -g -r _BASHCLI_CONTEXT_COMPLEMENT_DOCUMENTATION='Negates the effect of %
 
   for option in "${!OPTIONS[@]}"; do
     if [[ ${option} == -* ]]; then
-      bashcli-fatal "Option name must not start with a dash: ${option}"
+      bashcli-fatal "option name must not start with a dash: ${option}"
     fi
     optionType=${OPTIONS[${option}]}
     case ${optionType} in
-      flag:*) if [ "${OPTIONS[${optionType#flag:}]}" != flag ]; then
+      flag:?*) if [ "${OPTIONS[${optionType#flag:}]}" != flag ]; then
                 bashcli-fatal "the complement of a flag must be a flag: ${option}, ${optionType}"
               fi ;;
       flag|single|multi|multi-list) ;;
       enum:?*)
         case ${OPTIONS[${optionType#enum:}]} in
-          multi|multi-list|flag|flag:*|enum:*)
-            bashcli-fatal "Enum option-value must be a single option: ${optionType:#enum:}" ;;
+          multi|multi-list|flag|flag:?*|enum:?*)
+            bashcli-fatal "enum option-value must be a single option: ${optionType:#enum:}" ;;
         esac ;;
-      *) bashcli-fatal "Type of ${option} must be one of flag, single, multi, multi-list or enum: ${commandContext}" ;;
+      *) bashcli-fatal "options-type of ${option} must be one of flag, single, multi, multi-list or enum: ${commandContext}" ;;
     esac
     if [ -z "${OPTION_DESCRIPTIONS[${option}]}" ]; then
       case ${optionType} in
-        flag:*) prefix=${option//?/-}
+        flag:?*) prefix=${option//?/-}
                 printf -v documentation "${_BASHCLI_CONTEXT_COMPLEMENT_DOCUMENTATION}" "${prefix:0:2}${optionType#flag:}"
                 OPTION_DESCRIPTIONS[${option}]=${documentation};;
         *) OPTION_DESCRIPTIONS[${option}]="${_BASHCLI_CONTEXT_NOT_DOCUMENTED}"
@@ -117,7 +117,7 @@ declare -g -r _BASHCLI_CONTEXT_COMPLEMENT_DOCUMENTATION='Negates the effect of %
 
   for option in "${!OPTION_DESCRIPTIONS[@]}"; do
     if [ -z "${OPTIONS[${option}]}" ]; then
-      bashcli-warn "Description for non-existing option provided: ${option}"
+      bashcli-warn "description for non-existing option provided: ${option}"
       unset "OPTION_DESCRIPTIONS[${option}]"
     fi
   done
@@ -125,14 +125,14 @@ declare -g -r _BASHCLI_CONTEXT_COMPLEMENT_DOCUMENTATION='Negates the effect of %
   for alias in "${!OPTION_ALIASES[@]}"; do
     option=${OPTION_ALIASES[${alias}]}
     if [ -z "${OPTIONS[${option}]}" ]; then
-      bashcli-warn "Alias for non-existing option provided: ${alias} -> ${option}"
+      bashcli-warn "alias for non-existing option provided: ${alias} -> ${option}"
       unset "OPTION_ALIASES[${option}]"
     fi
   done
 
   for alias in "${!OPTION_ALIASES[@]}"; do
     if [[ ${alias} == -* ]]; then
-      bashcli-fatal "Alias name must not start with a dash: ${alias}"
+      bashcli-fatal "alias name must not start with a dash: ${alias}"
     fi
   done
 }
