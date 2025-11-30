@@ -44,6 +44,21 @@ bashcli-cache-get() {
   fi
 }
 
+bashcli-cache-delete() {
+  local namespace=$1
+  local key=$2
+
+  if [ $# -ne 2 ]; then
+    bashcli-error "usage: ${FUNCNAME} NAMESPACE KEY"
+    return 1
+  fi
+
+  if bashcli-cache-file "${namespace}" "${key}"; then
+    bashcli-debug "removing ${REPLY}"
+    rm -f -- "${REPLY}"
+  fi
+}
+
 bashcli-cache-file() {
   local namespace=$1
   local key=$2
