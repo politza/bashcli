@@ -8,17 +8,16 @@ The root command of the CLI.
 OPTIONS=(
   profile  multi-list
   version  flag
-  debug    flag
-  debug-filter single
+  debug    single
 )
 
 OPTION_DESCRIPTIONS=(
   profile "Enable one or more configuration profiles."
   version "Display version information about the program."
-  debug   "Enable debug logging."
-  debug-filter "Enable debug logging for matching commands and functions.
+  debug   "Configures debug logging.
 
-The argument should be an extended regular expression."
+This can be either true or false, or an extended regular expression filtering on commands and
+functions."
 )
 
 OPTION_ALIASES=(
