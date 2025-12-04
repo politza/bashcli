@@ -41,17 +41,16 @@ completion-exec() {
 test-complete-long-options() {
   completion-exec 'test-cli command --|' &> "${output}"
   diff -u "${output}" - <<EOF
---boolean       boolean option (-a,-b,-c)
---debug         Enable debug logging.
---debug-filter  Enable debug logging for matching commands and functions.
---first         first enum option (-f)
---help          Shows a help message.
---multi         multi option (-M)
---multi-list    multi-list option (-m)
---profile       Enable one or more configuration profiles. (-P)
---second        second enum option
---single        single option (-s)
---version       Display version information about the program.
+--boolean     boolean option (-a,-b,-c)
+--debug       Configures debug logging.
+--first       first enum option (-f)
+--help        Shows a help message.
+--multi       multi option (-M)
+--multi-list  multi-list option (-m)
+--profile     Enable one or more configuration profiles. (-P)
+--second      second enum option
+--single      single option (-s)
+--version     Display version information about the program.
 EOF
 }
 
