@@ -152,7 +152,7 @@ bashcli-options-parse() {
           esac
           case ${_optionType} in
             single)
-              bashcli-debug "single ${_option}"
+              bashcli-debug "single: ${_option}"
               _parsedOptions[${_option}]=$2
               shift ;;
             multi|multi-list)
@@ -170,16 +170,16 @@ bashcli-options-parse() {
                   eval "${_multiOptionRefs[${_option}]}+=(\"${_argument}\")"
                 fi
               done
-              bashcli-debug "${_optionType} ${_option} ${_parsedOptions[${_option}]//$'\n'/,}"
+              bashcli-debug "${_optionType}: ${_option} ${_parsedOptions[${_option}]//$'\n'/,}"
               shift ;;
             flag:?*)
-              bashcli-debug "flag ~${_optionType#flag:}"
+              bashcli-debug "flag: ~${_optionType#flag:}"
               _parsedOptions[${_optionType#flag:}]= ;;
             flag)
-              bashcli-debug "flag ${_option}"
+              bashcli-debug "flag: ${_option}"
               _parsedOptions[${_option}]=true ;;
             enum:?*)
-              bashcli-debug "enum ${_optionType#enum:} ${_option}"
+              bashcli-debug "enum: ${_optionType#enum:} ${_option}"
               _parsedOptions[${_optionType#enum:}]=${_option} ;;
             *)
               bashcli-error "invalid option type: ${_optionType}"
@@ -209,7 +209,7 @@ bashcli-options-parse() {
   done
 
   IFS=' '
-  bashcli-debug "parameters ${_parsedParameters[*]:-<none>}"
+  bashcli-debug "parameters: ${_parsedParameters[*]:-<none>}"
 }
 
 -bashcli-options-resolve-multivar() {
@@ -277,23 +277,23 @@ bashcli-options-parse() {
     case ${__optionType} in
       flag)
         if bashcli-config-get -x -t boolean "${__property}" && [ "${REPLY}" == true ]; then
-          bashcli-debug "flag ${__option}"
+          bashcli-debug "flag: ${__option}"
           __options[${__option}]=true
         fi;;
       flag:?*)
         if bashcli-config-get -x -t boolean "${__optionType#flag:}" && [ "${REPLY}" == true ]; then
-          bashcli-debug "flag ~${__optionType#flag:}"
+          bashcli-debug "flag: ~${__optionType#flag:}"
           __options[${__optionType#flag:}]=
         fi;;
       single)
         if bashcli-config-get -x "${__property}"; then
-          bashcli-debug "single ${__option} ${REPLY}"
+          bashcli-debug "single: ${__option} ${REPLY}"
           __options[${__option}]=${REPLY}
         fi;;
       multi|multi-list)
         if bashcli-config-get -x -t array "${__property}"; then
           IFS=' '
-          bashcli-debug "${__optionType} ${__option} ${REPLY[*]}}"
+          bashcli-debug "${__optionType}: ${__option} ${REPLY[*]}"
           IFS=$'\n'
           __options[${__option}]=${REPLY[*]}
           unset IFS
