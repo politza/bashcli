@@ -21,7 +21,7 @@ declare -gA BASHCLI_RESOURCE_SCOPES_DIRS=(
 # shellcheck disable=SC2165,SC2167
 bashcli-resource-scopes-parse() {
   local -A resolvedScopes=()
-  local scope scopes
+  local scope scopes excluded
   local IFS
   REPLY=()
 
@@ -37,7 +37,14 @@ bashcli-resource-scopes-parse() {
         fi
         resolvedScopes[${scope}]=set ;;
       (~@(builtin|default|global|project|local))
-      resolvedScopes[${scope:1}]= ;;
+      excluded=${scope:1}
+      for scope in "${BASHCLI_RESOURCE_SCOPES[@]}"; do
+        if [ "${scope}" != "${excluded}" ]; then
+          resolvedScopes[${scope}]=set
+        else
+          resolvedScopes[${scope}]=
+        fi
+      done;;
       none|~all) resolvedScopes=() ;;
       all|~none)
         resolvedScopes=()
@@ -62,13 +69,14 @@ bashcli-resource-scopes-parse() {
 bashcli-resource-scopes-resolve() {
   local OPTIND=1
   local scopesOption=all
-  local scope scopes resource reverse option directory filename
+  local all scope scopes resource reverse option directory filename
 
-  REPLY=
-  while getopts "s:r" option "$@"; do
+  REPLY=()
+  while getopts "s:ra" option "$@"; do
     case ${option} in
       s) scopesOption=${OPTARG};;
       r) reverse=true;;
+      a) all=true;;
       *) return 1;;
     esac
   done
@@ -87,18 +95,25 @@ bashcli-resource-scopes-resolve() {
     bashcli-array-reverse scopes
   fi
 
+  REPLY=()
   for scope in "${scopes[@]}"; do
     directory=${BASHCLI_RESOURCE_SCOPES_DIRS[${scope}]}
     filename=${directory}/${resource}
     if [ -e "${filename}" ]; then
       bashcli-debug "${scope} ${resource} ${filename}"
-      REPLY=${filename}
-      return 0
+      REPLY+=("${filename}")
+      if [ -z "${all}" ]; then
+        return 0
+      fi
     fi
   done
 
-  bashcli-debug "${scope} ${resource} <none>"
-  return 1
+  if [ ${#REPLY[@]} -gt 0 ]; then
+    return 0
+  else
+    bashcli-debug "${scope} ${resource} <none>"
+    return 1
+  fi
 }
 
 bashcli-resource-scopes-unparse() {

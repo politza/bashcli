@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+declare parameters=()
+declare -A options=()
+declare resource
+declare resolveArgs=()
+
+bashcli-options-parse options parameters -- "$@"
+
+if [ ${#parameters[@]} -ne 1 ]; then
+  bashcli-fatal "expected exactly one parameter"
+fi
+
+if [ "${options[a]}" ]; then
+  resolveArgs+=(-a)
+fi
+
+if [ "${options[r]}" ]; then
+  resolveArgs+=(-r)
+fi
+
+if [ "${options[s]}" ]; then
+  resolveArgs+=(-s "${options[s]}")
+fi
+
+bashcli-resource-scopes-resolve "${resolveArgs[@]}" "${parameters[0]}"
+for resource in "${REPLY[@]}"; do
+  printf "%s\n" "${resource}"
+done

@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+PATH=${PWD}/fixtures/resource-scopes:${PATH}
+output=$(mktemp)
+TEST_BASHCLI_LOCAL_DIR=$(mktemp -d)
+TEST_BASHCLI_GLOBAL_DIR=$(mktemp -d)
+
+trap "rm -r -- '${output}' '${TEST_BASHCLI_LOCAL_DIR}' '${TEST_BASHCLI_GLOBAL_DIR}'" EXIT
+
+before-each() {
+  export BASHCLI_GLOBAL_DIR=${TEST_BASHCLI_GLOBAL_DIR}
+  export BASHCLI_LOCAL_DIR=${TEST_BASHCLI_LOCAL_DIR}
+
+  mkdir --parents "${BASHCLI_GLOBAL_DIR}"/directory 
+  touch "${BASHCLI_GLOBAL_DIR}"/directory/file 
+  touch "${BASHCLI_GLOBAL_DIR}"/directory/global-file 
+
+  mkdir --parents "${BASHCLI_LOCAL_DIR}"/directory 
+  touch "${BASHCLI_LOCAL_DIR}"/directory/file 
+  touch "${BASHCLI_LOCAL_DIR}"/directory/local-file 
+}
+
+test-parse-scopes-all() {
+  cli resource-scopes parse all &> "${output}"
+  diff -u - "${output}" <<EOF
+builtin
+default
+global
+local
+EOF
+}
+
+test-parse-scopes-single() {
+  cli resource-scopes parse global &> "${output}"
+  diff -u - "${output}" <<EOF
+global
+EOF
+}
+
+test-parse-scopes-negation() {
+  cli resource-scopes parse ~global &> "${output}"
+  diff -u - "${output}" <<EOF
+builtin
+default
+local
+EOF
+}
+
+test-parse-scopes-identity() {
+  cli resource-scopes parse ~global,global &> "${output}"
+  diff -u - "${output}" <<EOF
+builtin
+default
+global
+local
+EOF
+}
+
+test-parse-scopes-list() {
+  cli resource-scopes parse global,local &> "${output}"
+  diff -u - "${output}" <<EOF
+global
+local
+EOF
+}
+
+test-parse-resolve() {
+  cli resource-scopes resolve directory/file &> "${output}"
+  diff -u - "${output}" <<EOF
+${BASHCLI_GLOBAL_DIR}/directory/file
+EOF
+}
+
+test-parse-resolve-reverse() {
+  cli resource-scopes resolve -r directory/file &> "${output}"
+  diff -u - "${output}" <<EOF
+${BASHCLI_LOCAL_DIR}/directory/file
+EOF
+}
+
+test-parse-resolve-all() {
+  cli resource-scopes resolve -a directory/file &> "${output}"
+  diff -u - "${output}" <<EOF
+${BASHCLI_GLOBAL_DIR}/directory/file
+${BASHCLI_LOCAL_DIR}/directory/file
+EOF
+}
+
+test-parse-resolve-all-local-file() {
+  cli resource-scopes resolve -a directory/local-file &> "${output}"
+  diff -u - "${output}" <<EOF
+${BASHCLI_LOCAL_DIR}/directory/local-file
+EOF
+}
+
+test-parse-resolve-all-global-file() {
+  cli resource-scopes resolve -a directory/global-file &> "${output}"
+  diff -u - "${output}" <<EOF
+${BASHCLI_GLOBAL_DIR}/directory/global-file
+EOF
+}
+
+test-parse-resolve-all-reverse() {
+  cli resource-scopes resolve -ar directory/file &> "${output}"
+  diff -u - "${output}" <<EOF
+${BASHCLI_LOCAL_DIR}/directory/file
+${BASHCLI_GLOBAL_DIR}/directory/file
+EOF
+}
+
+. ./lib/run-tests

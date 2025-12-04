@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+declare parameters=()
+declare scope
+
+bashcli-options-parse '' parameters -- "$@"
+
+if [ ${#parameters[@]} -ne 1 ]; then
+  bashcli-fatal "expected exactly one parameter"
+fi
+
+bashcli-resource-scopes-parse "$1"
+bashcli-array-sort REPLY
+for scope in "${REPLY[@]}"; do
+  printf "%s\n" "${scope}"
+done
