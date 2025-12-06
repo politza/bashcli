@@ -14,6 +14,7 @@ declare -g -A _BASHCLI_CONFIG_PROPERTIES=()
 declare -g -A _BASHCLI_CONFIG_PROPERTIES_PROFILE=()
 
 declare -g    BASHCLI_CONFIG_PROFILES=()
+declare -g    BASHCLI_CONFIG_USER_PROFILES=()
 declare -g -A _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
 
 declare -g -A _BASHCLI_CONFIG_ENV=()
@@ -595,6 +596,7 @@ bashcli-config-list() {
   local index=0
 
   BASHCLI_CONFIG_PROFILES=()
+  BASHCLI_CONFIG_USER_PROFILES=()
   _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
 
   # Check profile-names, remove duplicate and empty profiles, but keep the order.
@@ -606,6 +608,8 @@ bashcli-config-list() {
       BASHCLI_CONFIG_PROFILES=("${profile}" "${BASHCLI_CONFIG_PROFILES[@]}")
     fi
   done
+  # shellcheck disable=SC2034
+  BASHCLI_CONFIG_USER_PROFILES=("${BASHCLI_CONFIG_PROFILES[@]:1}")
 
   # Remove gaps from profile priorities.
   _BASHCLI_CONFIG_PROFILE_PRIORITIES=()
