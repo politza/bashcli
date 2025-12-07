@@ -86,6 +86,11 @@ bashcli-resource-scopes-resolve() {
     bashcli-error "require exactly one resource: $*"
     return 1
   fi
+  if [ -z "$1" ]; then
+    bashcli-error "resource must not be the empty string"
+    return 1
+  fi
+
   resource=$1
 
   bashcli-resource-scopes-parse "${scopesOption}"
