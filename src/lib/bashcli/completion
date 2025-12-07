@@ -165,7 +165,7 @@
         fi
         break
       elif [ "${cliPrefix}" == bashcli ]; then
-        bashcli-warn "completion function for value-type ${valueType} not defined"
+        bashcli-debug "completion function for value-type ${valueType} not defined"
       fi
     done
   fi
