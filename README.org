@@ -1,22 +1,22 @@
-#+TITLE: Bashcli
+#+TITLE: bashcli
 * Introduction
 
   =bashcli= is a framework for writing CLIs using bash-script.  It provides the following features:
 
-  + hierarchicaly structured comand sets, like =docker= and many others
+  + hierarchically structured command sets, like =docker= and many others
   + declarative command options of various types
   + builtin extendable completion of option and non-option arguments
   + builtin help command, incorporating provided command and option-documentation
-  + a config-property system inspired by [[https://microprofile.io/][microprofile]] and [[https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration][git-config]]
+  + a config-property system inspired by [[https://microprofile.io/][micro-profile]] and [[https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration][git-config]]
   + user-customization of command options via above config-properties
   + automatic integration of user-provided commands
   + creation of a single-file, self-extracting distributable
 
 * Getting Started
 
-  1. Creat a new project and add this one as a submodule
+  1. Create a new project and add this one as a sub-module
      #+begin_src bash
-       git init mycli 
+       git init mycli
        cd mycli
        git submodule add git@github.com:politza/bashcli.git
      #+end_src
@@ -45,63 +45,222 @@
        ./bashcli/bin/mkdist ./src/mycli dist
        ./dist/mycli hello-world
      #+end_src
-* Overwiew
-  The purpose of this section is to give a high-level overview of the various concepts involved,
-  without getting lost in all of their implementation details.
-** Command Structure
-   In it's most basic form, a command is just a file in a specific directory. The name of the file
-   determines the command's name and the directory its place in the hierarchy of commands.
+* Overview
+  Note: Documentation is currently incomplete.
+** Commands
+*** Structure
+    In it's most basic form, a command is just a file in a specific directory. The name of the file
+    determines the command's name and the directory its place in the hierarchy of commands.
 
-   The root-directory of this hierarchy is the =commands= directory, its location primarily determined
-   by the location of the symbolic link pointing to the =bashcli= script. A command can be either a
-   (inner) node-command (i.e. it contains other commands, which it invokes) or a leaf-command (i.e.
-   it does not contain other commands). The filename of a leaf-command is just its name, while
-   node-commands reside in a directory named after the command containing the special filename
-   =@main=.
+    The root-directory of this hierarchy is the =commands= directory, its location primarily determined
+    by the location of the symbolic link pointing to the =bashcli= script. A command can be either a
+    (inner) node-command (i.e. it contains other commands, which it invokes) or a leaf-command (i.e.
+    it does not contain other commands). The filename of a leaf-command is just its name, while
+    node-commands reside in a directory named after the command containing the special filename
+    =@main=.
 
-   For example, assume we extend the =mycli= CLI from the [[#Getting Started][Getting Started]] secion with a command that
-   operates on files. And that we implement this using a =files= command with 3 subcommands, namely
-   =create=, =remove= and =delete=. The directory structure implementing these commands would then look
-   like this:
-   #+begin_example
-.
-├── commands
-│   ├── files
-│   │   ├── @main
-│   │   ├── create
-│   │   ├── delete
-│   │   ├── rename
-└── mycli -> ../bashcli/src/bashcli
-   #+end_example
-   The =@main= script would implement the =files= command, which would delegate its work to one of the 3
-   subcommands (see [[./demos/files][./demos/files]]).
-** Command Execution
-** Command Options
-** Command Context
-** Command Completion
-* Functions and Variables
-* Brainstorming
-- command option types
-- completion
-  - extension mechanism  
-  - variables (BASH_COMPLETION_*)
-  - bash_completion dependency
-- option value types
-- parameter value types
-- option documentation
-- command documentation
-- option aliases
-- option parsing
-- command configuration via properties
-- configuration properties
-- environment override of properties
-- configuration namespaces
-- resource directories
-- resource profiles
-- shell setup (setopt, shopt, etc.)
-- node- and leaf-commands
-- command resolution
-- clean variable environment (declare = local)
-- making context available to subcommands (delcare -g)
-- lib folder
-- lib init script
+    For example, assume we extend the =mycli= CLI from the [[*Getting Started][Getting Started]] section with a command that
+    operates on files. And that we implement this using a =files= command with 3 sub-commands, namely
+    =create=, =remove= and =delete=. The directory structure implementing these commands would then look
+    like this:
+    #+begin_example
+ .
+ ├── commands
+ │   ├── files
+ │   │   ├── @main
+ │   │   ├── create
+ │   │   ├── delete
+ │   │   ├── rename
+ └── mycli -> ../bashcli/src/bashcli
+    #+end_example
+    The =@main= script would implement the =files= command, which would delegate its work to one of the 3
+    sub-commands (see [[./examples/files][./examples/files]]).
+*** Context
+    For each command context can be provided via a file of the same name having the =.context=
+    extension. This file should contain various variable definitions describing what the command
+    does and how it operates, see [[./examples/context/commands/show][./examples/context]].
+**** DESCRIPTION
+     Defines the description of the command. It is used as the main content for
+     the output of the help command.  Leading and trailing newlines are ignored.
+
+     *Example:*
+     #+begin_src bash
+       DESCRIPTION="
+       Describe what the command does.
+       "
+     #+end_src
+**** OPTIONS
+     Defines an associative array of options an their types. The following table lists the various
+     option-types and gives a brief explanation.
+     | Type        | Description                                                                                                |
+     |-------------+------------------------------------------------------------------------------------------------------------|
+     | flag        | Defines a simple switch, which can be used to enable some feature of the command.                          |
+     | flag:/name/ | Defines a complementary switch. Providing this option will negate the =flag= given by the suffix.            |
+     | single      | Defines a single-valued option, for which the last occurrence in the command-line determines its value.     |
+     | multi       | Defines a multi-valued option, which can be provided multiple times, resulting in a list of option-values. |
+     | multi-list  | Like =multi=, but the user may provide values via a comma-separated list                                    |
+     | enum:/name/ | Defines a concrete value for the single-valued option /name/. See the following section for further explanations. |
+
+     *Example:*
+     #+begin_src sh
+       OPTIONS=(
+         flag-option       flag
+         no-flag-option    flag:flag-option
+         single-option     single
+         multi-option      multi
+         multi-list-option multi-list
+         enum-option       single
+         enum-option-one   enum:enum-option
+         enum-option-two   enum:enum-option
+       )
+     #+end_src
+**** OPTION_DESCRIPTIONS
+     Defines an associative array of options and their documentation. This is being used to generate
+     the output for the options section of the help command.
+
+     *Example:*
+     #+begin_src sh
+       OPTION_DESCRIPTIONS=(
+         flag-option       "A simple switch."
+         no-flag-option    "A complement of a switch."
+         single-option     "A single-valued option."
+         multi-option      "A multi-valued option."
+         multi-list-option "A multi-valued option supporting CSV notation."
+         enum-option       "A single-valued option and a target for the enum-options."
+         enum-option-one   "An enum-option providing the value 'enum-option-one'."
+         enum-option-two   "An enum-option providing the value 'enum-option-two'."
+       )
+     #+end_src
+**** OPTION_ALIASES
+     Defines an associative array of aliases and their corresponding canonical options. Each alias may then be
+     used interchangeably with its associated option.
+
+     *Example:*
+     #+begin_src sh
+       OPTION_ALIASES=(
+         f flag-option
+         F no-flag-option
+         s single-option
+         m multi-option
+         M multi-list-option
+         e enum-option
+         p enum-option-one
+         S enum-option-two
+       )
+     #+end_src
+**** Option Value Types
+     Defines the value type of options and parameters via an associative array. This type is used in
+     the output of the help command and additionally allows to provide custom completion.
+
+     Each key should be either the name of an option or the special value =%parameter=, which defines
+     the type of parameters (non-option arguments). The parameter value-type defined this way
+     applies to all parameters.
+
+     In order to define it for a positional parameter =N= a key of =%parameter-N= may be used.
+
+     Custom completion function should be named =${cliName}-complete-${valueType}= and may be located
+     in an accompanying =${cliName}.complete= file aside the command-script, see [[./examples/context/commands/show.complete][./examples/context]].
+
+     *Example:*
+     #+begin_src sh
+       OPTION_VALUE_TYPES=(
+         %parameter-0 dir
+         %parameter   file
+         multi-option custom-type
+       )
+     #+end_src
+
+*** Options
+    The library provides a builtin option-parser, which is able to process the previously described
+    context-variables, combined with the arguments provided by the user, and store the result into
+    an options-map and various arrays. This feature is implemented via a shell function.
+
+    The function =bashcli-options-parse= accepts 2 fixed arguments for the options and remaining
+    parameters, both of which may be the empty string or absent and should be passed via a
+    name-reference. Additional arguments may be provided specifically for handling multi-valued
+    options as =variable-name\=option-name=, with the effect of storing the list of values provided
+    for that option to be stored in the array referenced by the given variable name.
+
+    The remaining arguments should be a literal and mandatory =--=, followed by the arguments provided
+    to the script itself.
+
+    The function would typically be invoked at the beginning of a command script, e.g.:
+    #+begin_src sh
+      declare -A options=()
+      declare    parameters=()
+      declare    multiOptionValues=()
+
+      bashcli-options-parse options parameters multiOptionValues=multi-option -- "$@"
+    #+end_src
+
+    The function stores the result of parsing the user-arguments into the provided variables
+    depending on the type of the option.
+
+    | Type       | Result                                                                                                                    |
+    |------------+---------------------------------------------------------------------------------------------------------------------------|
+    | flag       | Sets =options[flag]= to =true=.                                                                                               |
+    | flag:name  | Sets =options[flag]= to the empty string.                                                                                   |
+    | single     | Sets =options[single]= to the provided value.                                                                               |
+    | multi      | Adds the provided value separated with a newline to =options[multi]=. Also adds it to the optionally provided mapped array. |
+    | multi-list | Like =multi=.                                                                                                               |
+    | enum:name  | Sets =options[name]= to the name of the option.                                                                             |
+
+    Options are parsed opportunistically: If there is a command preceding a provided option which
+    defines that option the option will be applied to that command. Any option binds to the command
+    on the left closest to it. If there is no such command, execution aborts with an error.
+
+** Configuration Properties
+   Command options may be configured via configuration files. The implementation of this features
+   follows a simplified version of [[https://download.eclipse.org/microprofile/microprofile-config-3.1][Microprofile Config]].
+
+*** Syntax
+    1. Empty lines and lines starting with optional white-space followed by a =#= are ignored.
+    2. Every other line defines a property.
+    3. A definition consists of an optional =profile=, followed by a =name=, a === and a =value=.
+    4. A property =name= starts with a =name-component= followed by zero or more =name-component='s separated with a =.= .
+    5. A =name-component= matches the regular expression =[a-zA-Z0-9_-]=.
+    6. A =profile= starts with a =%=, followed by a =name-component=.
+    7. A =value= consists of arbitrary letters, except newlines.
+
+*** Evaluation
+    Values are trimmed for preceding and trailing white-space.
+
+    The value of a property may refer to environment variables and other properties using the syntax
+    =${VARIABLE}= resp. =${property}=. A default can be provided using the syntax =${expression:default}=,
+    which is used, if the expression results in an empty value.
+
+    Properties are evaluated in parallel, with the effect that values may be expressed in terms of
+    later defined properties.
+
+    Values may contain the escape sequences =\n=, =\r=, =\t= and =\s= for a newline, carriage-return, tab
+    and space.
+
+    For every property a single definition is effective, which is determined by the precedences of
+    the configuration file, assigned profiles and definition-order.
+
+** Resource Scopes
+   Options configuration and other resources may be retrieved from a list of ordered directories or
+   scopes, of which The following are available:
+
+   | Scope   | Location                                      | Description                      |
+   |---------+-----------------------------------------------+----------------------------------|
+   | builtin | Directory of the =bashcli= script               |                                  |
+   | default | Directory of the CLI script linked to =bashcli= |                                  |
+   | global  | ~/.config/${cliName}                          | Global user customizations.      |
+   | project | Not defined by default.                       | Project specific customizations. |
+   | local   | Not defined by default.                       | Local user customizations.       |
+
+** Runtime Considerations
+   Before executing any commands, the shell is set up to support extending globing and the various
+   fail-immediate options are enable.
+
+   #+begin_src sh
+     shopt -s extglob nullglob
+     set -eo pipefail
+   #+end_src
+
+* Versioning
+  This project uses semantic versioning, i.e. no breaking-changes within one major version.
+
+  Shell functions starting with a dash and variables starting with an underscore should be considered
+  private and are subject to change without notice.

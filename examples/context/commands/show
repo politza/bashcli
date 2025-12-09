@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Associative array for the options.
+declare -A options=()
+# Array for non-option arguments.
+declare parameters=()
+# Array for the multi-valued option.
+declare multiOptions=()
+# Array for the multi-valued list-option.
+declare multiListOptions=()
+
+# Parse the options and output their values.
+bashcli-options-parse \
+  options parameters \
+  multiOptions=multi-option \
+  multiListOptions=multi-list-option \
+  -- "$@"
+
+if [ "${options[flag-option]}" ]; then
+  echo "flag-option=${options[flag-option]}"
+fi
+
+if [ "${options[single-option]}" ]; then
+  echo "single-option=${options[single-option]}"
+fi
+
+for ((index = 0; index < ${#multiOptions[@]}; ++index)); do
+  echo "multi-option[${index}]=${multiOptions[index]}"
+done
+
+for ((index = 0; index < ${#multiListOptions[@]}; ++index)); do
+  echo "multi-list-option[${index}]=${multiListOptions[index]}"
+done
+
+case ${options[enum-option]} in
+  enum-option-one|enum-option-two)
+    echo "enum-option=${options[enum-option]}";;
+  '') ;;
+  *) bashcli-fatal "enum-option not supported: ${options[enum-option]}"
+esac
+
+for ((index = 0; index < ${#parameters[@]}; ++index)); do
+  echo "parameter[${index}]=${parameters[index]}"
+done

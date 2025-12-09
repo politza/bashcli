@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+context-cli-complete-multi-option-value() {
+  COMPREPLY=(first second third)
+}
+
+context-cli-complete-multi-list-option-value() {
+  # shellcheck disable=SC2034
+  BASHCLI_COMPLETIONS=(
+    first   "The first value."
+    second  "The second value."
+    third   "The third value."
+  )
+}

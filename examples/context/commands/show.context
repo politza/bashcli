@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+DESCRIPTION="
+A command demonstrating the various context elements.
+
+To enable completion for this command, create an alias and evaluate the completion script:
+
+$ alias context-cli=/path/to/context-cli
+
+$ eval \"\$(context-cli cli complete --script)\"
+"
+
+OPTIONS=(
+  flag-option       flag
+  no-flag-option    flag:flag-option
+  single-option     single
+  multi-option      multi
+  multi-list-option multi-list
+  enum-option       single
+  enum-option-one   enum:enum-option
+  enum-option-two   enum:enum-option
+)
+
+OPTION_DESCRIPTIONS=(
+  flag-option       "A simple switch."
+  no-flag-option    "A complement of a switch."
+  single-option     "A single-valued option."
+  multi-option      "A multi-valued option."
+  multi-list-option "A multi-valued option supporting CSV notation."
+  enum-option       "A single-valued option and a target for the enum-options."
+  enum-option-one   "An enum-option providing the value 'enum-option-one'."
+  enum-option-two   "An enum-option providing the value 'enum-option-two'."
+)
+
+OPTION_ALIASES=(
+  f flag-option
+  F no-flag-option
+  s single-option
+  m multi-option
+  M multi-list-option
+  e enum-option
+  p enum-option-one
+  S enum-option-two
+)
+
+OPTION_VALUE_TYPES=(
+  # Complete first parameter using builtin file-completion.
+  %parameter        file
+  # Complete these options using custom completion provided by ./@main.complete .
+  multi-option      multi-option-value
+  multi-list-option multi-list-option-value
+)
