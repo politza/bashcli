@@ -6,7 +6,7 @@ Commands relating to configuration properties.
 
 Configuration properties are partitioned into different namespaces. Each namespace is contained in
 it's own filename in the various directories, which is just the namespace concatenated with the
-'.conf' extension. The default namespace is '${BASHCLI_CLI_NAME}', which configures the CLI's
+'.conf' extension. The default namespace is 'options', which configures the CLI's
 command options.
 "
 

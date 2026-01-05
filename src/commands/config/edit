@@ -2,7 +2,7 @@
 
 declare parameters=()
 declare -n commonOptions=BASHCLI_CONFIG_CLI_COMMON_OPTIONS
-declare namespace=${BASHCLI_CLI_NAME}
+declare namespace=options
 declare configFile
 
 bashcli-options-parse '' parameters -- "$@"
