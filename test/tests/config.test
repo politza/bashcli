@@ -260,7 +260,7 @@ test-config-unset-local() {
 EOF
 }
 
-test-config-unset-local() {
+test-config-unset-default() {
   cli config --scope default unset property &> "${output}" && return 1
   diff "${output}" - <<EOF
 [error] builtin and default scopes are read-only
