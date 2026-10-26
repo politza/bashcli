@@ -13,7 +13,7 @@ bashcli-string-quote() {
   local -n __string
 
   for __string; do
-    if [[ ${__string} != *([a-zA-Z0-9,._+:@%/-]) ]]; then
+    if [[ ${__string} != *([a-zA-Z0-9,._+:@%/=-]) ]]; then
       __string=${__string@Q}
     fi
   done

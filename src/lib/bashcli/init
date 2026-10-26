@@ -40,9 +40,13 @@ bashcli-debug() {
   local minContextWidth=24
   local cliName=${BASHCLI_CLI_NAME}
   local -n styles=BASHCLI_TTY_STDERR_STYLES
+  local funcIndex=1
 
-  if [[ -n "${FUNCNAME[1]}" && "${FUNCNAME[1]}" != source ]]; then
-    fnName="${FUNCNAME[1]}"
+  if [[ "${FUNCNAME[1]}" == bashcli-debug-command ]]; then
+    ((++funcIndex))
+  fi
+  if [[ -n "${FUNCNAME[${funcIndex}]}" && "${FUNCNAME[${funcIndex}]}" != source ]]; then
+    fnName="${FUNCNAME[${funcIndex}]}"
     if [[ ${fnName} == ?(-)bashcli-* ]]; then
       fnName=${fnName#-}
       fnName=${fnName#bashcli-}
