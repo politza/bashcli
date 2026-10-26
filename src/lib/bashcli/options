@@ -167,7 +167,7 @@ bashcli-options-parse() {
                 fi
                 _parsedOptions[${_option}]+=${_argument}
                 if [ -R "${_multiOptionRefs[${_option}]}" ]; then
-                  eval "${_multiOptionRefs[${_option}]}+=(\"${_argument}\")"
+                  eval "${_multiOptionRefs[${_option}]}+=(${_argument@Q})"
                 fi
               done
               bashcli-debug "${_optionType}: ${_option} ${_parsedOptions[${_option}]//$'\n'/,}"
