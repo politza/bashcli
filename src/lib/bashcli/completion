@@ -156,6 +156,8 @@
         local BASHCLI_COMPLETION_OPTION_TYPE=${option:+${_BASHCLI_CONTEXT_OPTIONS[${option}]}}
         local BASHCLI_COMPLETION_VALUE_TYPE=${valueType}
         local BASHCLI_COMPLETION_PARAMETER_INDEX=${parameterIndex}
+        local BASHCLI_COMPLETION_WORDS=("${words[@]}")
+        local BASHCLI_COMPLETION_CWORD=${cword}
         bashcli-debug "fn -> ${completionFn}"
         "${completionFn}" >/dev/null
         if ((${#COMPREPLY[@]})); then

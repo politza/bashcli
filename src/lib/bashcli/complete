@@ -37,13 +37,25 @@ bashcli-complete-config-profile() {
 # Completes configuration property values.
 bashcli-complete-config-property() {
   local index
+  local namespace=options
+
+  for ((index = 0; index < ${BASHCLI_COMPLETION_CWORD:-0}; ++index)); do
+    case ${BASHCLI_COMPLETION_WORDS[index]} in
+      -n|--namespace)
+        if [ "${BASHCLI_COMPLETION_WORDS[index + 1]}" ]; then
+          namespace=${BASHCLI_COMPLETION_WORDS[index + 1]}
+          break
+        fi
+    esac
+  done
+
   bashcli-config-initialize
-  bashcli-config-read
+  bashcli-config-read -n "${namespace}"
 
   COMPREPLY=("${!_BASHCLI_CONFIG_PROPERTIES[@]}")
   bashcli-debug "$(declare -p COMPREPLY)"
   for ((index = 0; index < ${#COMPREPLY[@]}; ++index)); do
-    COMPREPLY[index]=${COMPREPLY[index]#options.}
+    COMPREPLY[index]=${COMPREPLY[index]#${namespace}.}
   done
 }
 
