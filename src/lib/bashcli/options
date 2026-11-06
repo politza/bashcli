@@ -12,6 +12,7 @@ bashcli-options-parse() {
   local _parsedParameters=()
   local -A _multiOptionRefs=()
   local -a _multiOptionVars=()
+  local -A _configuredOptionsCleared=()
   local _commandMain _commandStack=("${_BASHCLI_COMMAND_STACK[@]}")
   local _definesSubcommands _configPropertyPrefix
   local IFS
@@ -156,6 +157,14 @@ bashcli-options-parse() {
               _parsedOptions[${_option}]=$2
               shift ;;
             multi|multi-list)
+              if [ -z "${_configuredOptionsCleared[${_option}]}" ]; then
+                # Remove configured options, if they are provided on the command-line.
+                _parsedOptions[${_option}]=
+                if [ -R "${_multiOptionRefs[${_option}]}" ]; then
+                  eval "${_multiOptionRefs[${_option}]}=()"
+                fi
+                _configuredOptionsCleared[${_option}]=true
+              fi
               if [ "${_optionType}" == multi-list ]; then
                 bashcli-string-split "$2" , _arguments
               else

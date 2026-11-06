@@ -14,6 +14,7 @@ boolean=true
 single=default-single-value
 enum=primary
 multi[0]=default-multi-value
+multi-list[0]=default-multi-list-value
 EOF
 }
 
@@ -24,17 +25,19 @@ boolean=
 single=profile-single-value
 enum=secondary
 multi[0]=profile-multi-value
+multi-list[0]=profile-multi-list-value
 EOF
 }
 
-test-cli-config-merging() {
-  cli basic --secondary --single=cli-value --multi=cli-value &> "${output}"
+test-cli-config-replaced() {
+  cli basic --secondary --single=cli-value --multi=cli-value --multi-list=cli-value-0,cli-value-1 &> "${output}"
   diff "${output}" - <<EOF
 boolean=true
 single=cli-value
 enum=secondary
-multi[0]=default-multi-value
-multi[1]=cli-value
+multi[0]=cli-value
+multi-list[0]=cli-value-0
+multi-list[1]=cli-value-1
 EOF
 }
 

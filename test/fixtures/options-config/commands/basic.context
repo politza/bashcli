@@ -5,6 +5,7 @@ OPTIONS=(
   boolean    flag
   single     single
   multi      multi
+  multi-list multi-list
   enum       single
   primary    enum:enum
   secondary  enum:enum
